@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Johann y Abril, 22 de octubre de 2026</title>
+<meta name="description" content="Invitación a nuestra boda. Jueves 22 de octubre de 2026 a las 11:00, Parroquia San Ignacio de Loyola, Tijuana.">
+<meta name="theme-color" content="#F9E7E6">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Johann y Abril, 22 de octubre de 2026">
+<meta property="og:description" content="Con la gracia de Dios y la bendición de la Iglesia, contraen matrimonio.">
+<meta property="og:locale" content="es_MX">
+<meta property="og:image" content="assets/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Infant:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/styles.css">
+
+<!-- El emblema de San Ignacio de Loyola también sirve de favicon. -->
+<link rel="icon" href="assets/img/sello.svg" type="image/svg+xml">
+</head>
+<body>
+
+<a class="saltar" href="#respuesta">Ir a confirmar asistencia</a>
+
+<!-- ============================ PORTADA ============================ -->
+<header class="portada">
+  <div class="portada__interior">
+
+    <!-- El corazón en llamas es el emblema de San Ignacio de Loyola, patrono
+         de la parroquia. Es el único elemento que se mueve en toda la página:
+         la flama titila como una vela. Para quitarlo, borra este <svg>. -->
+    <svg class="sello" viewBox="0 0 64 84" aria-hidden="true" focusable="false">
+      <g fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M32 3v11M26.5 8.5h11"/>
+        <g class="sello__flama">
+          <path d="M32 17c-4.5 6.5-4.5 12 0 17.5 4.5-5.5 4.5-11 0-17.5Z"/>
+          <path d="M20.5 22c-3.4 4.7-3.4 9.2 0 13.8 3.4-4.6 3.4-9.1 0-13.8Z"/>
+          <path d="M43.5 22c-3.4 4.7-3.4 9.2 0 13.8 3.4-4.6 3.4-9.1 0-13.8Z"/>
+        </g>
+        <path d="M32 80C17 69 10 61 10 52c0-8 6-13 13-13 4.5 0 7.5 3 9 7 1.5-4 4.5-7 9-7 7 0 13 5 13 13 0 9-7 17-22 28Z"/>
+      </g>
+    </svg>
+
+    <p class="formula">
+      Con la gracia de Dios y la bendición de la Iglesia,<br>
+      contraen matrimonio
+    </p>
+
+    <h1 class="nombres">
+      <span class="nombres__linea">Johann Ezequiel&nbsp;Vega González</span>
+      <span class="nombres__y">y</span>
+      <span class="nombres__linea">Abril Cristina&nbsp;Carrillo Sánchez</span>
+    </h1>
+
+    <p class="fecha">jueves 22 de octubre de 2026</p>
+
+    <div class="ornamento" style="max-width: 18rem; margin-top: 2.2rem;">
+      <span class="ornamento__gema"></span>
+    </div>
+  </div>
+</header>
+
+<main class="pagina">
+
+  <!-- ======================= CUENTA REGRESIVA ======================= -->
+  <section class="bloque bloque--velo" style="text-align: center;">
+    <div class="cuenta-marco">
+      <span class="cuenta-rotulo">Falta para la boda</span>
+      <div class="cuenta" data-cuenta>
+        <!-- app.js rellena esto -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================= LA CEREMONIA ========================= -->
+  <section class="bloque bloque--velo">
+    <h2 class="bloque__titulo">La ceremonia</h2>
+
+    <dl class="programa">
+      <div class="programa__fila">
+        <dt class="programa__clave">Llegada</dt>
+        <dd class="programa__valor"><span class="cifras">10:30</span></dd>
+      </div>
+      <div class="programa__fila">
+        <dt class="programa__clave">Misa</dt>
+        <dd class="programa__valor"><span class="cifras">11:00</span></dd>
+      </div>
+      <div class="programa__fila">
+        <dt class="programa__clave">Lugar</dt>
+        <dd class="programa__valor">Parroquia San Ignacio de Loyola<br>Tijuana, Baja California</dd>
+      </div>
+      <div class="programa__fila">
+        <dt class="programa__clave">Celebrante</dt>
+        <dd class="programa__valor">Pbro. Aurelio</dd>
+      </div>
+    </dl>
+
+    <p class="nota">
+      No habrá recepción. Al terminar la misa pasamos a tomar asiento,
+      así que les pedimos llegar con unos minutos de anticipación.
+    </p>
+  </section>
+
+  <!-- ========================= CÓMO LLEGAR ========================= -->
+  <section class="bloque bloque--ancho bloque--salvia">
+    <h2 class="bloque__titulo">Cómo llegar</h2>
+
+    <p class="bloque__texto">
+      Les dejamos el mapa listo para que no se pierdan. También pueden activar
+      la ubicación desde el botón de abajo.
+    </p>
+
+    <p class="acciones">
+      <a class="boton" data-maps href="#" target="_blank" rel="noopener">Ver en Google Maps</a>
+      <button class="boton boton--discreto" type="button" data-agendar>Agregar al calendario</button>
+    </p>
+  </section>
+
+  <!-- ====================== MARCADOR DE FOTO ======================= -->
+  <!-- Para usar una foto: cambia este <figure> por
+       <figure class="marco">
+         <img src="assets/img/nuestra-foto.jpg" alt="Johann y Abril">
+       </figure>
+       Conviene una foto vertical, para que no se recorte de los lados. -->
+  <figure class="marco">
+    <figcaption class="marco__pie">Aquí irá una foto de ustedes, cuando la tengan</figcaption>
+  </figure>
+
+  <!-- ==================== CONFIRMAR ASISTENCIA ==================== -->
+  <section class="bloque bloque--ancho bloque--rose" id="respuesta">
+    <h2 class="bloque__titulo">Confirmar asistencia</h2>
+
+    <noscript>
+      <p class="sin-js">
+        Para confirmar hace falta que tu navegador tenga JavaScript activado.
+        La invitación se puede leer igual sin él.
+      </p>
+    </noscript>
+
+    <div class="tarjeta" data-rsvp>
+      <!-- rsvp.js arma la tarjeta de respuesta acá -->
+      <p class="tarjeta__cargando">Cargando tu invitación…</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="pie">
+  <p class="pie__linea">Johann Ezequiel y Abril Cristina</p>
+  <p class="pie__linea pie__linea--tenue">22 de octubre de 2026<br>Parroquia San Ignacio de Loyola</p>
+</footer>
+
+<script src="assets/js/config.js"></script>
+<script src="data/invitados.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/rsvp.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+.idea/
+.vscode/
+
+# Node (sólo se usa para node --check y las pruebas locales)
+node_modules/
+
+# Capturas de la revisión visual. Ojo: la negación tiene que ser del archivo
+# exacto, no "assets/img/*.png", porque eso también dejaría pasar cualquier
+# captura que se cuele en esa carpeta.
+*.png
+!assets/img/og.png
+capturas/
+
+# La foto de los novios SÍ se sube: GitHub Pages sólo sirve lo que está
+# commiteado, así que si la ignorás la invitación se queda con el marco vacío.
