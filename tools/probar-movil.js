@@ -146,6 +146,26 @@ for (const c of casos) {
   } else {
     console.log('  ok     todas las áreas tocables llegan a 44px');
   }
+
+  if (c.textoChico.length) {
+    fallos++;
+    console.log('  FALLA  ' + c.textoChico.length + ' texto(s) menor(es) de 15px:');
+    c.textoChico.slice(0, 8).forEach(t => {
+      console.log('           ' + t.px + 'px  ' + t.etiqueta + '  "' + t.texto + '"');
+    });
+  } else {
+    console.log('  ok     ningún texto visible baja de 15px');
+  }
+
+  if (c.inputsChicos.length) {
+    fallos++;
+    console.log('  FALLA  ' + c.inputsChicos.length + ' campo(s) menor(es) de 16px (el iOS haría zoom):');
+    c.inputsChicos.slice(0, 8).forEach(t => {
+      console.log('           ' + t.px + 'px  ' + t.etiqueta);
+    });
+  } else {
+    console.log('  ok     los campos llegan a 16px y el iOS no hace zoom');
+  }
 }
 
 console.log('\n' + (fallos

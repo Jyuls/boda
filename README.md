@@ -216,8 +216,8 @@ node tools/reparar-encoding.js    que nadie haya roto la codificación
 node tools/probar-backend.js      59 pruebas del backend, sin Google
 node tools/probar-cuenta.js       13 pruebas de la cuenta regresiva
 node tools/probar-estilos.js      CSS: clases, variables, pesos de fuente
-node tools/probar-movil.js        15 pantallas de teléfono, sin scroll ni overflow
-node tools/probar-rsvp.js         17 pruebas de comportamiento del formulario
+node tools/probar-movil.js        15 pantallas de teléfono: scroll, táctil y letra chica
+node tools/probar-rsvp.js         19 pruebas de comportamiento del formulario
 ```
 
 `probar-backend.js` son 59 pruebas que cubren la instalación, la generación de
@@ -240,10 +240,15 @@ aplica como si nada y el elemento se queda sin pintar.
 `probar-movil.js` y `probar-rsvp.js` abren un navegador de verdad. El primero
 mide la invitación en cinco anchos (320 a 600 px) en sus tres estados —la
 tarjeta de Sí/No, el buscador y la confirmación— y avisa si algo se sale de la
-pantalla, si aparece scroll horizontal, si el texto queda chico o si un botón es
-más chico que 44 px. El segundo aprieta el formulario como lo haría una persona
-y comprueba que marcar, desmarcar, avisar que falta alguien y llegar a la
-confirmación funcionan.
+pantalla, si aparece scroll horizontal, si un botón es más chico que 44 px, si
+algún texto visible queda debajo de 15 px o si un campo de escritura queda
+debajo de 16 px. Los dos últimos límites no son caprichos: hubo rótulos de
+11 px ("días", "Misa") que en el teléfono no se leían, y un campo por debajo de
+16 px hace que el iOS entre con zoom al escribir y el usuario tenga que hacer
+zoom out para seguir. El piso queda vigilado por prueba porque una vez arreglado
+se vuelve a encoger sin que nadie se dé cuenta. El segundo aprieta el formulario
+como lo haría una persona y comprueba que marcar, desmarcar, avisar que falta
+alguien y llegar a la confirmación funcionan.
 
 Los dos verifican también que estén midiendo la pantalla que dicen. Sin esa
 comprobación, un banco de pruebas puede pasar mientras mide otra cosa: es un

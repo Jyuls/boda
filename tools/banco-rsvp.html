@@ -171,6 +171,9 @@ function apagarTransiciones() {
 }
 
 const color = el => doc().defaultView.getComputedStyle(el).backgroundColor;
+/* El color con el que está escrito el botón, que es otra cosa que el fondo:
+   el botón sin marcar no tiene relleno, y su aviso va en la letra. */
+const colorTexto = el => doc().defaultView.getComputedStyle(el).color;
 const marca = el => doc().defaultView.getComputedStyle(el, '::after').content;
 const TRANSPARENTE = 'rgba(0, 0, 0, 0)';
 
@@ -265,6 +268,77 @@ prueba('el botón marcado lleva un visto', async () => {
   const tilde = String.fromCharCode(0x2713);
   if (!c || c === 'none' || c === '""') return 'no se dibujó ningún símbolo: ' + c;
   if (c.indexOf(tilde) === -1) return 'el símbolo no es un visto: ' + c;
+  return null;
+});
+
+prueba('el "Sí" marcado se pone verde y el "No" en vino', async () => {
+  /* El color tiene que ir con el significado: verde es sí, rojo es no. Ya
+     estuvo al revés una vez y se veía rareado, así que la convención queda
+     escrita acá para que un cambio futuro la respete.
+
+     Se leen --si y --no, que son las variables que de verdad pintan los
+     botones marcados. Antes se leía --sagrario, pero ésa es hoy la violeta de
+     los mandos: cuando la paleta se volvió morada, el "No" tuvo que mudarse a
+     una cereza propia para no dejar de ser rojo. Que la prueba apunte a las
+     variables de significado y no a un color de moda es justamente lo que
+     evita que el próximo cambio de paleta rompa la convención en silencio. */
+  const raiz = doc().defaultView.getComputedStyle(doc().documentElement);
+  const aRgb = hex => {
+    const h = hex.trim().replace('#', '');
+    const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16);
+    return 'rgb(' + [(n >> 16) & 255, (n >> 8) & 255, n & 255].join(', ') + ')';
+  };
+  const verde = aRgb(raiz.getPropertyValue('--si'));
+  const vino = aRgb(raiz.getPropertyValue('--no'));
+
+  /* Y que además sean de verdad verde y rojo, no dos violetas parecidos: si
+     alguien los intercambia o los pinta del mismo tono, esto lo avisa. */
+  const esVerde = c => {
+    const m = /rgb\((\d+), (\d+), (\d+)\)/.exec(c);
+    if (!m) return false;
+    return +m[2] > +m[1] && +m[2] > +m[3];
+  };
+  const esRojo = c => {
+    const m = /rgb\((\d+), (\d+), (\d+)\)/.exec(c);
+    if (!m) return false;
+    return +m[1] > +m[2] && +m[1] > +m[3];
+  };
+  if (!esVerde(verde)) return 'el "Sí" no es verde: --si es ' + verde;
+  if (!esRojo(vino)) return 'el "No" no es rojo: --no es ' + vino;
+
+  const si = $$('.opcion--si')[0];
+  const no = $$('.opcion--no')[0];
+
+  /* Se marca uno y se mira, y después el otro. Los dos tienen que verse bien
+     marcados a la vez, no sólo el que quedó de la prueba anterior. */
+  no.click();
+  if (color(no) !== vino) return 'el "No" marcado quedó en ' + color(no) + ', y el vino es ' + vino;
+  if (color(si) !== TRANSPARENTE) return 'el "Sí" sin marcar tenía color: ' + color(si);
+
+  si.click();
+  if (color(si) !== verde) return 'el "Sí" marcado quedó en ' + color(si) + ', y el verde es ' + verde;
+  if (color(no) !== TRANSPARENTE) return 'el "No" sin marcar tenía color: ' + color(no);
+  return null;
+});
+
+prueba('el "Sí" y el "No" sin marcar ya se distinguen por su color', async () => {
+  /* Que el botón marcado sea verde o rojo no alcanza: el color lo tiene que
+     decir el botón también, sin apretar. Si los dos sin marcar se ven
+     iguales, el invitado tiene que tocar para enterarse de qué botón es
+     cuál, y en un teléfono eso se traduce en toques de más. */
+  const si = $$('.opcion--si')[0];
+  const no = $$('.opcion--no')[0];
+  if (!si || !no) return 'faltan los botones';
+
+  /* Se dejan los dos sin marcar. */
+  if (si.getAttribute('aria-pressed') === 'true') si.click();
+  if (no.getAttribute('aria-pressed') === 'true') no.click();
+
+  const cSi = colorTexto(si);
+  const cNo = colorTexto(no);
+  if (cSi === TRANSPARENTE) return 'el "Sí" sin marcar no tiene color propio';
+  if (cNo === TRANSPARENTE) return 'el "No" sin marcar no tiene color propio';
+  if (cSi === cNo) return 'los dos sin marcar tienen el mismo color: ' + cSi;
   return null;
 });
 

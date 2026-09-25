@@ -96,6 +96,13 @@ const TOTAL = CASOS.length * NOMBRES_ESTADO.length;
    Material. Por debajo de eso la gente atina mal, y va a atinar mal justo en
    la parte donde se decide si la familia asiste a la boda. */
 const MINIMO_TACTIL = 44;
+/* 15 px es el piso de letra legible en un teléfono. Ya hubo rótulos de 11 px
+   ("días", "Misa", "ayuda") que en la pantalla se leían como letra de ayuda
+   ilegible, así que el mínimo queda vigilado por prueba y no de memoria.
+   Los inputs van a 16 px porque por debajo de eso el iOS hace zoom al
+   escribir y después el usuario tiene que hacer zoom out para seguir. */
+const MINIMO_TEXTO = 15;
+const MINIMO_INPUT = 16;
 
 function medir(iframe, nombre, estado) {
   const doc = iframe.contentDocument;
@@ -110,6 +117,8 @@ function medir(iframe, nombre, estado) {
     clientWidth: raiz.clientWidth,
     desborde: [],
     tactilesChicos: [],
+    textoChico: [],
+    inputsChicos: [],
     cuerpoPx: win.getComputedStyle(doc.body).fontSize
   };
 
@@ -154,6 +163,47 @@ function medir(iframe, nombre, estado) {
         etiqueta: el.tagName.toLowerCase() + ' "' + texto + '"',
         ancho: Math.round(caja.width),
         alto: Math.round(caja.height)
+      });
+    }
+  });
+
+  /* Letra chica: sólo el texto propio del elemento, no el que hereda de los
+     hijos, para no reportar 400 veces el mismo rótulo. */
+  doc.querySelectorAll('body *').forEach(function (el) {
+    if (el.classList.contains('trampa')) return;
+    if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE') return;
+    const c = win.getComputedStyle(el);
+    if (c.display === 'none' || c.visibility === 'hidden' || c.opacity === '0') return;
+    const caja = el.getBoundingClientRect();
+    if (caja.width === 0 && caja.height === 0) return;
+
+    const propio = Array.prototype.filter.call(el.childNodes, function (n) {
+      return n.nodeType === 3;
+    }).map(function (n) { return n.textContent.trim(); }).join('').trim();
+    if (!propio) return;
+
+    const px = parseFloat(c.fontSize);
+    if (px < MINIMO_TEXTO) {
+      r.textoChico.push({
+        etiqueta: el.tagName.toLowerCase() + '.' + (el.className || '?').toString().split(' ')[0],
+        px: Math.round(px * 10) / 10,
+        texto: propio.slice(0, 28)
+      });
+    }
+  });
+
+  /* Inputs por debajo de 16 px: el que hace zoom en iOS. */
+  doc.querySelectorAll('input, textarea, select').forEach(function (el) {
+    if (el.classList.contains('trampa')) return;
+    const c = win.getComputedStyle(el);
+    if (c.display === 'none' || c.visibility === 'hidden') return;
+    const caja = el.getBoundingClientRect();
+    if (caja.width === 0 && caja.height === 0) return;
+    const px = parseFloat(c.fontSize);
+    if (px < MINIMO_INPUT) {
+      r.inputsChicos.push({
+        etiqueta: el.tagName.toLowerCase() + '.' + (el.className || '?').toString().split(' ')[0],
+        px: Math.round(px * 10) / 10
       });
     }
   });
