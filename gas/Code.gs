@@ -1,5 +1,5 @@
 /** ==========================================================================
- *  Invitación de boda — Johann y Abril
+ *  Invitación de boda — Abril y Johann
  *  Pegar este archivo completo en:  Extensiones > Apps Script > Code.gs
  *
  *  Este script sólo usa SpreadsheetApp y Utilities, así que Google te pedirá
@@ -117,7 +117,7 @@ function instalar() {
     cfg.getRange(2, 1, 5, 3).setValues([
       ['url_base',    'https://TU_USUARIO.github.io/boda',            'Tu dirección en GitHub, sin barra final.'],
       ['enlace_maps', 'https://maps.app.goo.gl/UJr6qCr8tBrk5gqE9',    'El mapa que se abre desde la invitación.'],
-      ['fecha_texto', 'jueves 22 de octubre de 2026',                 'Cómo se escribe la fecha.'],
+      ['fecha_texto', 'Jueves 22 de octubre de 2026',                 'Cómo se escribe la fecha.'],
       ['hora_texto',  '11:00',                                        'Hora de la misa.'],
       ['lugar_texto', 'Parroquia San Ignacio de Loyola, Tijuana',     'Cómo se escribe el lugar.']
     ]);
@@ -317,7 +317,7 @@ function armarMensaje(fecha, hora, lugar, link) {
     fecha + ' a las ' + hora + '\n' +
     lugar + '\n\n' +
     'Confirma aquí: ' + link + '\n\n' +
-    'Con cariño, Johann y Abril';
+    'Con cariño, Abril y Johann';
 }
 
 function escaparJS(valor) {
@@ -440,7 +440,7 @@ function verResumen() {
   var cfg = config();
 
   var out = [];
-  out.push(['Boda de Johann y Abril · ' + texto(cfg.fecha_texto)]);
+  out.push(['Boda de Abril y Johann · ' + texto(cfg.fecha_texto)]);
   out.push(['Actualizado ' + Utilities.formatDate(new Date(), ZONA, 'dd/MM/yyyy HH:mm')]);
   out.push([]);
 

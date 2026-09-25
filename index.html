@@ -3,22 +3,34 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Johann y Abril, 22 de octubre de 2026</title>
+<title>Abril y Johann, 22 de octubre de 2026</title>
 <meta name="description" content="Invitación a nuestra boda. Jueves 22 de octubre de 2026 a las 11:00, Parroquia San Ignacio de Loyola, Tijuana.">
 <meta name="theme-color" content="#F9E7E6">
 
+<link rel="canonical" href="https://jyuls.github.io/boda/">
+
 <meta property="og:type" content="website">
-<meta property="og:title" content="Johann y Abril, 22 de octubre de 2026">
+<meta property="og:title" content="Abril y Johann, 22 de octubre de 2026">
 <meta property="og:description" content="Con la gracia de Dios y la bendición de la Iglesia, contraen matrimonio.">
 <meta property="og:locale" content="es_MX">
-<meta property="og:image" content="assets/img/og.png">
+<meta property="og:url" content="https://jyuls.github.io/boda/">
+<!-- Absoluta a propósito: los rastreadores de Facebook y WhatsApp no
+     resuelven rutas relativas, y sin esto la previsualización salía sin
+     imagen. -->
+<meta property="og:image" content="https://jyuls.github.io/boda/assets/img/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Infant:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- Sólo los pesos que se usan de verdad, y sólo dos familias.
+     Cormorant Infant: 300 y 400, normal e itálico (los siete 300 del CSS y las
+     doce cursivas). Jost: únicamente 400, porque todos sus usos heredan el
+     peso normal del body.
+     Pedir un peso de más no es gratis: son 26 KB por archivo WOFF2 que cada
+     invitado descarga con datos móviles para no verlos nunca. -->
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Infant:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/styles.css">
 
 <!-- El emblema de San Ignacio de Loyola también sirve de favicon. -->
@@ -53,12 +65,12 @@
     </p>
 
     <h1 class="nombres">
-      <span class="nombres__linea">Johann Ezequiel&nbsp;Vega González</span>
-      <span class="nombres__y">y</span>
       <span class="nombres__linea">Abril Cristina&nbsp;Carrillo Sánchez</span>
+      <span class="nombres__y">y</span>
+      <span class="nombres__linea">Johann Ezequiel&nbsp;Vega González</span>
     </h1>
 
-    <p class="fecha">jueves 22 de octubre de 2026</p>
+    <p class="fecha">Jueves 22 de octubre de 2026</p>
 
     <div class="ornamento" style="max-width: 18rem; margin-top: 2.2rem;">
       <span class="ornamento__gema"></span>
@@ -97,14 +109,9 @@
       </div>
       <div class="programa__fila">
         <dt class="programa__clave">Celebrante</dt>
-        <dd class="programa__valor">Pbro. Aurelio</dd>
+        <dd class="programa__valor">Pbro. Marco Aurelio Castillo Aguilar</dd>
       </div>
     </dl>
-
-    <p class="nota">
-      No habrá recepción. Al terminar la misa pasamos a tomar asiento,
-      así que les pedimos llegar con unos minutos de anticipación.
-    </p>
   </section>
 
   <!-- ========================= CÓMO LLEGAR ========================= -->
@@ -112,20 +119,18 @@
     <h2 class="bloque__titulo">Cómo llegar</h2>
 
     <p class="bloque__texto">
-      Les dejamos el mapa listo para que no se pierdan. También pueden activar
-      la ubicación desde el botón de abajo.
+      Les dejamos el mapa listo para que no se pierdan.
     </p>
 
     <p class="acciones">
       <a class="boton" data-maps href="#" target="_blank" rel="noopener">Ver en Google Maps</a>
-      <button class="boton boton--discreto" type="button" data-agendar>Agregar al calendario</button>
     </p>
   </section>
 
   <!-- ====================== MARCADOR DE FOTO ======================= -->
   <!-- Para usar una foto: cambia este <figure> por
        <figure class="marco">
-         <img src="assets/img/nuestra-foto.jpg" alt="Johann y Abril">
+         <img src="assets/img/nuestra-foto.jpg" alt="Abril y Johann">
        </figure>
        Conviene una foto vertical, para que no se recorte de los lados. -->
   <figure class="marco">
@@ -145,14 +150,14 @@
 
     <div class="tarjeta" data-rsvp>
       <!-- rsvp.js arma la tarjeta de respuesta acá -->
-      <p class="tarjeta__cargando">Cargando tu invitación…</p>
+      <p class="tarjeta__cargando">Cargando tu invitación⬦</p>
     </div>
   </section>
 
 </main>
 
 <footer class="pie">
-  <p class="pie__linea">Johann Ezequiel y Abril Cristina</p>
+  <p class="pie__linea">Abril Cristina y Johann Ezequiel</p>
   <p class="pie__linea pie__linea--tenue">22 de octubre de 2026<br>Parroquia San Ignacio de Loyola</p>
 </footer>
 

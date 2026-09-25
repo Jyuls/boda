@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<!--
+  Banco de pruebas de móvil. Carga la invitación en iframes de distintos
+  anchos y mide, en el viewport real de cada uno:
+     - si aparece scroll horizontal
+     - qué elementos se salen del ancho de la pantalla
+     - el tamaño de las áreas tocables (el mínimo cómodo es 44x44 px)
+     - si el cuerpo del texto se lee
+
+  Y lo hace en los TRES estados en los que se puede encontrar alguien, porque
+  cada uno tiene botones distintos y el que se revisa no es el único que se
+  toca:
+     - rsvp          la tarjeta con los Sí/No (el que llega por el link)
+     - buscador      la lista de nombres, sin código en la URL
+     - confirmacion  lo que se ve después de enviar
+
+  Uso:  python -m http.server 8000
+        node tools/probar-movil.js
+
+  Para probarlo a mano:
+    http://localhost:8000/tools/banco-movil.html?estado=buscador
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>banco movil</title>
+<style>
+  body { font: 13px/1.5 system-ui, sans-serif; margin: 0; padding: 12px; background: #222; color: #eee; }
+  .caso { margin-bottom: 18px; border: 1px solid #555; padding: 6px; }
+  .caso > h2 { font-size: 13px; margin: 0 0 6px; color: #9cf; }
+  iframe { border: 0; display: block; background: #fff; }
+  .midiendo { position: absolute; left: -9999px; }
+</style>
+</head>
+<body>
+<div class="midiendo" data-salida></div>
+
+<script>
+/* Cada caso es un teléfono real. La altura se deja alta para que el iframe
+   tenga todo el documento disponible sin barra de desplazamiento propia. */
+const CASOS = [
+  { nombre: 'iPhone SE (1a gen)',  ancho: 320, alto: 2000 },
+  { nombre: 'iPhone 12/13/14',     ancho: 390, alto: 2000 },
+  { nombre: 'iPhone 14 Pro Max',   ancho: 430, alto: 2000 },
+  { nombre: 'Pixel 7',             ancho: 412, alto: 2000 },
+  { nombre: 'tablet chico',        ancho: 600, alto: 2000 }
+];
+
+/* Los tres estados. "conHash" decide si la URL lleva el código de la
+   invitación; "preparar" es lo que hay que hacer dentro del iframe antes de
+   medir, porque en confirmación primero hay que contestar y enviar. */
+const ESTADOS = {
+  rsvp: { titulo: 'tarjeta Sí/No', conHash: true, preparar: null },
+  buscador: { titulo: 'buscador de nombres', conHash: false, preparar: null },
+  confirmacion: {
+    titulo: 'confirmación',
+    conHash: true,
+    preparar: function (doc) {
+      /* Todos a "Sí": el botón de enviar no hace nada si queda alguien sin
+         contestar, y no nos interesa medir ese aviso, sino la pantalla de
+         confirmación que viene después. */
+      doc.querySelectorAll('.opcion--si').forEach(function (b) { b.click(); });
+      const botones = Array.from(doc.querySelectorAll('button'));
+      const enviar = doc.querySelector('[data-enviar]') ||
+        botones.find(function (b) { return /enviar|confirmar/i.test(b.textContent); });
+      if (enviar) enviar.click();
+    }
+  }
+};
+
+/* Lo que hay guardado en este momento. Se reporta junto a cada medición para
+   que, cuando una pantalla no es la que se pidió, se vea si fue porque
+   sobraba una respuesta de otra corrida en vez de stays adivinando. */
+function leerAlmacen() {
+  try {
+    return String(localStorage.getItem('boda.respuestas') || '').slice(0, 200);
+  } catch (e) { return 'no se pudo leer'; }
+}
+
+const params = new URLSearchParams(location.search);
+const URL_INVITACION = params.get('pagina') || '/index.html';
+const CODIGO = params.get('codigo') || 'K4M2';
+
+/* Con ?estado=buscador se prueba sólo ese estado; sin el parámetro, todos.
+   probar-movil.js los corre de a uno para que cada estado reciba su propio
+   presupuesto de tiempo del navegador. */
+const soloEstado = params.get('estado');
+const NOMBRES_ESTADO = soloEstado ? [soloEstado] : Object.keys(ESTADOS);
+
+const salida = document.querySelector('[data-salida]');
+const resultados = [];
+let cargados = 0;
+const TOTAL = CASOS.length * NOMBRES_ESTADO.length;
+
+/* El mínimo que recomiendan las guías táctiles. 44 px es el número de Apple y
+   Material. Por debajo de eso la gente atina mal, y va a atinar mal justo en
+   la parte donde se decide si la familia asiste a la boda. */
+const MINIMO_TACTIL = 44;
+
+function medir(iframe, nombre, estado) {
+  const doc = iframe.contentDocument;
+  const win = iframe.contentWindow;
+  const raiz = doc.documentElement;
+
+  const r = {
+    nombre: nombre + ' / ' + estado,
+    estado: estado,
+    scrollHorizontal: raiz.scrollWidth > raiz.clientWidth + 1,
+    scrollWidth: raiz.scrollWidth,
+    clientWidth: raiz.clientWidth,
+    desborde: [],
+    tactilesChicos: [],
+    cuerpoPx: win.getComputedStyle(doc.body).fontSize
+  };
+
+  /* Cualquier elemento que se pase del ancho útil es un problema: en el
+     teléfono eso es un scroll lateral invisible que confunde. La trampa para
+     bots vive en -9999px a propósito, así que no cuenta. */
+  const limite = raiz.clientWidth;
+  doc.querySelectorAll('body *').forEach(el => {
+    if (el.classList.contains('trampa')) return;
+    const c = win.getComputedStyle(el);
+    if (c.display === 'none' || c.visibility === 'hidden') return;
+    const caja = el.getBoundingClientRect();
+    if (caja.width === 0 && caja.height === 0) return;
+
+    /* Un elemento puede ser más ancho que su contenedor si tiene overflow
+       visible a propósito; sólo nos interesan los que se salen de la ventana
+       sin que su ancestro los recorte. */
+    const padre = el.parentElement;
+    if (padre) {
+      const pc = win.getComputedStyle(padre);
+      if (pc.overflowX === 'auto' || pc.overflowX === 'scroll' || pc.overflowX === 'hidden') return;
+    }
+    if (caja.right > limite + 1 || caja.left < -1) {
+      r.desborde.push({
+        etiqueta: el.tagName.toLowerCase() + '.' + (el.className || '?').toString().split(' ')[0],
+        izquierda: Math.round(caja.left),
+        derecha: Math.round(caja.right)
+      });
+    }
+  });
+
+  /* Áreas tocables: botones, enlaces y campos. */
+  doc.querySelectorAll('button, a, input, textarea').forEach(el => {
+    if (el.classList.contains('trampa')) return;
+    const c = win.getComputedStyle(el);
+    if (c.display === 'none' || c.visibility === 'hidden') return;
+    const caja = el.getBoundingClientRect();
+    if (caja.width === 0 && caja.height === 0) return;
+    const texto = (el.textContent || el.placeholder || '').trim().slice(0, 24);
+    if (caja.height < MINIMO_TACTIL || caja.width < MINIMO_TACTIL) {
+      r.tactilesChicos.push({
+        etiqueta: el.tagName.toLowerCase() + ' "' + texto + '"',
+        ancho: Math.round(caja.width),
+        alto: Math.round(caja.height)
+      });
+    }
+  });
+
+  return r;
+}
+
+/* Dice en qué pantalla se quedó el iframe.
+   Esto no es cosmetérico: si el clic a "enviar" no llegara a hacer nada, el
+   banco mediría la tarjeta de los Sí/No y reportaría "ok" sin haber probado
+   la confirmación nunca. Un test que no sabe qué midió es un test que pasa
+   siempre. */
+function queVistaSeVe(doc) {
+  const texto = doc.body.textContent || '';
+  const hayBoton = re => Array.from(doc.querySelectorAll('button')).some(b => re.test(b.textContent || ''));
+
+  if (hayBoton(/copiar/i) || /confirmad|reservad|qued[oó] registrad|asistir[aá]n a la boda/i.test(texto)) {
+    return 'confirmacion';
+  }
+  if (hayBoton(/volver|cambiar mi respuesta/i) && !doc.querySelector('.opcion--si')) {
+    return 'confirmacion';
+  }
+  if (doc.querySelector('.buscador') || /busc[aá]|escriba su nombre|confirme su nombre/i.test(texto)) {
+    return 'buscador';
+  }
+  if (doc.querySelector('.opcion--si')) return 'rsvp';
+  return 'desconocida';
+}
+
+function listo() {
+  cargados++;
+  if (cargados < TOTAL) return;
+  salida.textContent = 'RESULTADO_JSON' + JSON.stringify(resultados) + 'FIN_JSON';
+  document.title = 'listo';
+}
+
+NOMBRES_ESTADO.forEach(function (nombreEstado) {
+  const estado = ESTADOS[nombreEstado];
+  if (!estado) return;
+  const destino = estado.conHash ? URL_INVITACION + '#' + CODIGO : URL_INVITACION;
+
+  CASOS.forEach(function (caso) {
+    const caja = document.createElement('div');
+    caja.className = 'caso';
+    caja.innerHTML = '<h2>' + caso.nombre + ' — ' + caso.ancho + 'px — ' + estado.titulo + '</h2>';
+    const iframe = document.createElement('iframe');
+    iframe.width = caso.ancho;
+    iframe.height = caso.alto;
+    iframe.style.width = caso.ancho + 'px';
+    iframe.style.height = caso.alto + 'px';
+    caja.appendChild(iframe);
+    document.body.appendChild(caja);
+
+    iframe.addEventListener('load', function () {
+      /* Un frame de más para que las fuentes de Google ya estén cargadas antes
+         de medir: con la fuente de reserva, las medidas salen distintas. */
+      const inner = document.createElement('div');
+      iframe.contentDocument.body.appendChild(inner);
+      /* Se borra la respuesta guardada ANTES de que el iframe cargue, y no
+         después: rsvp.js decide qué pantalla pintar en el momento de arrancar,
+         así que si queda una respuesta de otra corrida arrancamos en la
+         confirmación y acá se mide la pantalla equivocada. El localStorage es
+         el del dominio, compartido con index.html y con las demás pruebas.
+         El estado que haga falta se reproduce después, en "preparar". */
+      try { localStorage.removeItem('boda.respuestas'); } catch (e) { /* se mide igual */ }
+
+      const segundo = document.createElement('iframe');
+      segundo.width = caso.ancho;
+      segundo.height = caso.alto;
+      segundo.style.width = caso.ancho + 'px';
+      segundo.style.height = caso.alto + 'px';
+      segundo.src = destino;
+      inner.appendChild(segundo);
+
+      segundo.addEventListener('load', function () {
+        /* En confirmación hay que esperar a que rsvp.js termine de pintar la
+           tarjeta antes de contestarle. En vez de confiar en un reloj, se
+           espera a que los botones Sí/No existan. */
+        const esperarTarjeta = function (intentos) {
+          const hayOpciones = segundo.contentDocument.querySelectorAll('.opcion--si').length > 0;
+          if (!hayOpciones && intentos > 0) {
+            setTimeout(function () { esperarTarjeta(intentos - 1); }, 150);
+            return;
+          }
+          if (estado.preparar) {
+            try { estado.preparar(segundo.contentDocument); } catch (e) { /* se mide igual */ }
+          }
+          setTimeout(function () {
+            try {
+              const medido = medir(segundo, caso.nombre, nombreEstado);
+              medido.vistaReal = queVistaSeVe(segundo.contentDocument);
+              medido.almacen = leerAlmacen();
+              medido.opciones = segundo.contentDocument.querySelectorAll('.opcion').length;
+              resultados.push(medido);
+            } catch (e) {
+              resultados.push({ nombre: caso.nombre + ' / ' + nombreEstado, error: e.message });
+            }
+            listo();
+          }, 900);
+        };
+        esperarTarjeta(30);
+      });
+    });
+    iframe.src = URL_INVITACION;
+  });
+});
+</script>
+</body>
+</html>

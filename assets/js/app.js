@@ -1,6 +1,6 @@
 /* ==========================================================================
-   app.js — la página en sí: el link del mapa, la cuenta regresiva y el
-   archivo de calendario. Nada de esto habla con un servidor.
+   app.js — la página en sí: el link del mapa y la cuenta regresiva.
+   Nada de esto habla con un servidor.
    ========================================================================== */
 
 (function () {
@@ -130,117 +130,9 @@
     setInterval(actualizar, 30000);
   }
 
-  /* --------------------------------------------------------------------- */
-  /* Agregar al calendario: generamos un archivo .ics, sin librerías        */
-  /* --------------------------------------------------------------------- */
-
-  /* En iCalendar, la coma, el punto y coma y la barra se escapan. */
-  function escaparICS(valor) {
-    return String(valor)
-      .replace(/\\/g, '\\\\')
-      .replace(/;/g, '\\;')
-      .replace(/,/g, '\\,')
-      .replace(/\r?\n/g, '\\n');
-  }
-
-  /* El formato no admite líneas de más de 75 octetos: se parten con un
-     espacio al principio de la continuación. */
-  function plegar(linea) {
-    if (linea.length <= 73) return linea;
-    var trozos = [linea.slice(0, 73)];
-    var resto = linea.slice(73);
-    while (resto.length > 72) {
-      trozos.push(' ' + resto.slice(0, 72));
-      resto = resto.slice(72);
-    }
-    if (resto.length) trozos.push(' ' + resto);
-    return trozos.join('\r\n');
-  }
-
-  function aSelloUTC(fecha) {
-    return fecha.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-  }
-
-  function construirICS() {
-    var inicio = new Date(texto('inicio'));
-    var fin = new Date(texto('fin'));
-    if (isNaN(inicio.getTime())) return null;
-
-    var lugar = texto('lugar') + (texto('ciudad') ? ', ' + texto('ciudad') : '');
-    var descripcion = 'Misa a las 11:00. Celebra el Pbro. Aurelio. ' +
-                      'No habrá recepción: al terminar pasamos a tomar asiento.';
-
-    var sitio = CFG.usuario && CFG.usuario !== 'TU_USUARIO'
-      ? 'https://' + CFG.usuario + '.github.io/boda/'
-      : '';
-
-    var lineas = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//Invitacion boda Johann y Abril//ES',
-      'CALSCALE:GREGORIAN',
-      'METHOD:PUBLISH',
-      'BEGIN:VEVENT',
-      // Fijo a propósito: si se vuelve a agregar, el calendario actualiza
-      // el evento en lugar de crear uno repetido.
-      'UID:boda-johann-abril-20261022@boda',
-      'DTSTAMP:' + aSelloUTC(new Date()),
-      'DTSTART:' + aSelloUTC(inicio)
-    ];
-
-    if (!isNaN(fin.getTime()) && fin > inicio) {
-      lineas.push('DTEND:' + aSelloUTC(fin));
-    }
-
-    lineas.push('SUMMARY:' + escaparICS(texto('titulo')));
-    lineas.push('LOCATION:' + escaparICS(lugar));
-    lineas.push('DESCRIPTION:' + escaparICS(descripcion));
-    if (sitio) lineas.push('URL:' + sitio);
-
-    lineas.push('END:VEVENT', 'END:VCALENDAR');
-
-    return lineas.map(plegar).join('\r\n') + '\r\n';
-  }
-
-  function montarCalendario() {
-    var boton = buscar('[data-agendar]');
-    if (!boton) return;
-
-    boton.addEventListener('click', function () {
-      var ics = construirICS();
-      if (!ics) {
-        boton.textContent = 'La fecha no está disponible todavía';
-        boton.disabled = true;
-        return;
-      }
-
-      var blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
-      var url = URL.createObjectURL(blob);
-      var enlace = document.createElement('a');
-      enlace.href = url;
-      enlace.download = 'boda-johann-y-abril.ics';
-      document.body.appendChild(enlace);
-      enlace.click();
-      document.body.removeChild(enlace);
-      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-
-      var aviso = buscar('[data-agenda-aviso]');
-      if (!aviso) {
-        aviso = document.createElement('p');
-        aviso.className = 'ayuda';
-        aviso.setAttribute('data-agenda-aviso', '');
-        boton.parentNode.appendChild(aviso);
-      }
-      aviso.textContent = 'Listo. Abre el archivo que se descargó para agregarlo a tu calendario.';
-    });
-  }
-
-  /* --------------------------------------------------------------------- */
-
   function iniciar() {
     montarMapa();
     arrancarCuenta();
-    montarCalendario();
   }
 
   if (document.readyState === 'loading') {

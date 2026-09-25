@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<!--
+  Pruebas de comportamiento del formulario RSVP en un navegador de verdad.
+
+  Estas pruebas existen por un motivo concreto. El formulario estaba roto de
+  punta a punta: al tocar "Sí" no se marcaba nada y al tocar "Confirmar
+  asistencia" no pasaba nada. La causa era un ReferenceError (la variable se
+  declaraba "decisions" y se usaba "decisiones"), que el navegador registra
+  en consola y en ningún lado se ve en la página. Las otras 72 pruebas pasaban
+  porque ninguna tocaba el formulario: revisaban el backend y la cuenta
+  regresiva, no lo que pasa cuando alguien aprieta un botón.
+
+  Lo que se comprueba aquí, en un navegador de verdad:
+     - que tocar "Sí" marca ese botón y desmarca el otro, y al revés con "No"
+     - que el botón marcado cambia de verdad de aspecto, no sólo de atributo
+     - que "Confirmar asistencia" avisa si falta alguien por decidir
+     - los tres casos de una familia: todos sí, unos sí y otros no, todos no
+     - que cada caso arma las listas correctas de asistirán y de no asistirán,
+       y que el resumen que ve el invitado las muestra bien separadas
+     - que ya no quedan el campo de acompañantes, el botón de calendario ni
+       los avisos de "escríbenos"
+
+  Cada prueba es independiente: recarga la invitación y la trabaja desde cero.
+  Así una falla no arrastra a las de abajo ni depende del orden.
+
+  Uso:  python -m http.server 8000
+        node tools/probar-rsvp.js
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>pruebas rsvp</title>
+<style>
+  body { font: 13px/1.5 system-ui, sans-serif; margin: 0; padding: 10px; background: #222; color: #eee; }
+  iframe { width: 390px; height: 1600px; border: 0; background: #fff; }
+  .saliendo { position: absolute; left: -9999px; }
+</style>
+</head>
+<body>
+<div class="saliendo" id="salida"></div>
+
+<script>
+/* El iframe es del mismo origen que esta página, así que desde acá se puede
+   limpiar el localStorage que comparte con la invitación. Si no, rsvp.js
+   encuentra la respuesta de una corrida anterior y muestra la confirmación
+   en vez de la tarjeta, y las pruebas no prueban nada. */
+try { localStorage.removeItem('boda.respuestas'); } catch (e) { /* da igual */ }
+
+const marco = document.createElement('iframe');
+marco.width = 420;
+marco.height = 1700;
+marco.style.border = '0';
+marco.style.background = '#fff';
+document.body.appendChild(marco);
+
+const CODIGO = 'K4M2';
+
+/* El marcador se arma con dos trozos a propósito. Si el texto completo
+   estuviera escrito en el script, el runner lo encontraría primero dentro
+   del propio código fuente y parsearía "RESULTADO_JSON' + JSON.stringify(..."
+   en vez del resultado real. */
+const MARCA = 'RESULTADO_' + 'JSON';
+const FIN = 'FIN_' + 'JSON';
+
+/* Se escribe una marca apenas arranca el script. Si el runner la encuentra
+   pero no encuentra el informe completo, se sabe que el problema es que las
+   pruebas no terminaron, y no que el script no corrió. */
+document.getElementById('salida').textContent = MARCA + '{"arranque":true}' + FIN;
+
+const doc = () => marco.contentDocument;
+const $ = sel => doc().querySelector(sel);
+const $$ = sel => Array.from(doc().querySelectorAll(sel));
+const dormir = ms => new Promise(r => setTimeout(r, ms));
+
+/* --- infraestructura ---------------------------------------------------- */
+
+/* Espera a que se cumpla una condición, mirando cada 100 ms. Se espera bastante
+   porque el navegador de pruebas adelanta el reloj (por eso
+   --virtual-time-budget), y con un presupuesto corto estos segundos virtuales
+   se gastan mientras el iframe todavía no ha navegado. */
+function esperar(cond, veces) {
+  return new Promise(resolve => {
+    (function mirar() {
+      if (cond()) return resolve(true);
+      if (veces <= 0) return resolve(false);
+      veces--;
+      setTimeout(mirar, 100);
+    })();
+  });
+}
+
+/* Carga la invitación desde cero, como si el invitado acabara de abrir el
+   link. Sin cache-buster el navegador puede servir la versión anterior de
+   rsvp.js y las pruebas miden algo que ya no existe. */
+async function cargar() {
+  try { doc().defaultView.localStorage.removeItem('boda.respuestas'); } catch (e) { /* da igual */ }
+  const listo = new Promise(resolve => marco.addEventListener('load', resolve, { once: true }));
+  marco.src = '/index.html?t=' + Date.now() + '#' + CODIGO;
+  await listo;
+  await esperar(() => $$('.opcion--si').length > 0, 40);
+  await dormir(250);
+}
+
+/* Lo que el invitado realmente ve: lo que quedó guardado en el dispositivo. */
+function guardada() {
+  try { return JSON.parse(doc().defaultView.localStorage.getItem('boda.respuestas') || '{}')[CODIGO] || null; }
+  catch (e) { return null; }
+}
+
+/* Marca una decisión por fila. 'porFila' recibe los nombres y devuelve un
+   arreglo de 'si' / 'no' del mismo largo. */
+function decidir(porFila) {
+  const nombres = $$('.fila__nombre').map(n => n.textContent);
+  nombres.forEach((nombre, i) => {
+    const valor = porFila(nombres)[i];
+    if (!valor) return;
+    const boton = $$('.fila')[i].querySelector('.opcion--' + valor);
+    if (boton) boton.click();
+  });
+  return nombres;
+}
+
+async function oprimirEnviar() {
+  $('[data-enviar]').click();
+  await esperar(() => !!$('.tarjeta__hecho'), 30);
+  await dormir(200);
+}
+
+/* Corre un caso completo de principio a fin, dos veces: una con el envío de
+   verdad, para ver qué queda guardado, y otra llenando la trampa de bots,
+   que es la única forma de llegar hoy a la rama de la pantalla de
+   confirmación que trae el resumen con los nombres.
+
+   Sin urlScript configurado, el envío real cae en la pantalla de "guardada
+   pero no llegó", que no muestra el resumen. La trampa pinta esa misma
+   pantalla de confirmación, así que lo que se comprueba acá es el código que
+   se va a ver en cuanto se configure la URL de Apps Script, no un camino
+   muerto. */
+async function correrCaso(porFila) {
+  /* Primera pasada: envío normal. */
+  await cargar();
+  const nombres = decidir(porFila);
+  await oprimirEnviar();
+  const datos = guardada();
+
+  /* Segunda pasada: hasta el resumen. */
+  await cargar();
+  decidir(porFila);
+  const trampa = $('[data-trampa]');
+  if (!trampa) return { nombres, datos, titulo: '', resumen: '' };
+  trampa.value = 'relleno';
+  await oprimirEnviar();
+  const caja = $('.tarjeta__hecho-cuadro');
+  return {
+    nombres,
+    datos,
+    titulo: ($('.tarjeta__hecho-titulo') || {}).textContent || '',
+    resumen: caja ? caja.textContent : ''
+  };
+}
+
+/* Las transiciones CSS se apagan antes de medir el aspecto de un botón. Con el
+   reloj virtual del navegador de pruebas la interpolación no avanza, así que
+   getComputedStyle devuelve el valor de partida y el botón marcado parece no
+   haberse movido. Es un artefacto del reloj, no un fallo del sitio: en un
+   navegador de verdad la transición dura 0.15s y se ve bien. */
+function apagarTransiciones() {
+  const estilo = doc().createElement('style');
+  estilo.textContent = '.opcion { transition: none !important; }';
+  doc().head.appendChild(estilo);
+}
+
+const color = el => doc().defaultView.getComputedStyle(el).backgroundColor;
+const marca = el => doc().defaultView.getComputedStyle(el, '::after').content;
+const TRANSPARENTE = 'rgba(0, 0, 0, 0)';
+
+/* --- las pruebas ---------------------------------------------------------
+   Cada función devuelve null si todo salió bien, o un texto con el motivo
+   si falló. El número de pruebas ya no se cuenta a mano: se arma solo con
+   esta lista, así que no puede quedar desactualizado. */
+
+const PRUEBAS = [];
+const prueba = (nombre, fn) => PRUEBAS.push({ nombre, fn });
+
+/* --- 1. la tarjeta --- */
+
+prueba('la tarjeta se pinta', async () => {
+  const filas = $$('.fila').length;
+  if (filas === 0) return 'no hay filas de personas que decidir';
+  if (!$('[data-enviar]')) return 'no está el botón de confirmar';
+  if ($$('.fila__nombre').length !== filas) return 'alguna fila no muestra el nombre';
+  return null;
+});
+
+prueba('la tarjeta ya no pide acompañantes', async () => {
+  if ($('[data-acompanantes]')) return 'quedó el campo de acompañantes';
+  if (/Traen a alguien/.test($('[data-rsvp]').textContent)) return 'quedó el texto de acompañantes';
+  return null;
+});
+
+prueba('el aviso de ayuda nace vacío', async () => {
+  const ayuda = $('.ayuda');
+  const texto = ayuda ? ayuda.textContent.trim() : '';
+  if (texto !== '') return 'el aviso nace con texto: "' + texto + '"';
+  return null;
+});
+
+prueba('la página ya no ofrece agregar al calendario', async () => {
+  if (doc().querySelector('[data-agendar]')) return 'quedó el botón de calendario';
+  return null;
+});
+
+/* --- 2. marcar y desmarcar --- */
+
+prueba('tocar "Sí" lo marca', async () => {
+  const si = $$('.opcion--si')[0];
+  si.click();
+  return si.getAttribute('aria-pressed') === 'true'
+    ? null
+    : 'aria-pressed quedó en ' + si.getAttribute('aria-pressed');
+});
+
+prueba('al tocar "Sí", "No" no se marca', async () => {
+  const no = $$('.opcion--no')[0];
+  return no.getAttribute('aria-pressed') === 'false'
+    ? null
+    : 'No quedó en ' + no.getAttribute('aria-pressed');
+});
+
+prueba('tocar "No" marca el "No"', async () => {
+  const no = $$('.opcion--no')[0];
+  no.click();
+  return no.getAttribute('aria-pressed') === 'true'
+    ? null
+    : 'aria-pressed quedó en ' + no.getAttribute('aria-pressed');
+});
+
+prueba('al tocar "No", el "Sí" se desmarca', async () => {
+  const si = $$('.opcion--si')[0];
+  return si.getAttribute('aria-pressed') === 'false'
+    ? null
+    : 'Sí quedó en ' + si.getAttribute('aria-pressed');
+});
+
+/* --- 3. el aspecto del botón marcado, no sólo el atributo ---
+   Antes estas pruebas sólo miraban aria-pressed. El atributo puede estar
+   perfecto mientras el botón no cambia de color, que es justo lo que se le
+   reportó: no se entendía que la respuesta se había quedado marcada. */
+
+prueba('el botón marcado cambia de color de verdad', async () => {
+  await cargar();
+  apagarTransiciones();
+  const si = $$('.opcion--si')[0];
+  const no = $$('.opcion--no')[0];
+  const antes = color(si);
+  si.click();
+  if (antes !== TRANSPARENTE) return 'el botón sin marcar ya tenía color: ' + antes;
+  if (color(si) === antes) return 'al marcar "Sí" el fondo no cambió (sigue en ' + color(si) + ')';
+  if (color(no) !== antes) return 'al marcar "Sí", el "No" también cambió de color';
+  return null;
+});
+
+prueba('el botón marcado lleva un visto', async () => {
+  const c = marca($$('.opcion--si')[0]);
+  const tilde = String.fromCharCode(0x2713);
+  if (!c || c === 'none' || c === '""') return 'no se dibujó ningún símbolo: ' + c;
+  if (c.indexOf(tilde) === -1) return 'el símbolo no es un visto: ' + c;
+  return null;
+});
+
+prueba('al desmarcar, el botón vuelve a su estado inicial', async () => {
+  const si = $$('.opcion--si')[0];
+  const no = $$('.opcion--no')[0];
+  si.click();
+  no.click();
+  if (color(si) !== TRANSPARENTE) return 'el "Sí" marcado quedó en ' + color(si);
+  if (color(no) === TRANSPARENTE) return 'el "No" marcado no cambió de color';
+  return null;
+});
+
+/* --- 4. si falta alguien por decidir --- */
+
+prueba('si falta alguien por decidir, avisa', async () => {
+  await cargar();
+  $('[data-enviar]').click();
+  await dormir(250);
+  const ayuda = $('.ayuda');
+  const texto = ayuda ? ayuda.textContent : '';
+  if (!/Falta decidir/i.test(texto)) return 'el aviso decía: "' + texto.slice(0, 60) + '"';
+  return null;
+});
+
+/* --- 5. los tres casos de una familia ---
+   K4M2 es "Familia Carrillo", con Victoria Padilla y Alejandra Sanchez. */
+
+prueba('CASO todos SÍ', async () => {
+  const c = await correrCaso(() => ['si', 'si']);
+  if (!c.datos) return 'no se guardó nada en el dispositivo';
+  if (c.datos.asistiran.length !== c.nombres.length) return 'asistiran=' + JSON.stringify(c.datos.asistiran);
+  if (c.datos.no_asistiran.length !== 0) return 'no_asistiran debería estar vacía: ' + JSON.stringify(c.datos.no_asistiran);
+  const faltan = c.nombres.filter(n => c.datos.asistiran.indexOf(n) === -1);
+  if (faltan.length) return 'faltan de la lista de sí: ' + JSON.stringify(faltan);
+  if (!/nos vemos/i.test(c.titulo)) return 'el título de la confirmación decía: "' + c.titulo + '"';
+  if (!c.resumen) return 'no se pintó el resumen';
+  if (c.resumen.indexOf('No van') !== -1) return 'apareció "No van" cuando todos dijeron sí';
+  return null;
+});
+
+prueba('CASO mixto (alguien sí, alguien no)', async () => {
+  const c = await correrCaso(nombres => nombres.map((n, i) => (i === 0 ? 'si' : 'no')));
+  if (!c.datos) return 'no se guardó nada en el dispositivo';
+  if (c.datos.asistiran.length !== 1 || c.datos.asistiran[0] !== c.nombres[0]) return 'asistiran=' + JSON.stringify(c.datos.asistiran);
+  if (c.datos.no_asistiran.length !== 1 || c.datos.no_asistiran[0] !== c.nombres[1]) return 'no_asistiran=' + JSON.stringify(c.datos.no_asistiran);
+  if (!c.resumen) return 'no se pintó el resumen';
+  if (c.resumen.indexOf('Van') === -1) return 'falta la sección de los que van';
+  if (c.resumen.indexOf('No van') === -1) return 'falta la sección de los que no van';
+  if (c.resumen.indexOf(c.nombres[0]) === -1) return 'no aparece quien dijo sí: ' + c.nombres[0];
+  if (c.resumen.indexOf(c.nombres[1]) === -1) return 'no aparece quien dijo no: ' + c.nombres[1];
+  return null;
+});
+
+prueba('CASO todos NO', async () => {
+  const c = await correrCaso(() => ['no', 'no']);
+  if (!c.datos) return 'no se guardó nada en el dispositivo';
+  if (c.datos.asistiran.length !== 0) return 'asistiran debería estar vacía: ' + JSON.stringify(c.datos.asistiran);
+  if (c.datos.no_asistiran.length !== c.nombres.length) return 'no_asistiran=' + JSON.stringify(c.datos.no_asistiran);
+  const faltan = c.nombres.filter(n => c.datos.no_asistiran.indexOf(n) === -1);
+  if (faltan.length) return 'faltan de la lista de no: ' + JSON.stringify(faltan);
+  if (!/Gracias por avisar/i.test(c.titulo)) return 'el título de la confirmación decía: "' + c.titulo + '"';
+  if (c.resumen.indexOf('No van') === -1) return 'falta la sección de los que no van';
+  if (c.resumen.indexOf('Van') !== -1) return 'apareció "Van" cuando nadie said que sí';
+  return null;
+});
+
+prueba('CASO todos NO: igual se puede cambiar de opinión', async () => {
+  await cargar();
+  decidir(() => ['no', 'no']);
+  await oprimirEnviar();
+  const volver = $('.reintentar');
+  if (!volver) return 'no está el botón para cambiar la respuesta';
+  volver.click();
+  await esperar(() => $$('.opcion--si').length > 0, 20);
+  const marcados = $$('.opcion--no[aria-pressed="true"]').length;
+  const filas = $$('.fila').length;
+  return marcados === filas
+    ? null
+    : 'al volver quedaron marcados ' + marcados + ' de ' + filas;
+});
+
+prueba('no se manda lista de acompañantes sin que haya campo', async () => {
+  await cargar();
+  decidir(() => ['si', 'no']);
+  await oprimirEnviar();
+  const d = guardada();
+  if (!d) return 'no hay nada guardado';
+  if (!Array.isArray(d.acompanantes)) return 'el backend espera una lista y recibió ' + JSON.stringify(d.acompanantes);
+  if (d.acompanantes.length !== 0) return 'se envió acompañantes sin que haya campo: ' + JSON.stringify(d.acompanantes);
+  return null;
+});
+
+/* --- arranque ------------------------------------------------------------- */
+
+async function correr() {
+  await cargar();
+
+  const informe = [];
+  for (const p of PRUEBAS) {
+    let detalle = null;
+    try {
+      detalle = await p.fn();
+    } catch (e) {
+      detalle = 'excepción: ' + (e && e.message ? e.message : e);
+    }
+    informe.push({ nombre: p.nombre, ok: detalle === null, detalle: detalle || '' });
+  }
+  document.getElementById('salida').textContent = MARCA + JSON.stringify(informe) + FIN;
+  document.title = 'listo';
+}
+
+/* Red de seguridad: si algo revienta antes de terminar, las pruebas se quedan
+   mudas y el runner no recibe nada. Mejor un informe que diga "no pude
+   terminar" que un silencio. */
+Promise.race([
+  correr(),
+  dormir(60000).then(() => { throw new Error('las pruebas no terminaron a tiempo'); })
+]).catch(e => {
+  document.getElementById('salida').textContent = MARCA + JSON.stringify([{
+    nombre: 'las pruebas terminan', ok: false, detalle: String(e && e.message ? e.message : e)
+  }]) + FIN;
+  document.title = 'listo';
+});
+</script>
+</body>
+</html>

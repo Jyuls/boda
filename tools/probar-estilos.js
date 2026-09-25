@@ -116,5 +116,79 @@ if (nuncaUsadas.length) {
   console.log('\nvariables declaradas y no usadas: ' + nuncaUsadas.join(', '));
 }
 
+/* --- Auditoría de las fuentes que se piden ------------------------------------
+   Pedir un peso que no se usa cuesta dinero real del invitado: cada peso es un
+   archivo WOFF2 de 26-36 KB que baja con datos de móvil para no verse nunca.
+   Ya pasó dos veces aquí (un 500 y un Jost 300 que nadie usaba), y es el tipo
+   de error que no se nota a ojo: la página se ve idéntica.
+
+   Es una aproximación por la cascada: si una regla no dice font-weight, hereda
+   el del body (400), y casi todo el texto hereda la serif del body. Se
+   agrupan las reglas por familia declarada y se toman los pesos explícitos. */
+const html = fs.readFileSync(path.join(raiz, 'index.html'), 'utf8');
+
+const pedidoFonts = html.match(/fonts\.googleapis\.com\/css2\?([^"']+)/);
+if (!pedidoFonts) {
+  console.log('\nnote: no se encontró la petición de Google Fonts en index.html');
+} else {
+  const params = decodeURIComponent(pedidoFonts[1]).replace(/\+/g, ' ');
+
+  /* Qué pesos pide cada familia, tal como los pide Google. */
+  const pedidos = new Map();
+  for (const parte of params.split('&')) {
+    if (!parte.startsWith('family=')) continue;
+    const [nombre, eje] = parte.slice(7).split(':');
+    const pares = [];
+    if (!eje) continue;
+    for (const t of eje.split('@')[1].split(';')) {
+      if (eje.startsWith('ital')) {
+        const [ital, w] = t.split(',');
+        pares.push([w, ital === '1' ? 'italic' : 'normal']);
+      } else {
+        pares.push([t, 'normal']);
+      }
+    }
+    pedidos.set(nombre.trim(), pares);
+  }
+
+  /* Qué pesos usa el CSS, por familia. */
+  const aliasDe = { "'Cormorant Infant'": 'Cormorant Infant', "'Jost'": 'Jost' };
+  const usadasPor = new Map();
+  for (const bloque of css.split('}')) {
+    if (!bloque.includes('{')) continue;
+    const cuerpo = bloque.slice(bloque.indexOf('{'));
+    let familia = null;
+    for (const [alias, real] of Object.entries(aliasDe)) {
+      if (cuerpo.includes('--' + (alias === "'Cormorant Infant'" ? 'serif' : 'sans'))) familia = real;
+    }
+    /* Reglas con font-weight y sin font-family: heredan la serif del body. */
+    if (!familia && !cuerpo.includes('font-family')) familia = 'Cormorant Infant';
+
+    const peso = (cuerpo.match(/font-weight:\s*(\d+)/) || [])[1] || '400';
+    const estilo = (cuerpo.match(/font-style:\s*(\w+)/) || [])[1] || 'normal';
+    if (familia) {
+      if (!usadasPor.has(familia)) usadasPor.set(familia, new Set());
+      usadasPor.get(familia).add(peso + '/' + estilo);
+    }
+  }
+
+  const deMas = [];
+  for (const [familia, pares] of pedidos) {
+    const usadas = usadasPor.get(familia) || new Set();
+    for (const [peso, estilo] of pares) {
+      if (!usadas.has(peso + '/' + estilo)) deMas.push({ familia, peso, estilo });
+    }
+  }
+
+  if (deMas.length) {
+    fallos++;
+    console.log('\nPESOS DE FUENTE PEDIDOS Y NO USADOS (cada uno son 26-36 KB de más por invitado):');
+    for (const d of deMas) console.log('  ' + d.familia + ' ' + d.peso + ' ' + d.estilo);
+  } else {
+    const n = [...pedidos.values()].reduce((a, p) => a + p.length, 0);
+    console.log('ok  los ' + n + ' pesos de fuente que se piden son los que el CSS usa');
+  }
+}
+
 console.log(fallos ? '\n*** hay ' + fallos + ' problema(s)' : '\nTodo en orden.');
 process.exit(fallos ? 1 : 0);

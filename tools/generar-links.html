@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Links de invitación · boda Johann y Abril</title>
+<title>Links de invitación · boda Abril y Johann</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
 <style>
   /* Sencillo a propósito: es una herramienta, no la invitación. */
@@ -61,6 +61,7 @@
         <th>Invitación</th>
         <th>Personas</th>
         <th>Link</th>
+        <th>Copiar link</th>
         <th>Mensaje</th>
       </tr>
     </thead>
@@ -82,7 +83,9 @@
   var CFG = window.CONFIG || {};
   var INVITADOS = window.INVITADOS || [];
 
-  var base = String(CFG.usuario || 'TU_USUARIO').replace(/\/+$/, '');
+  /* config.js resuelve la URL del sitio. No se puede armar con CFG.usuario
+     pelado: eso es sólo el nombre de usuario y no es una dirección. */
+  var base = String(CFG.urlSitio || '').replace(/\/+$/, '');
   var cuerpo = document.querySelector('[data-filas]');
   var filtro = document.querySelector('[data-filtro]');
   var vacio = document.querySelector('[data-vacio]');
@@ -97,11 +100,11 @@
     return 'Con mucho gusto te invitamos a nuestra boda.\n\n' +
       planilla() + '\n\n' +
       'Confirma aquí: ' + link + '\n\n' +
-      'Con cariño, Johann y Abril';
+      'Con cariño, Abril y Johann';
   }
 
-  if (base.indexOf('TU_USUARIO') !== -1) {
-    aviso.textContent = 'Tu usuario de GitHub todavía dice TU_USUARIO, así que los links de abajo no funcionan. Abrí assets/js/config.js y poné tu usuario.';
+  if (!base) {
+    aviso.textContent = 'Todavía no se sabe la dirección del sitio, así que los links de abajo no funcionan. Abrí assets/js/config.js y poné tu usuario de GitHub, o escribí urlSitio con la URL completa si el repositorio no se llama "boda".';
     aviso.style.display = 'block';
   } else {
     aviso.style.display = 'none';

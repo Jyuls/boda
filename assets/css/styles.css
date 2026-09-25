@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Invitación de boda — Johann y Abril
+   Invitación de boda — Abril y Johann
    --------------------------------------------------------------------------
    Dirección: "Luz de vela". La luz de una capilla al anochecer: marfil
    cálido, rosa empolvado, verde salvia y el dorado de la cera.
@@ -270,17 +270,6 @@ a { color: var(--sagrario); }
 
 .bloque__texto { margin-bottom: 1.7rem; }
 
-.nota {
-  margin-top: 2rem;
-  padding: 1.1rem 1.3rem;
-  background: rgba(251, 244, 238, .7);
-  border-left: 2px solid var(--rose);
-  border-radius: 0 var(--esquina) var(--esquina) 0;
-  font-style: italic;
-  font-size: 1.02rem;
-  color: var(--ciruela);
-}
-
 /* -------------------------------------------------------------------------- */
 /* Cuenta regresiva                                                            */
 /* En una píldora de rosa claro: es la única "caja" de la portada hacia abajo, */
@@ -405,8 +394,11 @@ a { color: var(--sagrario); }
 }
 
 .boton {
-  display: inline-block;
-  padding: .78rem 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;            /* área táctil mínima cómoda */
+  padding: .6rem 1.5rem;
   background: var(--sagrario);
   color: var(--velo);
   border: 1px solid var(--sagrario);
@@ -414,13 +406,15 @@ a { color: var(--sagrario); }
   font-family: var(--sans);
   font-size: .88rem;
   letter-spacing: .01em;
+  text-align: center;
   text-decoration: none;
   cursor: pointer;
   transition: background-color .2s ease, color .2s ease, border-color .2s ease;
 }
 .boton:hover { background: var(--tinta); border-color: var(--tinta); }
 
-/* El enlace de calendario no merece el mismo peso que el mapa. */
+/* El enlace de calendario no merece el mismo peso que el mapa, pero sí el
+   mismo tamaño de dedo: si es más chico, nadie lo toca. */
 .boton--discreto {
   background: none;
   border: 0;
@@ -509,60 +503,94 @@ a { color: var(--sagrario); }
 .fila__nombre { font-size: 1.14rem; color: var(--tinta); }
 .fila__opciones { display: flex; gap: .45rem; }
 
+/* Los dos botones de cada nombre.
+   Antes medían 43x35 y 49x35 px, bastante por debajo de los 44 px que se
+   recomiendan. Eso importa más de lo que parece: es el control donde el
+   invitado decide si va a la boda, y dos Chickens chicas pegadas hacen que
+   la gente atine mal y tenga que corregir. Ahora miden 48 px de alto, se
+   separan más, y el que está elegido se queda marcado con aria-pressed. */
 .opcion {
+  position: relative;
   font-family: var(--sans);
-  font-size: .8rem;
-  padding: .35rem .95rem;
+  font-size: .84rem;
+  min-width: 4.25rem;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .35rem 1.1rem;
   background: none;
-  border: 1px solid rgba(124, 74, 85, .25);
+  border: 1px solid rgba(124, 74, 85, .3);
   border-radius: var(--esquina);
   color: var(--sagrario);
   cursor: pointer;
-  opacity: .55;
+  opacity: .6;
   transition: opacity .15s ease, background-color .15s ease, color .15s ease, border-color .15s ease;
 }
 .opcion:hover { opacity: .9; }
-.opcion[aria-pressed="true"] { opacity: 1; }
 
+/* --- el botón elegido ---------------------------------------------------
+   Antes el único aviso era que el relleno cambiara de color, y en el
+   teléfono no se alcanzaba a ver que la respuesta se había quedado
+   guardada. Ahora lo marcado lleva un ✓, se hunde y tiene un borde doble,
+   para que se distinga de un vistazo sin tener que volver a leerlo. */
+.opcion[aria-pressed="true"] {
+  opacity: 1;
+  padding-right: 2.3rem;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .28);
+}
+.opcion[aria-pressed="true"]::after {
+  content: '\2713';
+  position: absolute;
+  right: .8rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .92rem;
+  line-height: 1;
+  pointer-events: none;
+}
 .opcion--si[aria-pressed="true"] { background: var(--sagrario); border-color: var(--sagrario); color: var(--velo); }
 .opcion--no[aria-pressed="true"] { background: var(--salvia);       border-color: #A9BCA6;       color: var(--tinta); }
 
-/* Acompañantes */
-.acompanantes { margin-top: 1.9rem; }
-.acompanantes__titulo {
+/* Campo de texto libre: sólo lo usa el buscador de invitados. Estas reglas
+   se llamaban "acompanantes" porque su único usuario era el campo de
+   acompañantes, que ya no está en la página. */
+.campo__titulo {
   font-family: var(--sans);
   font-size: .78rem;
   line-height: 1.5;
   color: var(--ciruela);
   opacity: .8;
-  margin-bottom: .6rem;
+  margin: 1.9rem 0 .6rem;
 }
-.acompanantes__campo {
+.campo {
   width: 100%;
+  min-height: 44px;
   padding: .55rem .1rem;
   border: 0;
   border-bottom: 1px solid rgba(124, 74, 85, .28);
   background: none;
   color: var(--tinta);
   font-family: var(--serif);
-  font-size: 1.08rem;
+  font-size: 1.08rem;   /* arriba de 16px: si no, iOS hace zoom al escribir */
   border-radius: 0;
   transition: border-color .18s ease;
 }
-.acompanantes__campo:focus { outline: none; border-bottom-color: var(--sagrario); }
-.acompanantes__campo::placeholder { color: var(--tinta); opacity: .32; font-style: italic; }
+.campo:focus { outline: none; border-bottom-color: var(--sagrario); }
+.campo::placeholder { color: var(--tinta); opacity: .32; font-style: italic; }
 
 .mensaje { margin-top: 1.7rem; }
 .mensaje__campo {
   width: 100%;
-  min-height: 4.4rem;
+  min-height: 5.5rem;
   padding: .55rem .1rem;
   border: 0;
   border-bottom: 1px solid rgba(124, 74, 85, .28);
   background: none;
   color: var(--tinta);
   font-family: var(--serif);
-  font-size: 1.08rem;
+  font-size: 1.08rem;   /* arriba de 16px, por lo del zoom de iOS */
+  line-height: 1.6;
   resize: vertical;
   border-radius: 0;
   transition: border-color .18s ease;
@@ -627,7 +655,8 @@ a { color: var(--sagrario); }
   background: none;
   border: 0;
   border-bottom: 1px solid var(--cera);
-  padding: .2rem 0;
+  padding: .5rem 0;
+  min-height: 44px;
   color: var(--sagrario);
   font-family: var(--sans);
   font-size: .84rem;
@@ -643,12 +672,19 @@ a { color: var(--sagrario); }
   color: var(--ciruela);
   opacity: .85;
 }
+/* El <p class="ayuda"> de la tarjeta se crea siempre vacío y sólo se llena si
+   hay algo que avisar. Sin esto dejaría un margen fantasma debajo del botón. */
+.ayuda:empty { display: none; }
 
-/* Buscador (rsvp.js) */
+/* Buscador (rsvp.js). Sobrescribe el ancho y la forma de .opcion, pero
+   conserva el alto táctil de 48px. */
 .buscador { font-family: var(--sans); }
 .buscador .opcion {
   font-family: var(--serif);
   font-size: 1.05rem;
+  min-width: 0;
+  min-height: 48px;
+  justify-content: flex-start;
   color: var(--tinta);
   border: 0;
   border-bottom: 1px solid rgba(124, 74, 85, .1);

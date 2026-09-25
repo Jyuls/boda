@@ -1,4 +1,4 @@
-﻿/* Arnés de pruebas: simula SpreadsheetApp en memoria para ejercitar Code.gs
+/* Arnés de pruebas: simula SpreadsheetApp en memoria para ejercitar Code.gs
    fuera de Google. Corre:  node tools/probar-backend.js
    No forma parte del sitio publicado, sólo sirve para verificar. */
 
@@ -155,7 +155,7 @@ igual('max_acompanantes respeta un valor a mano', (function () {
   return [v, w];
 })(), [0, 3]);
 cierto('el mensaje incluye el link', tras[0][7].indexOf('https://juan.github.io/boda/#' + codigoCarrillo) !== -1);
-cierto('el mensaje dice la fecha', tras[0][7].indexOf('jueves 22 de octubre de 2026') !== -1);
+cierto('el mensaje dice la fecha', tras[0][7].indexOf('Jueves 22 de octubre de 2026') !== -1);
 
 seccion('3. el data/invitados.js que genera');
 const gen = hojas['Generado'];

@@ -1,4 +1,4 @@
-# Johann y Abril · 22 de octubre de 2026
+# Abril y Johann · 22 de octubre de 2026
 
 Invitación de boda estática. Sin framework, sin build, sin dependencias: son
 archivos HTML, CSS y JavaScript que GitHub Pages sirve tal cual.
@@ -10,7 +10,7 @@ Google Apps Script vinculado a ese Sheet.
 index.html                  la invitación
 assets/css/styles.css       estilos
 assets/js/config.js         <- lo único que tenés que editar
-assets/js/app.js            cuenta regresiva y archivo de calendario
+assets/js/app.js            el link del mapa y la cuenta regresiva
 assets/js/rsvp.js           tarjeta de confirmación
 assets/img/og.png           la imagen que se ve al compartir el link
 assets/img/sello.svg        el emblema de San Ignacio, también favicon
@@ -19,6 +19,11 @@ gas/Code.gs                 el backend, va dentro del Google Sheet
 tools/probar-backend.js     pruebas del backend
 tools/probar-cuenta.js      pruebas de la cuenta regresiva
 tools/probar-estilos.js     pruebas de CSS
+tools/probar-movil.js       pruebas de layout en pantallas de teléfono
+tools/probar-rsvp.js        pruebas de comportamiento del formulario
+tools/banco-movil.html      el banco donde se mide el móvil
+tools/banco-rsvp.html       el banco donde se aprieta el formulario
+tools/reparar-encoding.js   busca caracteres rotos por PowerShell
 tools/generar-links.html    tabla de links y mensajes, sólo para uso local
 tools/og-preview.html       plantilla de la imagen para compartir
 ```
@@ -30,14 +35,41 @@ tools/og-preview.html       plantilla de la imagen para compartir
 Abrí `assets/js/config.js` y poné tu usuario de GitHub:
 
 ```js
-usuario: 'TU_USUARIO',   // <- reemplazalo
-urlScript: '',           // <- se llena en el paso 4
+usuario: 'Jyuls',                  // tu usuario de GitHub, sin https://
+urlSitio: 'https://jyuls.github.io/boda/',
+urlScript: '',                     // <- se llena en el paso 4
 ```
 
 `usuario` es sólo el nombre de usuario, sin `https://` y sin `/boda`. El sitio
-arma los links solos como `https://TU_USUARIO.github.io/boda/#CODIGO`.
+arma la dirección solo como `https://TU_USUARIO.github.io/boda/`.
 
-Si no lo cambias, el sitio te avisa en pantalla en vez de generar links rotos.
+Si tu repositorio se llama distinto de `boda`, poné la dirección completa en
+`urlSitio` (con `/` al final). Esa es la que usan los links de invitación y la
+tabla de `generar-links.html`.
+
+**Qué pasa si dejás algo sin configurar.** La invitación se ve y funciona
+igual: no se rompe nada. `urlScript` vacío hace que, al confirmar, el sitio lo
+diga explícitamente y te muestre el texto para mandarlo por WhatsApp, en vez de
+perder la respuesta en silencio. Y `tools/generar-links.html` avisa arriba que
+los links no sirven todavía.
+
+---
+
+## 1b. Lo que se decidió quitar de la página
+
+Estas cosas ya no están en la invitación, pero conviene saber qué quedó atrás
+para que nadie las busque y no las encuentre:
+
+- **El campo de acompañantes.** El backend y la columna del Sheet siguen ahí, y
+  `gas/Code.gs` los sigue leyendo y sumando en el resumen: lo que se quitó fue
+  el formulario. El sitio manda la lista siempre vacía. Si algún día vuelve a
+  hacer falta, hay que rearmar el `input` en `rsvp.js`.
+- **El botón de agregar al calendario** y con él todo el código que armaba el
+  archivo `.ics` en `app.js`. Quedó solamente el link de Google Maps.
+- **El aviso de recepción** y los textos de "escríbenos y lo arreglamos". El
+  `<p class="ayuda">` sigue existiendo porque es donde aparece el error real
+  ("falta decidir por..."), pero nace vacío y el CSS lo oculta con
+  `.ayuda:empty`.
 
 ---
 
@@ -129,7 +161,7 @@ El sitio es estático, así que cualquier hosting sirve. Con GitHub Pages:
 ```
 git init
 git add .
-git commit -m "Invitación Johann y Abril"
+git commit -m "Invitación Abril y Johann"
 git branch -M main
 git remote add origin https://github.com/TU_USUARIO/TU_REPO.git
 git push -u origin main
@@ -139,7 +171,8 @@ Después, en el repo: **Settings → Pages → Source: main / (root) → Save**.
 
 Tu invitación queda en `https://TU_USUARIO.github.io/TU_REPO/`. Si el repo se
 llama `boda` y es tuyo, queda en `https://TU_USUARIO.github.io/boda/`, que es
-lo que da por hecho el sitio.
+lo que da por hecho el sitio. Si el repo se llama otra cosa, poné la dirección
+completa en `urlSitio` de `config.js`.
 
 Trabajando localmente sobre esa URL, actualizá `usuario` en `config.js` y
 después la columna `url_base` de la pestaña `Config` del Sheet, y volvé a
@@ -148,19 +181,18 @@ correr **Boda → Generar lista para la web** para que los links coincidan.
 ### Una vez publicado, dos ajustes
 
 **La imagen de WhatsApp.** El link trae una imagen (`assets/img/og.png`, de
-1200x630) para que se vea bonita en el chat. Está puesta con ruta relativa,
-pero la mayoría de los lectores de WhatsApp esperan la dirección completa. En
-`index.html` cambiá:
+1200x630) para que se vea bonita en el chat. En `index.html` va con la
+dirección completa, porque la mayoría de los lectores de WhatsApp y Facebook no
+resuelven rutas relativas:
 
 ```html
-<meta property="og:image" content="assets/img/og.png">
+<meta property="og:image" content="https://jyuls.github.io/boda/assets/img/og.png">
 ```
 
-por la versión con el dominio, ej.
-`https://TU_USUARIO.github.io/boda/assets/img/og.png`.
-
 Si algún día querés cambiar el diseño, editá `tools/og-preview.html`, abrilo en
-el navegador con la ventana en 1200x630 y volvé a capturar como `og.png`.
+el navegador con la ventana en 1200x630 y volvé a capturar como `og.png`. El
+nombre del archivo importa: la imagen tiene los nombres de los novios
+escritos, así que también hay que regenerarla si cambian.
 
 ---
 
@@ -177,12 +209,15 @@ confirma otra vez, se actualiza su fila en lugar de duplicarse.
 
 ## Pruebas
 
-El backend se puede probar sin Google, simulando el Sheet:
+Con el servidor local levantado (paso 2), corré:
 
 ```
-node tools/probar-backend.js
-node tools/probar-cuenta.js
-node tools/probar-estilos.js
+node tools/reparar-encoding.js    que nadie haya roto la codificación
+node tools/probar-backend.js      59 pruebas del backend, sin Google
+node tools/probar-cuenta.js       13 pruebas de la cuenta regresiva
+node tools/probar-estilos.js      CSS: clases, variables, pesos de fuente
+node tools/probar-movil.js        15 pantallas de teléfono, sin scroll ni overflow
+node tools/probar-rsvp.js         17 pruebas de comportamiento del formulario
 ```
 
 `probar-backend.js` son 59 pruebas que cubren la instalación, la generación de
@@ -197,9 +232,30 @@ prueba existe porque la comparación que decidía si la boda era "hoy" estaba
 invertida, y el sitio anunciaba "Hoy es el día" un mes antes de la fecha.
 
 `probar-estilos.js` revisa que ninguna clase del HTML o del JS se quede sin
-estilo, que no queden reglas huérfanas y que toda `var(--x)` tenga su
-declaración. Cubre un tipo de error que el navegador no avisa: si una variable
-de color no existe, la aplica como si nada y el elemento se queda sin pintar.
+estilo, que no queden reglas huérfanas, que toda `var(--x)` tenga su
+declaración y que las fuentes que pide el HTML sean las que el CSS usa. Cubre un
+tipo de error que el navegador no avisa: si una variable de color no existe, la
+aplica como si nada y el elemento se queda sin pintar.
+
+`probar-movil.js` y `probar-rsvp.js` abren un navegador de verdad. El primero
+mide la invitación en cinco anchos (320 a 600 px) en sus tres estados —la
+tarjeta de Sí/No, el buscador y la confirmación— y avisa si algo se sale de la
+pantalla, si aparece scroll horizontal, si el texto queda chico o si un botón es
+más chico que 44 px. El segundo aprieta el formulario como lo haría una persona
+y comprueba que marcar, desmarcar, avisar que falta alguien y llegar a la
+confirmación funcionan.
+
+Los dos verifican también que estén midiendo la pantalla que dicen. Sin esa
+comprobación, un banco de pruebas puede pasar mientras mide otra cosa: es un
+fallo que ya se dio más de una vez acá.
+
+`reparar-encoding.js` existe porque PowerShell 5.1 rompe los acentos si se
+escriben archivos con `Get-Content` + `Set-Content -Encoding UTF8`: guarda el
+texto dos veces codificado (cada acento queda con un carácter raro adelante) o,
+si el carácter no se puede representar en la página de códigos de la consola, lo
+cambia por un signo de reemplazo que ya no se puede recuperar. Este script
+deshace el primer caso y avisa del segundo. **No uses `Set-Content` en este
+proyecto**: usá un editor o Node.
 
 Para revisar que nada del frontend esté roto:
 

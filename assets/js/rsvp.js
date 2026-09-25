@@ -116,7 +116,7 @@
       }).slice(0, 8);
 
       if (!encontrados.length) {
-        lista.appendChild(el('li', 'ayuda', 'No encontramos ese nombre. Revisa cómo está escrito, o escríbenos y lo agregamos.'));
+        lista.appendChild(el('li', 'ayuda', 'No encontramos ese nombre. Revisa cómo está escrito.'));
         return;
       }
 
@@ -137,14 +137,14 @@
       });
     }
 
-    var campo = el('input', 'acompanantes__campo');
+    var campo = el('input', 'campo');
     campo.type = 'search';
     campo.placeholder = 'Escribe tu nombre';
     campo.setAttribute('aria-label', 'Buscar tu nombre en la lista de invitados');
     campo.addEventListener('input', coincidentes);
 
     var envoltorio = el('div');
-    envoltorio.appendChild(el('p', 'acompanantes__titulo', 'Tu nombre'));
+    envoltorio.appendChild(el('p', 'campo__titulo', 'Tu nombre'));
     envoltorio.appendChild(campo);
     RAIZ.appendChild(envoltorio);
 
@@ -161,10 +161,15 @@
     vaciar(RAIZ);
 
     var guardada = respuestasGuardadas()[grupo.codigo];
-    var decisions = {};
+    /* La variable de las respuestas vive en español, como todo lo demás del
+       archivo. Antes se declaraba "decisions" pero los handlers usaban
+       "decisiones", y eso reventaba con ReferenceError en el primer clic:
+       el Sí/No no se marcaba y el botón de enviar no hacía nada. Todo el
+       formulario quedaba muerto sin que se viera ningún error en pantalla. */
+    var decisiones = {};
     if (guardada) {
-      (guardada.asistiran || []).forEach(function (n) { decisions[n] = 'si'; });
-      (guardada.no_asistiran || []).forEach(function (n) { decisions[n] = 'no'; });
+      (guardada.asistiran || []).forEach(function (n) { decisiones[n] = 'si'; });
+      (guardada.no_asistiran || []).forEach(function (n) { decisiones[n] = 'no'; });
     }
 
     RAIZ.appendChild(el('p', 'tarjeta__dedicatoria', 'Invitación para'));
@@ -180,7 +185,7 @@
       ['si', 'no'].forEach(function (valor) {
         var boton = el('button', 'opcion opcion--' + valor, valor === 'si' ? 'Sí' : 'No');
         boton.type = 'button';
-        boton.setAttribute('aria-pressed', decisions[nombre] === valor ? 'true' : 'false');
+        boton.setAttribute('aria-pressed', decisiones[nombre] === valor ? 'true' : 'false');
 
         boton.addEventListener('click', function () {
           decisiones[nombre] = valor;
@@ -197,21 +202,10 @@
       RAIZ.appendChild(fila);
     });
 
-    /* --- acompañantes --- */
-    var maxAcompanantes = typeof grupo.maxAcompanantes === 'number' ? grupo.maxAcompanantes : 0;
-
-    if (maxAcompanantes > 0) {
-      var caja = el('div', 'acompanantes');
-      caja.appendChild(el('p', 'acompanantes__titulo', '¿Traen a alguien más? Máximo ' + maxAcompanantes + '. Si no, déjalo vacío.'));
-
-      var entrada = el('input', 'acompanantes__campo');
-      entrada.type = 'text';
-      entrada.placeholder = 'Nombre de su acompañante';
-      entrada.setAttribute('data-acompanantes', '');
-      caja.appendChild(entrada);
-
-      RAIZ.appendChild(caja);
-    }
+    /* Ya no se pregunta por acompañantes. La columna sigue existiendo en la
+       hoja de respuestas y el backend la sigue leyendo: lo que se quitó es
+       sólo el formulario, para no obligar a la gente a tabular un nombre
+       suelto que después nadie controlaba. */
 
     /* --- mensaje --- */
     var mensaje = el('div', 'mensaje');
@@ -240,7 +234,9 @@
     pie.appendChild(enviar);
     RAIZ.appendChild(pie);
 
-    var ayuda = el('p', 'ayuda', 'Si no te aparece tu nombre, escríbenos y lo arreglamos.');
+    /* Nace vacío y sólo se llena si hay algo que avisar (por ahora, que
+       falte alguien por decidir). Con :empty en el CSS, vacío no ocupa sitio. */
+    var ayuda = el('p', 'ayuda');
     RAIZ.appendChild(ayuda);
 
     enviar.addEventListener('click', function () {
@@ -253,21 +249,14 @@
         return;
       }
 
-      var acompañantes = [];
-      var campoAcompanantes = RAIZ.querySelector('[data-acompanantes]');
-      if (campoAcompanantes && campoAcompanantes.value.trim()) {
-        acompañantes = campoAcompanantes.value.split(',')
-          .map(function (s) { return s.trim(); })
-          .filter(Boolean)
-          .slice(0, maxAcompanantes);
-      }
-
       var datos = {
         codigo: grupo.codigo,
         grupo: grupo.grupo,
         asistiran: (grupo.miembros || []).filter(function (n) { return decisiones[n] === 'si'; }),
         no_asistiran: (grupo.miembros || []).filter(function (n) { return decisiones[n] === 'no'; }),
-        acompanantes: acompañantes,
+        /* Siempre vacío: ya no hay campo que lo llene, pero la hoja sigue
+           teniendo la columna y el backend la sigue esperando. */
+        acompanantes: [],
         mensaje: area.value.trim().slice(0, 500)
       };
 
@@ -310,11 +299,10 @@
   /* --------------------------------------------------------------------- */
 
   function textoRespaldo(datos) {
-    return 'Confirmación de asistencia — boda Johann y Abril\n\n' +
+    return 'Confirmación de asistencia — boda Abril y Johann\n\n' +
       'Invitación: ' + datos.grupo + '\n' +
       'Sí asisten: ' + (datos.asistiran.join(', ') || '—') + '\n' +
       'No asisten: ' + (datos.no_asistiran.join(', ') || '—') + '\n' +
-      (datos.acompanantes.length ? 'Acompañantes: ' + datos.acompanantes.join(', ') + '\n' : '') +
       (datos.mensaje ? 'Mensaje: ' + datos.mensaje + '\n' : '');
   }
 
@@ -363,7 +351,6 @@
       }
       par('Van', datos.asistiran.join(', '));
       par('No van', datos.no_asistiran.join(', '));
-      par('Acompañantes', datos.acompanantes.join(', '));
       if (resumen.childNodes.length) caja.appendChild(resumen);
     }
 
