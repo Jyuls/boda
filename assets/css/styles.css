@@ -53,6 +53,10 @@
   --medida-ancha: 38rem;
 
   /* -- Ritmo ------------------------------------------------------------------- */
+  /* El margen que separa el texto del borde de la pantalla. Vive en una variable
+     porque aparece en varios sitios y antes cada uno tenía su propio número,
+     que además se pisaban entre sí. */
+  --canal: 1.5rem;
   --aire: 4.2rem;
   --esquina: 5px;
   --esquina-suave: 10px;
@@ -252,17 +256,22 @@ a { color: var(--sagrario); }
 .bloque {
   max-width: var(--medida);
   margin-inline: auto;
-  padding: var(--aire) 1.5rem;
+  padding: var(--aire) var(--canal);
 }
 
 .bloque--velo    { background: transparent; }
 .bloque--salvia  { background: var(--salvia-claro); }
 .bloque--lila    { background: var(--lila-claro); }
 
-/* A sangre: el fondo ocupa la ventana entera y el texto sigue midiendo lo mismo. */
+/* A sangre: el fondo ocupa la ventana entera y el texto sigue midiendo lo mismo.
+   El max() es lo que hace que esto funcione en un teléfono. Sin él, el calc da
+   negativo en cuanto la pantalla es más angosta que la medida: a 390 px sale
+   (390 - 528) / 2 + 1.5rem = -50 px, el navegador lo recorta a 0, y el texto
+   queda pegado al borde de la pantalla. Con max() el margen nunca baja de
+   --canal, y en una pantalla grande sigue mandando el calc. */
 .bloque--ancho {
   max-width: none;
-  padding-inline: calc((100% - var(--medida)) / 2 + 1.5rem);
+  padding-inline: max(var(--canal), calc((100% - var(--medida)) / 2 + var(--canal)));
 }
 
 .marco {
@@ -720,10 +729,17 @@ a { color: var(--sagrario); }
   background: var(--sobre-vela);
   color: var(--sobre-vela-t);
   text-align: center;
-  padding: 3.4rem 1.5rem 3.6rem;
+  padding: 3.4rem var(--canal) 3.6rem;
   margin-top: 0;
 }
-.pie__linea { font-size: 1.18rem; }
+/* El pie es un bloque a sangre pero su texto son dos líneas cortas: si se
+   dejaran correr de borde a borde se leerían como un subtítulo de pantano.
+   Con un tope de ancho y centrado quedan como una firma. */
+.pie__linea {
+  font-size: 1.18rem;
+  max-width: 26rem;
+  margin-inline: auto;
+}
 .pie__linea--tenue {
   font-style: italic;
   font-size: 1.06rem;
@@ -756,8 +772,6 @@ a { color: var(--sagrario); }
      revés de lo que hace el resto de las webs. */
   body { font-size: 1.12rem; }
   :root { --aire: 3.2rem; }
-  .bloque { padding-inline: 1.15rem; }
-  .bloque--ancho { padding-inline: calc((100% - var(--medida)) / 2 + 1.15rem); }
   .tarjeta { padding: 1.7rem 1.2rem 1.5rem; }
   .cuenta-marco { padding: 1.3rem 1rem; }
   .cuenta__unidad { padding: 0 .5rem; }
