@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<!--
+  Banco de pruebas de los links de invitación.
+
+  El banco de móvil abría siempre el primer código de la lista, así que el
+  resto de los links (las 30 invitaciones) nunca se probaron de punta a
+  punta. Este recorre todos: abre la invitación, va cambiando el #código y
+  comprueba que a cada grupo le salga SU tarjeta con SUS nombres, y que un
+  código inventado caiga en el buscador.
+
+  También compara los nombres que se pintan contra los de data/invitados.js,
+  que es la forma de que una tilde perdida (González, María, Tíos, Jesús) salga
+  a la luz sin tener que mirar la pantalla.
+
+  Uso:  python -m http.server 8000
+        node tools/probar-links.js
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>banco de links</title>
+<style>
+  body { font: 13px/1.5 system-ui, sans-serif; margin: 0; padding: 12px; background: #222; color: #eee; }
+  iframe { border: 0; width: 400px; height: 1400px; background: #fff; }
+  .midiendo { position: absolute; left: -9999px; }
+</style>
+</head>
+<body>
+<script src="/data/invitados.js"></script>
+<div class="midiendo" data-salida></div>
+
+<script>
+/* Un código que no puede existir: la lista usa dos letras y dos números. */
+const CODIGO_FALSO = 'ZZ99';
+
+const iframe = document.createElement('iframe');
+iframe.width = 400;
+iframe.height = 1400;
+document.body.appendChild(iframe);
+
+function limpiarGuardado() {
+  /* Si quedara una respuesta guardada, la página pintaría la confirmación en
+     vez de la tarjeta y la prueba estaría midiendo otra cosa. */
+  try { localStorage.removeItem('boda.respuestas'); } catch (e) { /* se mide igual */ }
+}
+
+function revisar(doc, esperado) {
+  const texto = doc.querySelector('[data-rsvp]');
+  const cuerpo = texto ? texto.textContent : '';
+  const tarjeta = !!doc.querySelector('.opcion--si');
+  const buscador = /puedes buscar tu nombre/i.test(cuerpo);
+
+  /* Cada miembro tiene que aparecer escrito tal cual está en la lista. */
+  const faltan = esperado.miembros.filter(m => cuerpo.indexOf(m) === -1);
+  const grupo = esperado.grupo ? cuerpo.indexOf(esperado.grupo) !== -1 : true;
+
+  return {
+    codigo: esperado.codigo,
+    tarjeta: tarjeta,
+    buscador: buscador,
+    grupo: grupo,
+    faltan: faltan,
+    /* Un pedacito de lo que se ve, para que un fallo se pueda leer sin tener
+       que volver a abrir el navegador a mano. */
+    visto: (cuerpo || '').replace(/\s+/g, ' ').trim().slice(0, 110),
+    /* Y de qué documento se sacó, que es como se caza una midiendo el iframe
+       equivocado en vez de la página. */
+    deDonde: iframe.contentWindow.location.href
+  };
+}
+
+const pasos = [];
+window.INVITADOS.forEach(inv => {
+  pasos.push({ tipo: 'real', esperado: inv });
+});
+/* Y dos que no existen, para ver que el buscador es lo que aparece cuando
+   toca: sin código, y con uno que nadie tiene. */
+pasos.push({ tipo: 'falso', esperado: { codigo: '', grupo: '', miembros: [] } });
+pasos.push({ tipo: 'falso', esperado: { codigo: CODIGO_FALSO, grupo: '', miembros: [] } });
+
+const resultados = [];
+let i = 0;
+let cargada = false;
+
+/* No se duerme un tiempo fijo y se mide: en la primera carga, que es la más
+   fría, la página todavía puede estar pintando y el banco leería una pantalla
+   que todavía no está.
+
+   Y no se espera a que aparezca la tarjeta, porque al cambiar el #código la
+   tarjeta del invitado ANTERIOR sigue en el DOM un instante: se mediría el
+   link anterior y todos los códigos parecerían el mismo. Se espera a que la
+   página repinte de verdad, que se nota porque vacía el contenedor y mete
+   elementos nuevos. Es una señal de "cambió algo", no la comprobación que
+   después se va a hacer, que si no la prueba se confirmaría a sí misma. */
+function esperarA(condicion, intentos, seguir) {
+  if (condicion()) { seguir(); return; }
+  if (intentos <= 0) { seguir(); return; }
+  setTimeout(function () { esperarA(condicion, intentos - 1, seguir); }, 60);
+}
+
+/* Cambia el hash y espera a que la tarjeta se rehaga. */
+function irA(codigo, seguir) {
+  const raiz = iframe.contentDocument.querySelector('[data-rsvp]');
+  const antes = raiz ? raiz.firstElementChild : null;
+  iframe.contentWindow.location.hash = codigo ? '#' + codigo : '';
+  esperarA(function () {
+    const ahora = iframe.contentDocument.querySelector('[data-rsvp]');
+    return ahora && ahora.firstElementChild !== antes;
+  }, 50, seguir);
+}
+
+function siguiente() {
+  if (i >= pasos.length) {
+    const salida = document.querySelector('[data-salida]');
+    salida.textContent = 'RESULTADO_JSON' + JSON.stringify(resultados) + 'FIN_JSON';
+    document.title = 'listo';
+    return;
+  }
+
+  const paso = pasos[i];
+  limpiarGuardado();
+
+  if (paso.tipo === 'falso') {
+    irA(paso.esperado.codigo, function () {
+      const doc = iframe.contentDocument;
+      const cuerpo = (doc.querySelector('[data-rsvp]') || {}).textContent || '';
+      resultados.push({
+        codigo: paso.esperado.codigo || '(sin código)',
+        tarjeta: !!doc.querySelector('.opcion--si'),
+        buscador: /puedes buscar tu nombre/i.test(cuerpo),
+        grupo: null,
+        faltan: []
+      });
+      i++;
+      siguiente();
+    });
+    return;
+  }
+
+  const esperar = function () {
+    const doc = iframe.contentDocument;
+    resultados.push(revisar(doc, paso.esperado));
+    i++;
+    siguiente();
+  };
+
+  /* El primer paso carga la invitación CON el código en la url, que es como
+     llega un invitado de verdad: pegando el link. Los pasos siguientes sólo
+     cambian el hash, que es lo que pasa cuando se pasa de un link a otro.
+
+     Ojo con cómo se decide cuál es el primero: se lleva una bandera y no se
+     compara el índice, porque i empieza en 0 y con `i === 1` el primer paso
+     entraba por la rama de "ya está cargada", fijaba el hash sobre un
+     about:blank y medía eso. Parecía que fallaba la primera invitación, y lo
+     que fallaba era el banco. */
+  if (!cargada) {
+    cargada = true;
+    iframe.addEventListener('load', function () {
+      esperarA(function () {
+        const raiz = iframe.contentDocument.querySelector('[data-rsvp]');
+        return !!raiz && !!raiz.firstElementChild;
+      }, 50, esperar);
+    });
+    iframe.src = '/index.html#' + paso.esperado.codigo;
+  } else {
+    irA(paso.esperado.codigo, esperar);
+  }
+}
+
+siguiente();
+</script>
+</body>
+</html>

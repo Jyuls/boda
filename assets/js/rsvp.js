@@ -351,8 +351,8 @@
         resumen.appendChild(el('dt', null, clave));
         resumen.appendChild(el('dd', null, valor));
       }
-      par('Van', datos.asistiran.join(', '));
-      par('No van', datos.no_asistiran.join(', '));
+      par('Asistirán', datos.asistiran.join(', '));
+      par('No asistirán', datos.no_asistiran.join(', '));
       if (resumen.childNodes.length) caja.appendChild(resumen);
     }
 

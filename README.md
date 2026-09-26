@@ -302,6 +302,7 @@ node tools/probar-backend.js      85 pruebas del backend, sin Google
 node tools/probar-conexion.js     ¿está desplegado el Web App? (necesita internet)
 node tools/probar-cuenta.js       13 pruebas de la cuenta regresiva
 node tools/probar-estilos.js      CSS: clases, variables, pesos de fuente
+node tools/probar-links.js        los 30 links de invitación, uno por uno
 node tools/probar-movil.js        17 pantallas de teléfono: scroll, táctil y letra chica
 node tools/probar-panel.js        57 pruebas del panel del resumen y su filtro
 node tools/probar-rsvp.js         20 pruebas de comportamiento del formulario

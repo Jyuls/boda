@@ -384,7 +384,7 @@ prueba('CASO todos SÍ', async () => {
   if (faltan.length) return 'faltan de la lista de sí: ' + JSON.stringify(faltan);
   if (!/nos vemos/i.test(c.titulo)) return 'el título de la confirmación decía: "' + c.titulo + '"';
   if (!c.resumen) return 'no se pintó el resumen';
-  if (c.resumen.indexOf('No van') !== -1) return 'apareció "No van" cuando todos dijeron sí';
+  if (c.resumen.indexOf('No asistirán') !== -1) return 'apareció "No asistirán" cuando todos dijeron sí';
   return null;
 });
 
@@ -394,8 +394,8 @@ prueba('CASO mixto (alguien sí, alguien no)', async () => {
   if (c.datos.asistiran.length !== 1 || c.datos.asistiran[0] !== c.nombres[0]) return 'asistiran=' + JSON.stringify(c.datos.asistiran);
   if (c.datos.no_asistiran.length !== 1 || c.datos.no_asistiran[0] !== c.nombres[1]) return 'no_asistiran=' + JSON.stringify(c.datos.no_asistiran);
   if (!c.resumen) return 'no se pintó el resumen';
-  if (c.resumen.indexOf('Van') === -1) return 'falta la sección de los que van';
-  if (c.resumen.indexOf('No van') === -1) return 'falta la sección de los que no van';
+  if (c.resumen.indexOf('Asistirán') === -1) return 'falta la sección de los que asistirán';
+  if (c.resumen.indexOf('No asistirán') === -1) return 'falta la sección de los que no asistirán';
   if (c.resumen.indexOf(c.nombres[0]) === -1) return 'no aparece quien dijo sí: ' + c.nombres[0];
   if (c.resumen.indexOf(c.nombres[1]) === -1) return 'no aparece quien dijo no: ' + c.nombres[1];
   return null;
@@ -409,8 +409,8 @@ prueba('CASO todos NO', async () => {
   const faltan = c.nombres.filter(n => c.datos.no_asistiran.indexOf(n) === -1);
   if (faltan.length) return 'faltan de la lista de no: ' + JSON.stringify(faltan);
   if (!/Gracias por avisar/i.test(c.titulo)) return 'el título de la confirmación decía: "' + c.titulo + '"';
-  if (c.resumen.indexOf('No van') === -1) return 'falta la sección de los que no van';
-  if (c.resumen.indexOf('Van') !== -1) return 'apareció "Van" cuando nadie said que sí';
+  if (c.resumen.indexOf('No asistirán') === -1) return 'falta la sección de los que no asistirán';
+  if (c.resumen.indexOf('Asistirán') !== -1) return 'apareció "Asistirán" cuando nadie dijo que sí';
   return null;
 });
 
