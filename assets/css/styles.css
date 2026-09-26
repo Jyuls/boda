@@ -69,7 +69,18 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 html {
+  /* Todo el diseño está medido en rem, así que de qué tan grande es la letra
+     base depende de que el navegador no la cambie por su cuenta. Chrome en
+     Android ajusta el texto automáticamente en algunos casos y en otros no, y
+     eso hacía que la misma invitación se viera de un tamaño en Chrome y de otro
+     en el navegador de otra app. Con 100% se le quita esa libertad, pero sin
+     fijar un tamaño absoluto: si alguien agranda la letra en su navegador
+     porque le cuesta leer, la página sigue agrandándose. */
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* 100% y no 16px a secas: 100% sigue respetando la preferencia de letra del
+     sistema, que es una ayuda de accesibilidad que no hay que pisar. */
+  font-size: 100%;
   scroll-behavior: smooth;
 }
 
