@@ -245,7 +245,7 @@ a { color: var(--sagrario); }
 /* de papel, no como una hoja con renglones.                                    */
 /* -------------------------------------------------------------------------- */
 
-/* La columna no se limita: se限制了 el CONTENIDO de cada bloque. La razón
+/* La columna no se limita: se limita el CONTENIDO de cada bloque. La razón
    es que las secciones a sangre necesitan llegar al borde de la pantalla, y
    la forma de lograrlo con márgenes negativos exige 100vw, que incluye la
    barra de desplazamiento y se pasa siempre por unos 8 píxeles. Medir en
@@ -463,6 +463,13 @@ a { color: var(--sagrario); }
   overflow: hidden;
 }
 
+/* Cada marco usa la proporción de su foto, para que `object-fit: cover` no
+   recorte nada. Si se cambian las fotos, hay que cambiar estos dos números:
+     - iglesia 1261x751 -> 5:3  (panorámica, se ve la fachada entera)
+     - pareja  1201x1600 -> 3:4 (vertical; en 4:3 se perderían las caras) */
+.marco--iglesia { aspect-ratio: 5 / 3; }
+.marco--pareja { aspect-ratio: 3 / 4; }
+
 .marco__pie {
   font-style: italic;
   font-size: 1.08rem;
@@ -474,6 +481,42 @@ a { color: var(--sagrario); }
 }
 
 .marco img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* El `padding` de arriba existe para que el texto de reemplazo respire. Con la
+   foto puesta estorba: dejaría una franja de gradiente rodeando la imagen.
+   Sin padding la foto ocupa el marco entero y el borde redondeado lo recorta. */
+.marco:not(.marco--vacio) { padding: 0; }
+
+/* La foto es opcional. Mientras el archivo no exista, el marco se queda con su
+   texto. Ojo: esto no puede hacerse con el atributo `hidden`, porque
+   `.marco img` pone `display: block` y le gana al `[hidden]` del navegador: la
+   imagen se vería (o se vería el cuadrito roto) igual. Por eso la visibilidad
+   la lleva una clase, que sí gana por especificidad. */
+.marco--vacio img { display: none; }
+
+/* La leyenda desaparece sola cuando la foto sí está, para no quedar un texto
+   abajo de la imagen. */
+.marco--vacio .marco__pie { display: block; }
+.marco:not(.marco--vacio) .marco__pie { display: none; }
+
+/* -------------------------------------------------------------------------- */
+/* Dirección de la iglesia                                                     */
+/* -------------------------------------------------------------------------- */
+
+.direccion {
+  font-style: normal;
+  margin: 0 0 1.9rem;
+  padding: 1.15rem 1.3rem;
+  background: var(--velo);
+  border: 1px solid rgba(107, 62, 134, .14);
+  border-left: 3px solid var(--lila);
+  border-radius: 0 var(--esquina-suave) var(--esquina-suave) 0;
+  line-height: 1.65;
+}
+
+.direccion__linea { display: block; }
+
+.direccion__linea:first-child { font-weight: 600; }
 
 /* -------------------------------------------------------------------------- */
 /* Tarjeta de respuesta                                                        */

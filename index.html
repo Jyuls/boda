@@ -118,23 +118,44 @@
   <section class="bloque bloque--ancho bloque--salvia">
     <h2 class="bloque__titulo">Cómo llegar</h2>
 
+    <!-- Marco de foto con foto opcional: si assets/img/iglesia.jpg no está,
+         el <img> se esconde y queda sólo el texto de abajo. No hay que editar
+         nada cuando llegue la foto.
+         `marco--iglesia` le da la proporción 5:3 en el CSS, que es la de la
+         foto (panorámica, para que se vea la fachada entera). -->
+    <figure class="marco marco--iglesia marco--vacio" data-foto>
+      <img src="assets/img/iglesia.jpg"
+           alt="La Parroquia San Ignacio de Loyola, en Nueva Tijuana">
+      <figcaption class="marco__pie">Parroquia San Ignacio de Loyola</figcaption>
+    </figure>
+
     <p class="bloque__texto">
-      Les dejamos el mapa listo para que no se pierdan.
+      La ceremonia es en la <strong>Parroquia San Ignacio de Loyola</strong>.
+      Les dejamos la dirección y el mapa listos para que no se pierdan.
     </p>
+
+    <address class="direccion">
+      <span class="direccion__linea" data-lugar></span>
+      <span class="direccion__linea" data-direccion></span>
+      <span class="direccion__linea"><span data-colonia></span>, C.P. <span data-cp></span></span>
+      <span class="direccion__linea" data-ciudad></span>
+    </address>
 
     <p class="acciones">
       <a class="boton" data-maps href="#" target="_blank" rel="noopener">Ver en Google Maps</a>
+      <a class="boton boton--discreto" data-telefono href="#">Llamar a la parroquia</a>
     </p>
   </section>
 
-  <!-- ====================== MARCADOR DE FOTO ======================= -->
-  <!-- Para usar una foto: cambia este <figure> por
-       <figure class="marco">
-         <img src="assets/img/nuestra-foto.jpg" alt="Abril y Johann">
-       </figure>
-       Conviene una foto vertical, para que no se recorte de los lados. -->
-  <figure class="marco">
-    <figcaption class="marco__pie">Aquí irá una foto de ustedes, cuando la tengan</figcaption>
+  <!-- ================== FOTO DE LA PAREJA =================== -->
+  <!-- Para usar una foto: poné el archivo en assets/img/nuestros.jpg y ya
+       está, no hay que tocar nada.
+       `marco--pareja` le da la proporción 3:4 en el CSS, que es la de esta
+       foto (vertical). Con un marco apaisado se le cortaría arriba y abajo,
+       justo donde están las caras. -->
+  <figure class="marco marco--pareja marco--vacio" data-foto>
+    <img src="assets/img/nuestros.jpg" alt="Abril y Johann">
+    <figcaption class="marco__pie">Abril y Johann</figcaption>
   </figure>
 
   <!-- ==================== CONFIRMAR ASISTENCIA ==================== -->

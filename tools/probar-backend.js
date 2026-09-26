@@ -28,6 +28,18 @@ class Rango {
     if (vals.length !== this.nf) {
       throw new Error('setValues: esperaba ' + this.nf + ' filas, llegó ' + vals.length);
     }
+    /* Google Sheets también exige que cada fila tenga exactamente el mismo
+       número de columnas que el rango, y avisa con "The number of columns in
+       the data does not match the number of columns in the range". Este mock
+       miraba sólo el número de filas, así que verResumen() escribía filas
+       de 1, 2 y 4 columnas en un rango de 7, las 59 pruebas pasaban y la
+       hoja de verdad se rompía. */
+    for (let r = 0; r < this.nf; r++) {
+      if (!Array.isArray(vals[r]) || vals[r].length !== this.nc) {
+        throw new Error('setValues fila ' + (r + 1) + ': el rango tiene ' + this.nc +
+          ' columnas y la fila trae ' + (Array.isArray(vals[r]) ? vals[r].length : 'algo que no es una fila'));
+      }
+    }
     for (let r = 0; r < this.nf; r++) {
       for (let c = 0; c < this.nc; c++) this.h.escribe(this.f + r, this.c + c, vals[r][c]);
     }
@@ -266,6 +278,57 @@ igual('limpiarLista quita vacíos y recorta',
 igual('maxAcompanantesDe: vacío = 2', maxAcompanantesDe(''), 2);
 igual('maxAcompanantesDe: número se respeta', maxAcompanantesDe(4), 4);
 igual('maxAcompanantesDe: basura = 2', maxAcompanantesDe('abc'), 2);
+
+seccion('10. el resumen no rompe los anchos');
+/* El error que vi en la hoja de verdad: "The number of columns in the data
+   does not match the number of columns in the range. The data has 1 but the
+   range has 7". El resumen arma filas de 1, 2, 3 y 4 columnas y las escribe
+   en un rango de 7, así que todas tienen que salir rellenadas. */
+igual('aColumnas rellena una fila de 1 a 7', aColumnas(['a'], 7), ['a', '', '', '', '', '', '']);
+igual('aColumnas no toca una fila de 7', aColumnas([1, 2, 3, 4, 5, 6, 7], 7), [1, 2, 3, 4, 5, 6, 7]);
+igual('aColumnas deja en 7 una fila que sobra', aColumnas([1, 2, 3, 4, 5, 6, 7, 8, 9], 7), [1, 2, 3, 4, 5, 6, 7]);
+igual('aColumnas acepta la fila vacía', aColumnas([], 7), ['', '', '', '', '', '', '']);
+verResumen();
+const todas7 = resumen.getRange(1, 1, resumen.getLastRow(), 7).getValues()
+  .every(f => f.length === 7);
+cierto('todas las filas del resumen tienen 7 columnas', todas7);
+
+seccion('11. el panel del resumen');
+const d = calcularResumen(
+  hojas['Invitados'].getRange(2, 1, hojas['Invitados'].getLastRow() - 1, 6).getValues(),
+  hojas['Respuestas'].getRange(2, 1, hojas['Respuestas'].getLastRow() - 1, 8).getValues(),
+  { fecha_texto: 'Jueves 22 de octubre de 2026' },
+  new Date(2026, 9, 25, 12, 0, 0)
+);
+igual('el panel calcula las mismas invitaciones que la hoja', d.totales.invitaciones, 30);
+igual('y los mismos confirmados', d.totales.confirmados, 3);
+igual('y los mismos pendientes', d.totales.pendientes, 27);
+igual('y las mismas personas que asistirán', d.totales.asistiran, 6);
+igual('y los mismos acompañantes', d.totales.acompanantes, 2);
+igual('y las mismas personas sin decidir', d.totales.sinDecidir, 48);
+igual('trae la fecha de la Config', d.fechaTexto, 'Jueves 22 de octubre de 2026');
+igual('los confirmados traen su momento', d.confirmaron.every(c => c.cuando !== ''), true);
+igual('los pendientes traen a quiénes esperar',
+  d.sinResponder.every(s => s.nombres.length === s.personas), true);
+igual('sin responder y confirmadas suman todas las invitaciones',
+  d.sinResponder.length + d.confirmaron.length, 30);
+
+seccion('12. el panel sale bien escrito');
+const panel = htmlResumen();
+cierto('trae un <html> completo', /^<!DOCTYPE html>/.test(panel) && /<\/html>\s*$/.test(panel));
+cierto('trae los números grandes', /<b>30<\/b><span>Invitaciones<\/span>/.test(panel));
+cierto('trae el buscador', /id="q"/.test(panel));
+cierto('el buscador ignora acentos, como el de la invitación',
+  /normalize\("NFD"\)/.test(panel) && /\[\\u0300-\\u036f\]/.test(panel));
+cierto('los nombres van escapados', /&lt;script&gt;|Sánchez/.test(panel));
+cierto('trae los dos encabezados', /Sin responder <em>\(27\)<\/em>/.test(panel) && /Confirmaron <em>\(3\)<\/em>/.test(panel));
+
+seccion('13. escaparHtml');
+igual('escapa el ampersand', escaparHtml('a & b'), 'a &amp; b');
+igual('escapa los ángulos', escaparHtml('<b>x</b>'), '&lt;b&gt;x&lt;/b&gt;');
+igual('escapa las comillas', escaparHtml('"y"'), '&quot;y&quot;');
+igual('escapa el apóstrofo', escaparHtml("'"), '&#39;');
+igual('aguanta null', escaparHtml(null), '');
 
 console.log('\n' + (fallos
   ? '*** ' + fallos + ' PRUEBAS FALLIDAS de ' + total

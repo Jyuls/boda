@@ -78,7 +78,8 @@ function onOpen() {
     .createMenu('Boda')
     .addItem('Instalar invitaciones', 'instalar')
     .addItem('Generar lista para la web', 'generarInvitados')
-    .addItem('Ver resumen', 'verResumen')
+    .addItem('Ver resumen', 'mostrarResumen')
+    .addItem('Resumen en la hoja', 'verResumen')
     .addSeparator()
     .addItem('Ayuda', 'ayuda')
     .addToUi();
@@ -367,13 +368,38 @@ function escribirGenerado(contenido) {
 /* -------------------------------------------------------------------------- */
 /* 6. RESUMEN                                                                  */
 /* -------------------------------------------------------------------------- */
+/* 6. EL RESUMEN                                                              */
+/*     Dos cosas con el mismo cálculo: una pestaña de la hoja, que sirve para  */
+/*     imprimir o compartir un pantallazo, y un panel con la misma información */
+/*     pero hecha para mirarla.                                               */
+/* -------------------------------------------------------------------------- */
 
-function verResumen() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+var COLUMNAS_RESUMEN = 7;
 
-  /* Respuestas recibidas, indexadas por código. */
+/* Google Sheets es estricto: si el rango tiene 7 columnas, cada fila que se
+   le pasa a setValues tiene que traer 7 valores. El resumen arma filas de 1, 2
+   y 4 columnas (un separador vacío, un rótulo suelto, una tabla de 4), y sin
+   esto la hoja tiraba "The number of columns in the data does not match the
+   number of columns in the range". */
+function aColumnas(fila, columnas) {
+  var r = [];
+  for (var i = 0; i < columnas; i++) r.push(fila[i] === undefined ? '' : fila[i]);
+  return r;
+}
+
+function escaparHtml(valor) {
+  return String(valor === null || valor === undefined ? '' : valor)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/* El cálculo, solo, sin escribir nada. Así lo usan las dos vistas y se puede
+   probar sin una hoja de verdad. */
+function calcularResumen(invitaciones, respuestas, cfg, ahora) {
   var recibidas = {};
-  var respuestas = leerFilas(HOJA_RESPUESTAS, COL_RES.length);
   for (var i = 0; i < respuestas.length; i++) {
     var codigo = texto(respuestas[i][1]).toUpperCase();
     if (!codigo) continue;
@@ -385,16 +411,13 @@ function verResumen() {
     };
   }
 
-  var confirmados = 0;
-  var pendientes = 0;
-  var esperados = 0;
-  var asistiran = 0;
-  var acompanantesTotal = 0;
-  var noAsistiran = 0;
-  var sinDecidir = 0;
-  var detalle = [];
+  var sinResponder = [];
+  var confirmaron = [];
+  var t = {
+    invitaciones: 0, confirmados: 0, pendientes: 0,
+    personas: 0, asistiran: 0, noAsistiran: 0, acompanantes: 0, sinDecidir: 0
+  };
 
-  var invitaciones = leerFilas(HOJA_INVITADOS, 6);
   for (var f = 0; f < invitaciones.length; f++) {
     var grupo = texto(invitaciones[f][1]);
     if (!grupo) continue;
@@ -404,74 +427,99 @@ function verResumen() {
     var cantidad = miembros.length;
     var r = recibidas[cod];
 
-    var deEste = { asiste: 0, no: 0, extra: 0 };
+    t.invitaciones++;
+    t.personas += cantidad;
 
     if (r) {
-      confirmados++;
-      deEste.asiste = r.asistiran.length;
-      deEste.no = r.noAsistiran.length;
-      deEste.extra = r.acompanantes.length;
-      sinDecidir += Math.max(cantidad - deEste.asiste - deEste.no, 0);
+      t.confirmados++;
+      /* "Asistirán" son los que dijeron sí más los acompañantes que suman:
+         es el número que sirve para la mesa y el catering. */
+      t.asistiran += r.asistiran.length + r.acompanantes.length;
+      t.acompanantes += r.acompanantes.length;
+      t.noAsistiran += r.noAsistiran.length;
+      t.sinDecidir += Math.max(cantidad - r.asistiran.length - r.noAsistiran.length, 0);
+      confirmaron.push({
+        codigo: cod,
+        grupo: grupo,
+        nombres: miembros,
+        si: r.asistiran.length,
+        no: r.noAsistiran.length,
+        acomp: r.acompanantes.length,
+        extra: r.acompanantes,
+        total: r.asistiran.length + r.acompanantes.length,
+        cuando: r.fecha ? Utilities.formatDate(new Date(r.fecha), ZONA, 'dd/MM HH:mm') : ''
+      });
     } else {
-      pendientes++;
-      sinDecidir += cantidad;
+      t.pendientes++;
+      t.sinDecidir += cantidad;
+      sinResponder.push({ codigo: cod, grupo: grupo, personas: cantidad, nombres: miembros });
     }
-
-    esperados += cantidad;
-    asistiran += deEste.asiste + deEste.extra;
-    acompanantesTotal += deEste.extra;
-    noAsistiran += deEste.no;
-
-    detalle.push({
-      codigo: cod,
-      grupo: grupo,
-      confirmo: !!r,
-      esperados: cantidad,
-      asiste: deEste.asiste,
-      no: deEste.no,
-      extra: deEste.extra,
-      fecha: r && r.fecha
-        ? Utilities.formatDate(new Date(r.fecha), ZONA, 'dd/MM HH:mm')
-        : ''
-    });
   }
 
-  var total = confirmados + pendientes;
-  var cfg = config();
+  return {
+    titulo: 'Boda de Abril y Johann',
+    fechaTexto: texto(cfg.fecha_texto),
+    actualizado: Utilities.formatDate(ahora, ZONA, "dd/MM/yyyy 'a las' HH:mm"),
+    totales: t,
+    sinResponder: sinResponder,
+    confirmaron: confirmaron
+  };
+}
+
+/* Lee las hojas y calcula. Lo usan tanto la pestaña como el panel. */
+function resumenActual() {
+  return calcularResumen(
+    leerFilas(HOJA_INVITADOS, 6),
+    leerFilas(HOJA_RESPUESTAS, COL_RES.length),
+    config(),
+    new Date()
+  );
+}
+
+/* --- la pestaña ------------------------------------------------------------ */
+
+function verResumen() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var d = resumenActual();
+  var t = d.totales;
+  var C = COLUMNAS_RESUMEN;
 
   var out = [];
-  out.push(['Boda de Abril y Johann · ' + texto(cfg.fecha_texto)]);
-  out.push(['Actualizado ' + Utilities.formatDate(new Date(), ZONA, 'dd/MM/yyyy HH:mm')]);
+  out.push([d.titulo + (d.fechaTexto ? ' · ' + d.fechaTexto : '')]);
+  out.push(['Actualizado ' + d.actualizado]);
   out.push([]);
 
   out.push(['Invitaciones', '', 'Personas', '']);
-  out.push(['Enviadas', total, 'Asistirán', asistiran]);
-  out.push(['Confirmadas', confirmados, 'No asistirán', noAsistiran]);
-  out.push(['Pendientes', pendientes, 'Sin decidir', sinDecidir]);
+  out.push(['Enviadas', t.invitaciones, 'Asistirán', t.asistiran]);
+  out.push(['Confirmadas', t.confirmados, 'No asistirán', t.noAsistiran]);
+  out.push(['Pendientes', t.pendientes, 'Sin decidir', t.sinDecidir]);
   out.push([]);
-  out.push(['Personas en la lista', esperados]);
-  out.push(['Acompañantes que se suman', acompanantesTotal]);
+  out.push(['Personas en la lista', t.personas]);
+  out.push(['Acompañantes que se suman', t.acompanantes]);
   out.push([]);
 
-  var sinResponder = detalle.filter(function (d) { return !d.confirmo; });
-  out.push(['SIN RESPONDER (' + sinResponder.length + ')']);
-  out.push(['código', 'invitación', 'personas', 'notas']);
-  for (var s = 0; s < sinResponder.length; s++) {
-    out.push([sinResponder[s].codigo, sinResponder[s].grupo, sinResponder[s].esperados, '']);
+  out.push(['SIN RESPONDER (' + d.sinResponder.length + ')']);
+  out.push(['código', 'invitación', 'personas']);
+  for (var s = 0; s < d.sinResponder.length; s++) {
+    out.push([d.sinResponder[s].codigo, d.sinResponder[s].grupo, d.sinResponder[s].personas]);
   }
   out.push([]);
 
-  var si = detalle.filter(function (d) { return d.confirmo; });
-  out.push(['CONFIRMARON (' + si.length + ')']);
+  out.push(['CONFIRMARON (' + d.confirmaron.length + ')']);
   out.push(['código', 'invitación', 'sí', 'no', 'acomp.', 'total', 'respondió']);
-  for (var c = 0; c < si.length; c++) {
-    var d = si[c];
-    out.push([d.codigo, d.grupo, d.asiste, d.no, d.extra, d.asiste + d.extra, d.fecha]);
+  for (var c = 0; c < d.confirmaron.length; c++) {
+    var f = d.confirmaron[c];
+    out.push([f.codigo, f.grupo, f.si, f.no, f.acomp, f.total, f.cuando]);
   }
+
+  /* Acá estaba el error: filas de 1, 2, 3 y 4 columnas en un rango de 7. */
+  var filas = [];
+  for (var k = 0; k < out.length; k++) filas.push(aColumnas(out[k], C));
 
   var h = asegurarHoja(HOJA_RESUMEN);
   h.clearContents();
-  h.getRange(1, 1, out.length, 7).setValues(out);
+  if (!filas.length) return;
+  h.getRange(1, 1, filas.length, C).setValues(filas);
 
   /* Formato: nada de colores chillones, sólo jerarquía. */
   h.getRange(1, 1).setFontSize(15);
@@ -483,13 +531,12 @@ function verResumen() {
   h.getRange(5, 4, 3, 1).setFontSize(14).setFontWeight('bold');
   h.getRange(7, 1, 2, 1).setFontSize(11);
 
-  for (var k = 0; k < out.length; k++) {
-    var linea = texto(out[k][0]);
+  for (var j = 0; j < filas.length; j++) {
+    var linea = texto(filas[j][0]);
     if (linea.indexOf('SIN RESPONDER (') === 0 || linea.indexOf('CONFIRMARON (') === 0) {
-      var f2 = k + 1;
-      h.getRange(f2, 1, 1, 7).setFontWeight('bold').setFontSize(12);
-      h.getRange(f2, 1, 1, 7).setBorder(true, false, false, false);
-      h.getRange(f2 + 1, 1, 1, 7).setFontSize(9).setFontColor('#888888');
+      h.getRange(j + 1, 1, 1, C).setFontWeight('bold').setFontSize(12);
+      h.getRange(j + 1, 1, 1, C).setBorder(true, false, false, false);
+      h.getRange(j + 2, 1, 1, C).setFontSize(9).setFontColor('#888888');
     }
   }
 
@@ -500,9 +547,163 @@ function verResumen() {
   h.setColumnWidth(5, 80);
   h.setColumnWidth(6, 80);
   h.setColumnWidth(7, 110);
-  h.getRange(1, 1, out.length, 7).setVerticalAlignment('top');
+  h.getRange(1, 1, filas.length, C).setVerticalAlignment('top');
 
   ss.setActiveSheet(h);
+}
+
+/* --- el panel ------------------------------------------------------------- */
+
+function mostrarResumen() {
+  var html = HtmlService.createHtmlOutput(htmlResumen());
+  html.setTitle('Resumen de la boda');
+  html.setWidth(900);
+  html.setHeight(620);
+  SpreadsheetApp.getUi().showModalDialog(html, 'Resumen · Abril y Johann');
+}
+
+function htmlResumen() {
+  var d = resumenActual();
+  var t = d.totales;
+  var L = [];
+  var n = 0;
+
+  L.push('<!DOCTYPE html><html><head><meta charset="utf-8">');
+  L.push('<style>');
+  L.push(':root{--velo:#FBF7FC;--lila-claro:#F1E9FB;--lila:#D6C4EE;--tinta:#382646;');
+  L.push('--sagrario:#6B3E86;--si:#C6D9C2;--si-texto:#3D6B41;--no:#B23A52;--linea:#E6DCF2}');
+  L.push('*{box-sizing:border-box}');
+  L.push('body{margin:0;background:var(--velo);color:var(--tinta);');
+  L.push('font:15px/1.5 "Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}');
+  L.push('.caja{padding:22px 26px 28px}');
+  L.push('header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;');
+  L.push('padding-bottom:14px;border-bottom:2px solid var(--lila)}');
+  L.push('h1{margin:0;font-size:22px;font-weight:600;letter-spacing:-.01em}');
+  L.push('.fecha{color:var(--sagrario);font-size:14px;margin-top:3px}');
+  L.push('.mini{color:#8a7a92;font-size:12px;text-align:right;white-space:nowrap}');
+  L.push('.buscador{margin:16px 0 4px;display:flex;gap:8px;align-items:center}');
+  L.push('.buscador input{flex:1;padding:9px 12px;border:1px solid var(--lila);border-radius:8px;');
+  L.push('font:inherit;font-size:15px;color:var(--tinta);background:#fff;outline:none}');
+  L.push('.buscador input:focus{border-color:var(--sagrario);box-shadow:0 0 0 3px rgba(107,62,134,.12)}');
+  L.push('.buscador button{padding:9px 14px;border:1px solid var(--lila);background:#fff;');
+  L.push('border-radius:8px;font:inherit;font-size:14px;cursor:pointer;color:var(--sagrario)}');
+  L.push('.numeros{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 6px}');
+  L.push('.num{flex:1 1 96px;background:#fff;border:1px solid var(--linea);border-radius:12px;padding:11px 13px}');
+  L.push('.num b{display:block;font-size:25px;font-weight:600;letter-spacing:-.02em}');
+  L.push('.num span{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.07em;');
+  L.push('color:#8a7a92;margin-top:2px}');
+  L.push('.num.ok b{color:var(--si-texto)}.num.no b{color:var(--no)}.num.pend b{color:#B07A18}');
+  L.push('h2{font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:var(--sagrario);');
+  L.push('margin:26px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--lila)}');
+  L.push('h2 em{font-style:normal;color:#8a7a92;font-weight:400;letter-spacing:0}');
+  L.push('table{width:100%;border-collapse:collapse;font-size:14px;background:#fff}');
+  L.push('th{text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;');
+  L.push('letter-spacing:.06em;color:#8a7a92;padding:8px 10px;border-bottom:1px solid var(--linea)}');
+  L.push('td{padding:8px 10px;border-bottom:1px solid #F4EFF9;vertical-align:top}');
+  L.push('tr:last-child td{border-bottom:none}');
+  L.push('td.cod{font-family:Consolas,monospace;font-size:13px;color:#8a7a92;white-space:nowrap}');
+  L.push('td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}');
+  L.push('td.si{color:var(--si-texto);font-weight:600}');
+  L.push('td.no{color:var(--no);font-weight:600}');
+  L.push('td.cuando{color:#8a7a92;font-size:13px;white-space:nowrap}');
+  L.push('.nombres{color:#8a7a92;font-size:12.5px;margin-top:2px}');
+  L.push('.vacio{padding:16px;background:#fff;border:1px dashed var(--lila);border-radius:10px;');
+  L.push('color:#8a7a92;font-size:14px}');
+  L.push('.nada{display:none;padding:10px;background:#fff;border:1px dashed var(--lila);');
+  L.push('border-radius:10px;color:#8a7a92;font-size:14px}');
+  L.push('@media print{.buscador{display:none}}');
+  L.push('</style></head><body><div class="caja">');
+
+  n++;
+  L.push('<header><div><h1>' + escaparHtml(d.titulo) + '</h1>');
+  L.push('<div class="fecha">' + escaparHtml(d.fechaTexto) + '</div></div>');
+  L.push('<div class="mini">Actualizado<br><b>' + escaparHtml(d.actualizado) + '</b></div></header>');
+
+  L.push('<div class="buscador"><input id="q" placeholder="Filtrar por nombre, grupo o código…" autocomplete="off">');
+  L.push('<button id="p" onclick="window.print()">Imprimir</button></div>');
+
+  L.push('<div class="numeros">');
+  L.push('<div class="num"><b>' + t.invitaciones + '</b><span>Invitaciones</span></div>');
+  L.push('<div class="num ok"><b>' + t.confirmados + '</b><span>Confirmadas</span></div>');
+  L.push('<div class="num pend"><b>' + t.pendientes + '</b><span>Pendientes</span></div>');
+  L.push('<div class="num"><b>' + t.personas + '</b><span>Personas</span></div>');
+  L.push('<div class="num ok"><b>' + t.asistiran + '</b><span>Asistirán</span></div>');
+  L.push('<div class="num no"><b>' + t.noAsistiran + '</b><span>No asistirán</span></div>');
+  L.push('<div class="num"><b>' + t.acompanantes + '</b><span>Acompañantes</span></div>');
+  L.push('<div class="num pend"><b>' + t.sinDecidir + '</b><span>Sin decidir</span></div>');
+  L.push('</div>');
+
+  /* --- sin responder --- */
+  L.push('<section class="bloque" data-nombre="sin responder"><h2>Sin responder <em>(' + d.sinResponder.length + ')</em></h2>');
+  if (!d.sinResponder.length) {
+    L.push('<div class="vacio">Respondió todo el mundo. Qué bien.</div>');
+  } else {
+    L.push('<table><thead><tr><th>Código</th><th>Invitación</th><th style="text-align:right">Personas</th></tr></thead><tbody>');
+    for (var i = 0; i < d.sinResponder.length; i++) {
+      var s = d.sinResponder[i];
+      L.push('<tr><td class="cod">' + escaparHtml(s.codigo) + '</td><td>' + escaparHtml(s.grupo) +
+        '<div class="nombres">' + escaparHtml(s.nombres.join(', ')) + '</div></td>' +
+        '<td class="n">' + s.personas + '</td></tr>');
+    }
+    L.push('</tbody></table>');
+  }
+  L.push('</section>');
+
+  /* --- confirmaron --- */
+  L.push('<section class="bloque" data-nombre="confirmaron"><h2>Confirmaron <em>(' + d.confirmaron.length + ')</em></h2>');
+  if (!d.confirmaron.length) {
+    L.push('<div class="vacio">Todavía nadie confirmó.</div>');
+  } else {
+    L.push('<table><thead><tr><th>Código</th><th>Invitación</th>' +
+      '<th style="text-align:right">Sí</th><th style="text-align:right">No</th>' +
+      '<th style="text-align:right">Acomp.</th><th style="text-align:right">Total</th>' +
+      '<th>Respondió</th></tr></thead><tbody>');
+    for (var c = 0; c < d.confirmaron.length; c++) {
+      var f = d.confirmaron[c];
+      L.push('<tr><td class="cod">' + escaparHtml(f.codigo) + '</td><td>' + escaparHtml(f.grupo) +
+        '<div class="nombres">' + escaparHtml(f.nombres.join(', ')) +
+        (f.extra.length ? ' · +' + escaparHtml(f.extra.join(', ')) : '') + '</div></td>' +
+        '<td class="n si">' + f.si + '</td><td class="n no">' + f.no + '</td>' +
+        '<td class="n">' + f.acomp + '</td><td class="n"><b>' + f.total + '</b></td>' +
+        '<td class="cuando">' + escaparHtml(f.cuando) + '</td></tr>');
+    }
+    L.push('</tbody></table>');
+  }
+  L.push('</section>');
+
+  L.push('</div>');
+
+  /* Aparece sólo al filtrar y no encontrar a nadie. */
+  L.push('<div id="nada" class="nada">Ningún invitado coincide con esa búsqueda.</div>');
+
+  /* Filtrar: escribe en mayúsculas y sin acentos, así "sanchez" encuentra a
+     "Sánchez", igual que el buscador de la invitación. Cada bloque se oculta
+     entero, título incluido, cuando ya no le queda ninguna fila. */
+  L.push('<script>');
+  L.push('function plano(s){return String(s||"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toUpperCase().trim();}');
+  L.push('var q=document.getElementById("q"), secs=[].slice.call(document.querySelectorAll("section.bloque"));');
+  L.push('function filtrar(){');
+  L.push('  var t=plano(q.value), conFilas=0;');
+  L.push('  secs.forEach(function(sec){');
+  L.push('    var tb=sec.querySelector("tbody"), quedan=0;');
+  L.push('    if(tb){');
+  L.push('      [].forEach.call(tb.rows,function(fila){');
+  L.push('        var coincide=!t||plano(fila.textContent).indexOf(t)!==-1;');
+  L.push('        fila.style.display=coincide?"":"none";');
+  L.push('        if(coincide)quedan++;');
+  L.push('      });');
+  L.push('    }');
+  L.push('    sec.style.display=(quedan||!tb)?"":"none";');
+  L.push('    if(quedan)conFilas++;');
+  L.push('  });');
+  L.push('  var nada=document.getElementById("nada");');
+  L.push('  if(nada)nada.style.display=conFilas?"none":"block";');
+  L.push('}');
+  L.push('q.addEventListener("input",filtrar);');
+  L.push('</script>');
+  L.push('</body></html>');
+
+  return L.join('\n');
 }
 
 /* -------------------------------------------------------------------------- */

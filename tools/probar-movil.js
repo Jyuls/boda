@@ -23,7 +23,7 @@ if (!fs.existsSync(EDGE)) {
   process.exit(2);
 }
 
-const ESTADOS = ['rsvp', 'buscador', 'confirmacion'];
+const ESTADOS = ['rsvp', 'buscador', 'confirmacion', 'conFoto', 'sinFotos'];
 const soloEstado = process.argv[2];
 const aProbar = soloEstado ? ESTADOS.filter(e => e === soloEstado) : ESTADOS;
 
@@ -108,14 +108,14 @@ for (const c of casos) {
      clic a "enviar" no hubiera tomado efecto, el banco estaría reportando
      "ok" sobre la tarjeta de siempre y la confirmación nunca se habría
      probado. */
-  if (c.vistaReal && c.vistaReal !== c.estado) {
+  if (c.vistaReal && c.vistaReal !== c.vistaEsperada) {
     fallos++;
-    console.log('  FALLA  se midió la pantalla "' + c.vistaReal + '" en vez de "' + c.estado + '"');
+    console.log('  FALLA  se midió la pantalla "' + c.vistaReal + '" en vez de "' + c.vistaEsperada + '"');
     console.log('         (el banco no está probando lo que dice; esto es una falla del test)');
     console.log('         .opcion en el marco: ' + c.opciones +
       ' | boda.respuestas: ' + (c.almacen || '(vacío)'));
   } else {
-    console.log('  ok     es la pantalla de ' + c.estado);
+    console.log('  ok     es la pantalla de ' + c.vistaEsperada);
   }
 
   console.log('  cuerpo de texto: ' + c.cuerpoPx);
@@ -166,9 +166,71 @@ for (const c of casos) {
   } else {
     console.log('  ok     los campos llegan a 16px y el iOS no hace zoom');
   }
+
+  if (c.pegados.length) {
+    fallos++;
+    console.log('  FALLA  ' + c.pegados.length + ' texto(s) pegado(s) al borde de la pantalla:');
+    c.pegados.slice(0, 8).forEach(t => {
+      console.log('           ' + t.etiqueta + '  izq ' + t.izquierda + 'px, der ' + t.derecha +
+        'px  "' + t.texto + '"');
+    });
+  } else {
+    console.log('  ok     ningún texto queda pegado al borde (mínimo 16px)');
+  }
+
+  /* Fotos: el marco puede estar vacío (todavía no hay foto) o con foto, pero
+     nunca con el cuadrito de imagen rota a la vista. Y según en qué estado esté,
+     tiene que haber marcos vacíos o marcos con foto, no una mezcla rara. */
+  if (c.fotosRotas && c.fotosRotas.length) {
+    fallos++;
+    console.log('  FALLA  ' + c.fotosRotas.length + ' imagen(es) rota(s) a la vista:');
+    c.fotosRotas.forEach(f => console.log('           ' + f));
+  } else {
+    console.log('  ok     ninguna imagen rota a la vista');
+  }
+
+  if (c.estado === 'conFoto') {
+    if (c.marcosConFoto === 0) {
+      fallos++;
+      console.log('  FALLA  con las fotos puestas ningún marco las mostró: ' +
+        c.marcosVacios + ' siguen vacíos (el JS no sacó la clase "marco--vacio")');
+    } else {
+      console.log('  ok     las ' + c.marcosConFoto + ' fotos aparecen y la leyenda se retira');
+    }
+  } else if (c.estado === 'sinFotos') {
+    /* Al revés que en los demás: aquí los marcos tienen que quedarse VACÍOS y
+       enseñar su texto. Si alguno queda con foto, es que el marco se está
+       tragando un archivo que no existe. */
+    if (c.marcosVacios === 0) {
+      fallos++;
+      console.log('  FALLA  con las fotos faltando ningún marco mostró su texto: ' +
+        c.marcosConFoto + ' se ven "con foto" (el JS no puso la clase "marco--vacio")');
+    } else {
+      console.log('  ok     los ' + c.marcosVacios + ' marcos vuelven a su texto de espera');
+    }
+  } else if (c.marcosConFoto === 0) {
+    console.log('  ok     los ' + c.marcosVacios + ' marcos de foto quedan con su texto de espera');
+  } else {
+    console.log('  ok     ' + c.marcosConFoto + ' marcos con foto, ' + c.marcosVacios + ' esperando');
+  }
+
+  if (c.direccionVacia && c.direccionVacia.length) {
+    fallos++;
+    console.log('  FALLA  la dirección de la iglesia está incompleta: faltan ' +
+      c.direccionVacia.join(', '));
+  } else {
+    console.log('  ok     la dirección de la iglesia está completa');
+  }
+
+  if (c.telefonoRoto) {
+    fallos++;
+    console.log('  FALLA  el enlace de teléfono no tiene un href "tel:" válido');
+  } else {
+    console.log('  ok     el enlace de teléfono llama de verdad');
+  }
 }
 
-console.log('\n' + (fallos
+  console.log('\n' + (fallos
   ? '*** ' + fallos + ' problema(s) de móvil'
   : 'Ningún problema de móvil en los ' + aProbar.length + ' estado(s) y los anchos probados.'));
 

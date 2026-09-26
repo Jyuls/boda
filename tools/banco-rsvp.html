@@ -37,6 +37,9 @@
 </style>
 </head>
 <body>
+<!-- La lista real de invitados, para no tener escrito a mano un código que
+     deja de existir en cuanto el Shopping Center carga la lista verdadera. -->
+<script src="/data/invitados.js"></script>
 <div class="saliendo" id="salida"></div>
 
 <script>
@@ -53,7 +56,12 @@ marco.style.border = '0';
 marco.style.background = '#fff';
 document.body.appendChild(marco);
 
-const CODIGO = 'K4M2';
+/* Se usa el primer código de la lista real, no uno fijo: cuando carguen sus
+   invitados de verdad, el ejemplo K4M2 desaparece y una prueba que lo tiene
+   escrito a mano empezaría a fallar sin que nada esté roto. */
+const CODIGO = (window.INVITADOS && window.INVITADOS.length)
+  ? window.INVITADOS[0].codigo
+  : 'K4M2';
 
 /* El marcador se arma con dos trozos a propósito. Si el texto completo
    estuviera escrito en el script, el runner lo encontraría primero dentro
@@ -365,7 +373,7 @@ prueba('si falta alguien por decidir, avisa', async () => {
 });
 
 /* --- 5. los tres casos de una familia ---
-   K4M2 es "Familia Carrillo", con Victoria Padilla y Alejandra Sanchez. */
+   Se prueba contra el primer grupo de la lista real, sea el que sea. */
 
 prueba('CASO todos SÍ', async () => {
   const c = await correrCaso(() => ['si', 'si']);
@@ -429,6 +437,49 @@ prueba('no se manda lista de acompañantes sin que haya campo', async () => {
   if (!d) return 'no hay nada guardado';
   if (!Array.isArray(d.acompanantes)) return 'el backend espera una lista y recibió ' + JSON.stringify(d.acompanantes);
   if (d.acompanantes.length !== 0) return 'se envió acompañantes sin que haya campo: ' + JSON.stringify(d.acompanantes);
+  return null;
+});
+
+/* --- 6. el buscador con la lista real ---
+   Se prueba con un nombre que sí tiene tilde, escrito sin ella. Con la lista
+   de verdad llena de Sánchez, Lucía, Sofía, Óscar, Iván y Rosalía, el que
+   busca "sanchez" y no encuentra nada concluye que no está invitado y se queda
+   afuera. El buscador tiene que perdonar los acentos. */
+
+prueba('el buscador encuentra a alguien aunque se escriba sin tilde', async () => {
+  /* Se busca en la lista real un nombre que tenga alguna letra acentuada, para
+     no depender de un nombre fijo que mañana cambie. */
+  const lista = (window.INVITADOS && window.INVITADOS.length) ? window.INVITADOS : [];
+  let elegido = null;
+  for (const g of lista) {
+    for (const m of g.miembros) {
+      if (/[\u00C0-\u017F]/.test(m)) { elegido = { miembro: m, grupo: g.grupo }; break; }
+    }
+    if (elegido) break;
+  }
+  if (!elegido) return 'no hay ningún nombre con acento en la lista, no hay nada que probar';
+
+  /* Se abre la invitación sin código, que es como llega alguien que perdió el
+     enlace. */
+  const listo = new Promise(resolve => marco.addEventListener('load', resolve, { once: true }));
+  marco.src = '/index.html?t=' + Date.now();
+  await listo;
+  await esperar(() => $$('.buscador').length > 0 || $$('.campo').length > 0, 40);
+  await dormir(250);
+
+  const campo = $$('.campo')[0];
+  if (!campo) return 'no apareció el campo de búsqueda';
+
+  const sinAcentos = elegido.miembro.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  campo.value = sinAcentos;
+  campo.dispatchEvent(new Event('input', { bubbles: true }));
+  await dormir(250);
+
+  const texto = (doc().body.textContent || '');
+  if (texto.indexOf(elegido.grupo) === -1) {
+    return 'buscando "' + sinAcentos + '" (de "' + elegido.miembro +
+      '") no apareció el grupo "' + elegido.grupo + '"';
+  }
   return null;
 });
 

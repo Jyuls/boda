@@ -17,9 +17,11 @@ assets/img/sello.svg        el emblema de San Ignacio, también favicon
 data/invitados.js           los grupos y sus links (lo regenera el Sheet)
 gas/Code.gs                 el backend, va dentro del Google Sheet
 tools/probar-backend.js     pruebas del backend
+tools/probar-conexion.js    prueba que el Web App de Apps Script está en pie
 tools/probar-cuenta.js      pruebas de la cuenta regresiva
 tools/probar-estilos.js     pruebas de CSS
 tools/probar-movil.js       pruebas de layout en pantallas de teléfono
+tools/probar-panel.js       pruebas del panel del resumen y de su filtro
 tools/probar-rsvp.js        pruebas de comportamiento del formulario
 tools/banco-movil.html      el banco donde se mide el móvil
 tools/banco-rsvp.html       el banco donde se aprieta el formulario
@@ -52,6 +54,74 @@ igual: no se rompe nada. `urlScript` vacío hace que, al confirmar, el sitio lo
 diga explícitamente y te muestre el texto para mandarlo por WhatsApp, en vez de
 perder la respuesta en silencio. Y `tools/generar-links.html` avisa arriba que
 los links no sirven todavía.
+
+### La dirección de la iglesia
+
+También en `config.js`, dentro de `boda`. No hay que tocar el HTML: la página
+arma el bloque "Cómo llegar" con esto.
+
+```js
+direccion: 'Av. José López Portillo Pte. 95',
+colonia: 'Nueva Tijuana',
+cp: '22435',
+ciudadCorta: 'Tijuana, B.C.',
+telefono: '5216646234040'      // sólo dígitos, con clave de país
+```
+
+El número **Pte. 95** es el que publica la Arquidiócesis de Tijuana para la
+Parroquia San Ignacio de Loyola. El C.P. **22435** es el de Nueva Tijuana, que es
+donde está la parroquia (el 22500 que aparece en el directorio oficial es el
+código postal de Otay, que queda más al sur).
+
+`telefono` en `''` esconde el enlace de llamada. El botón de Google Maps usa
+`enlaceMaps`, que está un poco más arriba en el mismo archivo: es el link corto
+que sale de compartir la ubicación desde el celular, y conviene, porque apunta a
+la puerta exacta en vez de dejar que el invitado busque la iglesia por su cuenta.
+
+### Las fotos
+
+Dos huecos, y ninguno hay que tocarlo en el código: se pone el archivo y
+aparece.
+
+Las dos fotos ya están puestas. Sus medidas reales y el marco que le toca a cada
+una:
+
+| Archivo | Para qué | Medida | Proporción |
+|---|---|---|---|
+| `assets/img/iglesia.jpg` | La iglesia, en el bloque "Cómo llegar" | 1261 × 751, 170 KB | 5:3 |
+| `assets/img/nuestros.jpg` | Ustedes dos, antes de confirmar asistencia | 1201 × 1600, 156 KB | 3:4 |
+
+Cada marco usa la proporción de su foto (`.marco--iglesia` y `.marco--pareja` en
+`styles.css`), con `object-fit: cover`. Por eso **no** conviene cambiar una foto
+por otra de otra proporción sin actualizar esos dos números: la de ustedes es
+vertical y en un marco apaisado se le cortarían arriba y abajo, justo donde están
+las caras.
+
+`iglesia.png` pesaba 1.49 MB; se guardó como JPEG de 170 KB. Una foto decorativa
+no necesita tanto, y la página se abre desde celulares con datos.
+
+**Si un archivo no está, no pasa nada.** El marco se queda con su texto
+("Parroquia San Ignacio de Loyola" / "Abril y Johann") y no aparece ningún
+cuadrito de imagen rota. Las dos ramas se comprueban en `probar-movil.js`, cada
+una en su estado: `conFoto` les cambia el src por un archivo que sí existe y
+verifica que la imagen aparezca y la leyenda se retire; `sinFotos` les apunta a
+uno que **no** existe y verifica que vuelvan a su texto. Ese segundo estado
+encontró un bug real: si la foto cargaba y *después* fallaba, se quedaba el
+ícono de imagen rota a la vista.
+
+De dónde sacar las fotos, en orden de preferencia:
+
+1. **Del celular de ustedes.** La mejor opción y la más rápida: la fachada se ve
+   desde la calle, con luz de día. Sin permisos, sin problemas.
+2. **Pidiéndosela a la parroquia** (664 623 4040). Pueden tener una foto
+   oficial del templo y autorizarla sin problema.
+3. **Facebook o Instagram de la parroquia.** Se puede mirar, pero el derecho de
+   autor sigue siendo de quien tomó la foto. Para una invitación que se comparte
+   por WhatsApp conviene pedir permiso primero, aunque sea por mensaje.
+
+Lo que **no** conviene es poner una foto de otra iglesia parecida: los invitados
+llegan confiados a esa puerta y ahí no está su boda. Si al final no se consigue
+ninguna foto, la página queda igual de linda con los marcos de texto.
 
 ---
 
@@ -99,6 +169,13 @@ La hoja es esta: <https://docs.google.com/spreadsheets/d/1eGdVLKygzBWYvugZ5dMqYb
 
 Eso crea cinco pestañas: `Invitados`, `Respuestas`, `Resumen`, `Config`,
 `Generado`, y llena `Invitados` con 30 invitaciones de ejemplo.
+
+> **Si el instalador se quejó de que `url_base` dice `TU_USUARIO`:** es el
+> paso que falta. Andá a la pestaña **`Config`**, en la fila `url_base`, y
+> escribí `https://TU_USUARIO.github.io/boda/`. Después volvé a correr
+> **Boda → Instalar invitaciones** para que los links dejen de decir PENDIENTE.
+> El instalador avisa porque los links se arman con ese valor: si queda mal,
+> los 30 invitados reciben un link que no lleva a ningún lado.
 
 **Sacá el ejemplo.** En `Invitados` borrá las filas de muestra y escribí las
 tuyas. Por cada grupo que invitás:
@@ -198,12 +275,20 @@ escritos, así que también hay que regenerarla si cambian.
 
 ## 7. Ver quién confirmó
 
-**Boda → Ver resumen**, o mirá la pestaña `Resumen` del Sheet: cuántas
-invitaciones se mandaron, cuántas confirmaron, cuántas personas asistirán,
-cuántos acompañantes se suman, y el detalle de quién falta por responder.
+**Boda → Ver resumen** abre un panel con todo: ocho números arriba
+(invitaciones, confirmadas, pendientes, personas, asistirán, no asistirán,
+acompañantes y sin decidir) y debajo las dos listas, la de los que no han
+respondido y la de los que sí. Trae un filtro que también ignora los acentos
+—`sanchez` encuentra a `Sánchez`— y un botón para imprimirlo.
+
+**Boda → Resumen en la hoja** hace lo mismo pero escribiendo una pestaña, útil
+si querés un pantallazo para compartir o imprimir desde el Sheet.
 
 Las respuestas crudas, una por línea, están en `Respuestas`. Si alguien
 confirma otra vez, se actualiza su fila en lugar de duplicarse.
+
+> Si tocás `Code.gs` y después el panel no aparece, recordá que la vista del
+> menú se reconstruye al recargar la hoja: cerrá y abrí el Sheet de nuevo.
 
 ---
 
@@ -213,17 +298,33 @@ Con el servidor local levantado (paso 2), corré:
 
 ```
 node tools/reparar-encoding.js    que nadie haya roto la codificación
-node tools/probar-backend.js      59 pruebas del backend, sin Google
+node tools/probar-backend.js      85 pruebas del backend, sin Google
+node tools/probar-conexion.js     ¿está desplegado el Web App? (necesita internet)
 node tools/probar-cuenta.js       13 pruebas de la cuenta regresiva
 node tools/probar-estilos.js      CSS: clases, variables, pesos de fuente
-node tools/probar-movil.js        15 pantallas de teléfono: scroll, táctil y letra chica
-node tools/probar-rsvp.js         19 pruebas de comportamiento del formulario
+node tools/probar-movil.js        17 pantallas de teléfono: scroll, táctil y letra chica
+node tools/probar-panel.js        57 pruebas del panel del resumen y su filtro
+node tools/probar-rsvp.js         20 pruebas de comportamiento del formulario
 ```
 
-`probar-backend.js` son 59 pruebas que cubren la instalación, la generación de
+`probar-backend.js` son 85 pruebas que cubren la instalación, la generación de
 links y códigos, el `data/invitados.js` que produce, el envío de respuestas, el
 filtrado de nombres ajenos, el límite de acompañantes, la corrección de
 respuestas y el resumen.
+
+El simulador de hojas que usan esas pruebas mira las **columnas** de cada fila
+que se escribe, igual que Google, no sólo cuántas filas hay. Antes miraba
+sólo las filas, y por eso las 59 pruebas pasaban mientras la pestaña `Resumen`
+se rompía en la hoja de verdad con *"The number of columns in the data does not
+match the number of columns in the range. The data has 1 but the range has 7."*
+El resumen arma filas de 1, 2, 3 y 4 columnas y las escribe en un rango de 7,
+así que ahora `aColumnas()` las rellena antes.
+
+`probar-panel.js` prueba el panel del resumen contra un DOM de mentira, hecho
+a mano. Cubre dos fallos que estaban a punto de pasar: el filtro escondía el
+`div` que contenía toda la ventana cuando una tabla se quedaba sin
+coincidencias, y un espacio en blanco al final de la búsqueda no encontraba a
+nadie.
 
 `probar-cuenta.js` corre la cuenta regresiva con el reloj simulado en los cinco
 momentos que importan: la boda dentro de semanas, el día previo, el mismo día a

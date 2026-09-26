@@ -7,12 +7,14 @@
      - el tamaño de las áreas tocables (el mínimo cómodo es 44x44 px)
      - si el cuerpo del texto se lee
 
-  Y lo hace en los TRES estados en los que se puede encontrar alguien, porque
-  cada uno tiene botones distintos y el que se revisa no es el único que se
-  toca:
+  Y lo hace en los estados en los que se puede encontrar alguien, porque cada
+  uno tiene botones distintos y el que se revisa no es el único que se toca:
      - rsvp          la tarjeta con los Sí/No (el que llega por el link)
      - buscador      la lista de nombres, sin código en la URL
      - confirmacion  lo que se ve después de enviar
+     - conFoto       con las fotos puestas, para ver los marcos llenos
+     - sinFotos      con las fotos faltando, para ver que no queda un cuadrito
+                     roto y que el texto del marco aparece en su lugar
 
   Uso:  python -m http.server 8000
         node tools/probar-movil.js
@@ -33,6 +35,9 @@
 </style>
 </head>
 <body>
+<!-- La lista real de invitados, para no tener escrito a mano un código que
+     deja de existir en cuanto se carga la lista verdadera. -->
+<script src="/data/invitados.js"></script>
 <div class="midiendo" data-salida></div>
 
 <script>
@@ -52,6 +57,45 @@ const CASOS = [
 const ESTADOS = {
   rsvp: { titulo: 'tarjeta Sí/No', conHash: true, preparar: null },
   buscador: { titulo: 'buscador de nombres', conHash: false, preparar: null },
+
+  /* Las fotos ya están en assets/img/, así que los estados de arriba miden la
+     rama de "foto presente". Este estado mide la OTRA rama, que si no se
+     probaría nunca: se les apunta a un archivo que no existe y tiene que
+     aparecer el texto del marco, sin que se vea el cuadrito de imagen rota.
+     Es la rama que se vería si el usuario borrara o renombrara el archivo por
+     error, o si la foto se perdiera al publicar. */
+  sinFotos: {
+    titulo: 'con las fotos faltando',
+    conHash: false,
+    soloAncho: 320,
+    vistaEsperada: 'buscador',
+    preparar: function (doc) {
+      doc.querySelectorAll('.marco img').forEach(function (img) {
+        img.src = 'assets/img/no-existe-esta-foto.jpg';
+      });
+    }
+  },
+
+  /* Y éste comprueba que el marco se llena con la foto que sí está, sin que el
+     banco intervenga: lo tiene que hacer el mismo app.js de la página. Se le
+     cambia el src por otro archivo que existe, para no depender de que la foto
+     buena siga en su lugar. Corre en un solo ancho, el más angosto, que es
+     donde una foto se vería mal. */
+  conFoto: {
+    titulo: 'con las fotos puestas',
+    conHash: false,
+    soloAncho: 320,
+    /* Esta corrida no toca el formulario, así que lo que se ve es la pantalla
+       del buscador. Se declara en vez de desactivar la comprobación de "me
+      asure lo que creo": si algún día este estado empezara a medir otra cosa,
+       tiene que avisar. */
+    vistaEsperada: 'buscador',
+    preparar: function (doc) {
+      doc.querySelectorAll('.marco img').forEach(function (img) {
+        img.src = '../assets/img/og.png';
+      });
+    }
+  },
   confirmacion: {
     titulo: 'confirmación',
     conHash: true,
@@ -79,7 +123,13 @@ function leerAlmacen() {
 
 const params = new URLSearchParams(location.search);
 const URL_INVITACION = params.get('pagina') || '/index.html';
-const CODIGO = params.get('codigo') || 'K4M2';
+/* El primer código de la lista real, no uno fijo: cuando se carguen los
+   invitados de verdad, el ejemplo K4M2 desaparece y una prueba que lo tiene
+   escrito a mano empezaría a fallar sin que nada esté roto. */
+const PRIMER_CODIGO = (window.INVITADOS && window.INVITADOS.length)
+  ? window.INVITADOS[0].codigo
+  : 'K4M2';
+const CODIGO = params.get('codigo') || PRIMER_CODIGO;
 
 /* Con ?estado=buscador se prueba sólo ese estado; sin el parámetro, todos.
    probar-movil.js los corre de a uno para que cada estado reciba su propio
@@ -90,7 +140,11 @@ const NOMBRES_ESTADO = soloEstado ? [soloEstado] : Object.keys(ESTADOS);
 const salida = document.querySelector('[data-salida]');
 const resultados = [];
 let cargados = 0;
-const TOTAL = CASOS.length * NOMBRES_ESTADO.length;
+const TOTAL = NOMBRES_ESTADO.reduce(function (n, nombre) {
+  const estado = ESTADOS[nombre];
+  if (!estado) return n;
+  return n + (estado.soloAncho ? CASOS.filter(function (c) { return c.ancho === estado.soloAncho; }).length : CASOS.length);
+}, 0);
 
 /* El mínimo que recomiendan las guías táctiles. 44 px es el número de Apple y
    Material. Por debajo de eso la gente atina mal, y va a atinar mal justo en
@@ -103,6 +157,13 @@ const MINIMO_TACTIL = 44;
    escribir y después el usuario tiene que hacer zoom out para seguir. */
 const MINIMO_TEXTO = 15;
 const MINIMO_INPUT = 16;
+/* El aire entre el texto y el borde de la pantalla. No lo cubría ninguna otra
+   prueba, y hacía falta: las secciones "a sangre" (Cómo llegar, Confirmar
+   asistencia) calculaban el margen con un (100% - medida)/2 que da NEGATIVO
+   en cuanto la pantalla es más angosta que la de escritorio. El navegador lo
+   recortaba a cero y el texto quedaba pegado al borde, sin scroll horizontal
+   de nada que lo delatara. */
+const MINIMO_CANAL = 16;
 
 function medir(iframe, nombre, estado) {
   const doc = iframe.contentDocument;
@@ -119,8 +180,51 @@ function medir(iframe, nombre, estado) {
     tactilesChicos: [],
     textoChico: [],
     inputsChicos: [],
-    cuerpoPx: win.getComputedStyle(doc.body).fontSize
+    pegados: [],
+    cuerpoPx: win.getComputedStyle(doc.body).fontSize,
+    fotosRotas: [],
+    marcosConFoto: 0,
+    marcosVacios: 0,
+    direccionVacia: [],
+    telefonoRoto: false
   };
+
+  /* Las fotos son opcionales: si el archivo no está, el marco se queda con su
+     texto. Lo que nunca puede pasar es que se vea el cuadrito de imagen rota,
+     que es como se ve un <img> que falló al cargar y quedó a la vista. */
+  doc.querySelectorAll('.marco').forEach(function (marco) {
+    if (marco.classList.contains('marco--vacio')) r.marcosVacios++;
+    else r.marcosConFoto++;
+
+    const img = marco.querySelector('img');
+    if (!img) return;
+    const c = win.getComputedStyle(img);
+    if (c.display === 'none') return;          /* bien escondida */
+    if (img.complete && img.naturalWidth === 0) {
+      r.fotosRotas.push((img.getAttribute('src') || '?').split('/').pop());
+    }
+  });
+
+  /* La dirección de la iglesia: si falta un dato en config.js, el bloque se
+     queda con líneas vacías y el invitado no sabe a dónde ir. */
+  const dir = doc.querySelector('.direccion');
+  if (dir) {
+    const ETIQUETAS = ['lugar', 'direccion', 'colonia', 'cp', 'ciudad'];
+    ETIQUETAS.forEach(function (que) {
+      const el = dir.querySelector('[data-' + que + ']');
+      if (el && !el.textContent.trim()) r.direccionVacia.push(que);
+    });
+    if (!dir.querySelector('[data-lugar]')) r.direccionVacia.push('lugar (no existe el elemento)');
+    const tel = dir.parentElement.querySelector('[data-telefono]') || doc.querySelector('[data-telefono]');
+    if (tel) {
+      const c = win.getComputedStyle(tel);
+      if (c.display !== 'none' && !/^tel:\+?\d+$/.test(tel.getAttribute('href') || '')) {
+        r.telefonoRoto = true;
+      }
+    }
+  } else {
+    r.direccionVacia.push('falta el bloque .direccion');
+  }
 
   /* Cualquier elemento que se pase del ancho útil es un problema: en el
      teléfono eso es un scroll lateral invisible que confunde. La trampa para
@@ -208,6 +312,45 @@ function medir(iframe, nombre, estado) {
     }
   });
 
+  /* Texto pegado al borde de la pantalla. Se mide sólo el texto propio del
+     elemento, y se saltea lo que va posicionado o lo que un ancestro recorta,
+     porque ahí el texto no está pegado: directamente no se ve. */
+  const limiteDerecho = raiz.clientWidth;
+  doc.querySelectorAll('body *').forEach(function (el) {
+    if (el.classList.contains('trampa')) return;
+    if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE') return;
+    const c = win.getComputedStyle(el);
+    if (c.display === 'none' || c.visibility === 'hidden' || c.opacity === '0') return;
+    if (c.position === 'absolute' || c.position === 'fixed') return;
+    const caja = el.getBoundingClientRect();
+    if (caja.width === 0 && caja.height === 0) return;
+
+    const propio = Array.prototype.filter.call(el.childNodes, function (n) {
+      return n.nodeType === 3;
+    }).map(function (n) { return n.textContent.trim(); }).join('').trim();
+    if (!propio) return;
+
+    /* Si un ancestro lo recorta, el texto no llega a la pantalla. */
+    let p = el.parentElement, recortado = false;
+    while (p) {
+      const pc = win.getComputedStyle(p);
+      if (pc.overflowX === 'hidden' || pc.overflow === 'hidden') { recortado = true; break; }
+      p = p.parentElement;
+    }
+    if (recortado) return;
+
+    const izq = caja.left;
+    const der = limiteDerecho - caja.right;
+    if (izq < MINIMO_CANAL || der < MINIMO_CANAL) {
+      r.pegados.push({
+        etiqueta: el.tagName.toLowerCase() + '.' + (el.className || '?').toString().split(' ')[0],
+        izquierda: Math.round(izq),
+        derecha: Math.round(der),
+        texto: propio.slice(0, 24)
+      });
+    }
+  });
+
   return r;
 }
 
@@ -240,12 +383,31 @@ function listo() {
   document.title = 'listo';
 }
 
+/* Esperar a que las imágenes decidan. Sin esto se mide en el aire: un <img> que
+   todavía no falló se ve "cargando", y el estado de los marcos cambia según
+   cuánto tardó la red. "complete" es true tanto si cargó como si falló, que es
+   justo lo que se necesita para no medir a medio camino. */
+function esperarFotos(doc, intentos, seguir) {
+  const pendientes = Array.prototype.filter.call(
+    doc.querySelectorAll('.marco img'),
+    function (img) { return !img.complete; }
+  );
+  if (pendientes.length && intentos > 0) {
+    setTimeout(function () { esperarFotos(doc, intentos - 1, seguir); }, 100);
+    return;
+  }
+  seguir();
+}
+
 NOMBRES_ESTADO.forEach(function (nombreEstado) {
   const estado = ESTADOS[nombreEstado];
   if (!estado) return;
   const destino = estado.conHash ? URL_INVITACION + '#' + CODIGO : URL_INVITACION;
+  const casos = estado.soloAncho
+    ? CASOS.filter(function (c) { return c.ancho === estado.soloAncho; })
+    : CASOS;
 
-  CASOS.forEach(function (caso) {
+  casos.forEach(function (caso) {
     const caja = document.createElement('div');
     caja.className = 'caso';
     caja.innerHTML = '<h2>' + caso.nombre + ' — ' + caso.ancho + 'px — ' + estado.titulo + '</h2>';
@@ -291,10 +453,12 @@ NOMBRES_ESTADO.forEach(function (nombreEstado) {
           if (estado.preparar) {
             try { estado.preparar(segundo.contentDocument); } catch (e) { /* se mide igual */ }
           }
+          esperarFotos(segundo.contentDocument, 30, function () {
           setTimeout(function () {
             try {
               const medido = medir(segundo, caso.nombre, nombreEstado);
               medido.vistaReal = queVistaSeVe(segundo.contentDocument);
+              medido.vistaEsperada = estado.vistaEsperada || nombreEstado;
               medido.almacen = leerAlmacen();
               medido.opciones = segundo.contentDocument.querySelectorAll('.opcion').length;
               resultados.push(medido);
@@ -303,6 +467,7 @@ NOMBRES_ESTADO.forEach(function (nombreEstado) {
             }
             listo();
           }, 900);
+          });
         };
         esperarTarjeta(30);
       });

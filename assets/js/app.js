@@ -33,6 +33,80 @@
   }
 
   /* --------------------------------------------------------------------- */
+  /* Dirección y teléfono                                                    */
+  /* --------------------------------------------------------------------- */
+
+  /* La dirección se escribe en config.js y se pinta acá, para que corregirla
+     no obligue a andar tocando el HTML. */
+  function montarDireccion() {
+    var linea = {
+      lugar: texto('lugar'),
+      direccion: texto('direccion'),
+      colonia: texto('colonia'),
+      cp: texto('cp'),
+      ciudad: texto('ciudadCorta')
+    };
+    Object.keys(linea).forEach(function (clave) {
+      var destino = buscar('[data-' + clave + ']');
+      if (destino) destino.textContent = linea[clave];
+    });
+  }
+
+  function montarTelefono() {
+    var enlace = buscar('[data-telefono]');
+    if (!enlace) return;
+    var numero = texto('telefono').replace(/[^\d+]/g, '');
+    if (!numero) { enlace.hidden = true; return; }
+    enlace.href = 'tel:' + numero;
+  }
+
+  /* --------------------------------------------------------------------- */
+  /* Fotos opcionales                                                        */
+  /* --------------------------------------------------------------------- */
+
+  /* Cada <figure data-foto> trae su <img>. El HTML lo marca con
+     "marco--vacio", que esconde la imagen y muestra la leyenda. Si el archivo
+     existe, la imagen se destapa y la leyenda se va; si no existe, se queda
+     como está y el invitado no ve ningún cuadrito roto.
+
+     El atributo `error` es el que hace toda la diferencia: es lo único que
+     avisa que la foto no está. Sin él, el marco quedaría medio vacío con un
+     ícono de imagen rota. */
+  function montarFotos() {
+    var marcos = document.querySelectorAll('[data-foto]');
+    for (var i = 0; i < marcos.length; i++) {
+      (function (marco) {
+        var img = marco.querySelector('img');
+        if (!img) return;
+
+        img.addEventListener('load', function () {
+          marco.classList.remove('marco--vacio');
+        });
+
+        /* Y al revés: si la foto falla DESPUÉS de haber cargado, hay que volver
+           a taparla. Pasa de verdad — se cae el dato en el celular a media
+           carga, o el navegador vuelve a pedir la imagen — y sin esto el marco
+           se queda con el ícono de imagen rota a la vista. */
+        img.addEventListener('error', function () {
+          marco.classList.add('marco--vacio');
+        });
+
+        /* Si la imagen ya había llegado desde el caché, "load" no vuelve a
+           dispararse: hay que mirar cómo quedó. Y lo mismo con una que ya
+           había fallado: `complete` es true en los dos casos y lo que los
+           distingue es si tiene píxeles. */
+        if (img.complete) {
+          if (img.naturalWidth > 0) {
+            marco.classList.remove('marco--vacio');
+          } else {
+            marco.classList.add('marco--vacio');
+          }
+        }
+      })(marcos[i]);
+    }
+  }
+
+  /* --------------------------------------------------------------------- */
   /* Cuenta regresiva                                                        */
   /* --------------------------------------------------------------------- */
 
@@ -132,6 +206,9 @@
 
   function iniciar() {
     montarMapa();
+    montarDireccion();
+    montarTelefono();
+    montarFotos();
     arrancarCuenta();
   }
 

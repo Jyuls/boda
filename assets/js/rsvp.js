@@ -39,7 +39,9 @@
 
   function vaciar(nodo) { while (nodo.firstChild) nodo.removeChild(nodo.firstChild); }
 
-  /* "José" tiene que encontrar a "José". */
+  /* Buscar "sanchez" tiene que encontrar a "Sánchez". Con la lista real llena
+     de acentos y diéresis esto no es un detalle: si alguien lo escribe sin la
+     tilde y no aparece, conclude que no está invitado. */
   function normalizar(valor) {
     return String(valor)
       .normalize('NFD')

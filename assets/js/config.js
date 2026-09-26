@@ -15,7 +15,7 @@ window.CONFIG = {
   // Implementar > Nueva implementación > Aplicación web > Copiar.
   // Si está vacío, el sitio funciona igual y guarda la respuesta en el
   // dispositivo del invitado, pero no llega a tu spreadsheet.
-  urlScript: '',
+  urlScript: 'https://script.google.com/macros/s/AKfycbzeum-vZuBwPdFagFrb1mHGE5AAVPsnWTkWT-Dums0av0UVRm0VL01J1lsgJt-0uaI/exec',
 
   enlaceMaps: 'https://maps.app.goo.gl/UJr6qCr8tBrk5gqE9',
 
@@ -27,7 +27,34 @@ window.CONFIG = {
     fechaLarga: 'Jueves 22 de octubre de 2026',
     titulo: 'Boda de Abril Cristina y Johann Ezequiel',
     lugar: 'Parroquia San Ignacio de Loyola',
-    ciudad: 'Tijuana, Baja California'
+    ciudad: 'Tijuana, Baja California',
+
+    /* La dirección se arma en "Cómo llegar" con estas líneas. Cámbialas aquí y
+       se actualiza la página; no hace falta tocar el HTML.
+       El número "Pte. 95" es el que publica la Arquidiócesis de Tijuana para
+       San Ignacio de Loyola. El C.P. 22435 es el que corresponde a Nueva
+       Tijuana, donde está la parroquia. */
+    direccion: 'Av. José López Portillo Pte. 95',
+    colonia: 'Nueva Tijuana',
+    cp: '22435',
+    ciudadCorta: 'Tijuana, B.C.',
+
+    /* Para el enlace "Llamar": sólo números, con código de país y sin espacios.
+       Dejarlo en '' esconde el teléfono. */
+    telefono: '5216646234040',
+
+    /* Fotos. Si el archivo no está en assets/img/, la página se queda igual
+       con su texto y no aparece ningún cuadrito roto. Con la imagen puesta,
+       aparece sola.
+
+       El marco de cada una está en el CSS, ajustado a la proporción de la foto
+       para que no se recorte nada:
+         - iglesia: 5:3, panorámica (1261x751 va bien)
+         - pareja:  3:4, vertical    (1201x1600 va bien)
+       Si cambias las fotos, revisa esas dos reglas en styles.css para que el
+       marco siga la proporción de la nueva imagen. */
+    fotoIglesia: 'assets/img/iglesia.jpg',
+    fotoPareja: 'assets/img/nuestros.jpg'
   }
 };
 
