@@ -50,6 +50,10 @@ const TAMANOS = [
 /* Las mismas medidas que el CSS de fondo.png, para reproducir el cover. */
 const FUENTE = { w: 1056, h: 1489 };
 const UMBRAL_ALFA = 40; /* más opaco que esto cuenta como pétalo */
+/* El "celular en pantallas anchas": la columna de --ancho-celular (26rem) y
+   el corte de la @media (30rem). Sólo para saber dónde está la guirnalda. */
+const CELULAR_MAX = 480;
+const ANCHO_CELULAR = 416;
 
 const dormir = ms => new Promise(r => setTimeout(r, ms));
 
@@ -81,15 +85,20 @@ function mascaraPara(w, h) {
   return data;
 }
 
-/* ¿El punto (x,y) del viewport vive sobre un pétalo opaco de la guirnalda? */
-function sobrePetalo(w, h, x, y) {
-  const data = mascaraPara(w, h);
-  const escala = Math.max(w / FUENTE.w, h / FUENTE.h);
+/* ¿El punto (x,y) del viewport vive sobre un pétalo opaco de la guirnalda?
+   La guirnalda no siempre abarca todo: en pantallas anchas está clavada a la
+   columna del teléfono (rect r), así que fuera de ese rectángulo no hay
+   pétalo que pisar. Dentro, se muestrea el alfa con el mismo cover. */
+function sobrePetalo(r, x, y) {
+  if (x < r.left || x >= r.right || y < r.top || y >= r.bottom) return false;
+  const ovW = Math.round(r.width), ovH = Math.round(r.height);
+  const data = mascaraPara(ovW, ovH);
+  const escala = Math.max(ovW / FUENTE.w, ovH / FUENTE.h);
   const dw = FUENTE.w * escala, dh = FUENTE.h * escala;
-  const sx = Math.round((x - (w - dw) / 2) / escala);
-  const sy = Math.round((y - (h - dh) / 2) / escala);
+  const sx = Math.round(((x - r.left) - (ovW - dw) / 2) / escala);
+  const sy = Math.round(((y - r.top) - (ovH - dh) / 2) / escala);
   if (sx < 0 || sy < 0 || sx >= FUENTE.w || sy >= FUENTE.h) return false;
-  return data[((sy * w) + sx) * 4 + 3] > UMBRAL_ALFA;
+  return data[((sy * ovW) + sx) * 4 + 3] > UMBRAL_ALFA;
 }
 
 function posicionar(iframe, y) {
@@ -134,7 +143,7 @@ function medir(iframe, tam) {
   const bajo = nodos.filter(o => {
     const cx = Math.round(o.caja[0] + o.caja[2] / 2);
     const cy = Math.round(o.caja[1] + o.caja[3] / 2);
-    return sobrePetalo(tam.w, tam.h, cx, cy);
+    return rc ? sobrePetalo(rc, cx, cy) : false;
   });
 
   const r = {
@@ -148,6 +157,11 @@ function medir(iframe, tam) {
       w: Math.round(rc.width), h: Math.round(rc.height),
       posicion: getComputedStyle(vis).position
     } : null,
+    /* El centro horizontal del cuerpo: en pantallas anchas el body es la
+       columna de teléfono centrada, y la guirnalda debe estar clavada a ese
+       centro (no al del viewport, que incluye el scrollbar). */
+    columnaCx: doc.body ? Math.round(doc.body.getBoundingClientRect().left +
+      doc.body.getBoundingClientRect().width / 2) : null,
     visibles: nodos.length,
     bajoLaGuirnalda: bajo.length,
     bajo: bajo,

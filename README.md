@@ -365,19 +365,22 @@ fila o columna que todavía sostiene flor, con un mínimo de densidad del 3.5%
 para no arrastrar filamentos sueltos.
 
 El marco, tal y como quedó, es la guirnalda completa y estática: `.ventana` en
-`index.html` es un `<div>` vacío con `position: fixed`, `inset: 0` y
-`background: url(../img/fondo.png) center / cover no-repeat`, y por encima de
+`index.html` es un `<div>` vacío con `position: fixed` y
+`background: url(../img/fondo.png) center / cover no-repeat`, por encima de
 todo (`z-index: 30`) para que se vea siempre en pantalla aunque la página ruede.
 La imagen es transparente a propósito: deja pasar el toque (`pointer-events:
 none`) y no entra en el árbol de lectura (`aria-hidden="true"`). Eso es todo lo
 que hace el marco; no se corta en esquinas para el sitio.
 
-Esto no se eligió por accidente. En su momento se propuso un marco de esquinas
-fijas y un filete de 1px, y se comprobó midiendo que un racimo fijo a la
-pantalla termina tapando texto en cuanto la página rueda: la fecha de la
-portada y el último renglón del pie caían debajo del racimo inferior. El
-compromiso que el usuario prefirió es el que está implementado: la guirnalda
-entera, flotando fija sobre todo, sin importar el scroll.
+Y para que la guirnalda nunca se recorte ni se pierda, en una pantalla ancha la
+invitación se ve como en el celular: desde 30rem (~480px de ancho) el documento
+baja a una columna de ancho de teléfono (`--ancho-celular`, 26rem ≈ 416px)
+centrada en el navegador, con la guirnalda clavada a esa misma columna. En un
+celular la columna es toda la pantalla y no hay cambio. El resultado es que las
+flores de fondo.png se comportan igual en todos los tamaños: siempre a la vista,
+en los bordes de la columna, sin los recortes de un `cover` sobre una pantalla
+horizontal (que antes se comía la guirnalda de arriba y de abajo) y sin un marco
+que tape el centro.
 
 ---
 

@@ -76,6 +76,13 @@
   --medida: 33rem;
   --medida-ancha: 38rem;
 
+  /* -- El celular en pantallas anchas -------------------------------------------
+     En un navegador de escritorio la invitación se ve como en el teléfono: una
+     columna de este ancho, centrada, y la guirnalda de fondo.png clavada a
+     ella. 26rem son ~416px, un teléfono grande. La misma medida que ya usaba
+     .cuenta-marco. */
+  --ancho-celular: 26rem;
+
   /* -- Ritmo ------------------------------------------------------------------- */
   /* El margen que separa el texto del borde de la pantalla. Vive en una variable
      porque aparece en varios sitios y antes cada uno tenía su propio número,
@@ -129,26 +136,30 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   La guirnalda estática: fondo.png, siempre en pantalla
+   La guirnalda: fondo.png clavada a la columna de la invitación
    --------------------------------------------------------------------------
    La imagen entera de fondo.png, que el usuario pasó en transparente, queda
-   fija por encima de toda la página y no se mueve con el scroll: es un marco
-   botánico que siempre se ve. El contenido rueda por debajo; las flores lo
-   cruzan, y es justo lo que se pidió.
+   fija por encima de todo, sin moverse con el scroll. En el celular la columna
+   de la invitación es toda la pantalla, y la guirnalda abraza las cuatro
+   orillas del viewport. En una pantalla ancha la invitación se ve como en el
+   celular (una columna de ancho de teléfono centrada) y la guirnalda se clava
+   a esa misma columna: por eso las flores nunca se recortan ni se pierden al
+   hacer la ventana más ancha o más horizontal.
 
-   background-size: cover para que la guirnalda abrace las cuatro orillas del
-   viewport (recortando lo que sobre), center para que el centro claro quede
-   en el centro de la pantalla. pointer-events:none para que el toque pase; en
-   el HTML lleva aria-hidden="true". */
+   background-size: cover para que la guirnalda abrace las orillas de la
+   columna (recortando lo que sobre del ancho o del alto, según la proporción),
+   center para que el centro claro quede en el centro. pointer-events:none para
+   que el toque pase; en el HTML lleva aria-hidden="true". */
 
 .ventana {
   position: fixed;
   top: 0; left: 0;
   /* 100vw, no right:0: un elemento fijo con right:0 termina en el borde
      interno del scrollbar clásico y la guirnalda se ve 15px más angosta. El
-     ancho físico de la ventana incluye esa zona. La altura con respaldo dvh,
-     para que no se descuadre cuando la barra de direcciones del teléfono se
-     esconde al hacer scroll. */
+     ancho físico de la ventana incluye esa zona. En pantallas anchas la
+     `@media (min-width: 30rem)` de abajo la reemplaza por el ancho de la
+     columna de teléfono. La altura con respaldo dvh, para que no se descuadre
+     cuando la barra de direcciones del teléfono se esconde al hacer scroll. */
   width: 100vw;
   height: 100vh;
   height: 100dvh;
@@ -984,8 +995,37 @@ a { color: var(--sagrario); }
 /* Impresión: por si alguien decide imprimir la invitación                      */
 /* -------------------------------------------------------------------------- */
 
+/* En una pantalla ancha (desde 30rem, ~480px, o sea cualquier cosa que no sea
+   un celular en vertical) la invitación se ve como en el celular: el ancho del
+   documento baja al de un teléfono y todo queda centrado. Las secciones dejan
+   de ir a sangre y quedan dentro de la columna. La guirnalda de .ventana se
+   clava a esa columna (mismo ancho, mismo centro), así que las flores de
+   fondo.png se comportan igual que en el teléfono: siempre a la vista, sin
+   recortes raros cuando la ventana es más ancha o más horizontal. */
+@media (min-width: 30rem) {
+  /* El telón fuera del "celular": un lila lavado, para que la columna se lea
+     como una pantalla y no como una página que no usa el ancho. */
+  html { background: #EDE7F5; }
+
+  body {
+    max-width: var(--ancho-celular);
+    margin-inline: auto;
+  }
+
+  .ventana {
+    left: 50%;
+    transform: translateX(-50%);
+    width: var(--ancho-celular);
+  }
+}
+
 @media print {
   body { background: #fff; font-size: 11pt; }
+  /* El "celular" es cosa de pantalla: al imprimir la columna vuelve a ser toda
+     la hoja, el telón se apaga y la guirnalda fija no se lleva a la página. */
+  html { background: #fff; }
+  body { max-width: none; margin: 0; }
+  .ventana { display: none; }
   .portada {
     background: none;
     color: var(--tinta);

@@ -72,14 +72,32 @@ for (const r of resultados) {
   const etiqueta = r.tam + ' ' + pos + ' (scrollY ' + r.scrollY + ', doc ' + r.docAltura + ')';
 
   const v = r.ventana;
-  const cubre = v &&
-    Math.abs(v.x) <= 1 && Math.abs(v.y) <= 1 &&
-    Math.abs(v.w - parseInt(r.tam.split('x')[0], 10)) <= 1 &&
-    Math.abs(v.h - parseInt(r.tam.split('x')[1], 10)) <= 1;
 
-  const estadoMarco = v && v.posicion === 'fixed' && cubre
-    ? 'fija y cubre el viewport [' + v.x + ',' + v.y + ' ' + v.w + 'x' + v.h + ']'
-    : '*** NO cubre el viewport o no es fixed (revisar .ventana): ' + JSON.stringify(v) + ' ***';
+  /* La guirnalda de .ventana no cubre el viewport en pantallas anchas: desde
+     30rem la invitación vive en una columna de ancho de teléfono (26rem, 416px)
+     centrada en el navegador, y la guirnalda está clavada a esa columna. Lo
+     importante es que el CENTRO de la guirnalda coincida con el centro de la
+     columna (el body), y que el ancho sea el de la columna; el cuerpo y la
+     ventana se centran sobre el ancho útil, que en un viewport con scrollbar
+     clásico es unos 7px menos que el ancho del viewport. En un celular (menos
+     de 480px de ancho) la columna es toda la pantalla. */
+  const w = parseInt(r.tam.split('x')[0], 10);
+  const h = parseInt(r.tam.split('x')[1], 10);
+
+  const cubre = v && v.posicion === 'fixed' && (
+    w < 480
+      ? v.y === 0 && Math.abs(v.x) <= 1 &&
+        Math.abs(v.w - w) <= 1 && Math.abs(v.h - h) <= 1
+      : r.columnaCx !== null &&
+        Math.abs((v.x + v.w / 2) - r.columnaCx) <= 2 &&
+        Math.abs(v.w - 416) <= 1 && v.y === 0 && Math.abs(v.h - h) <= 1
+  );
+
+  const estadoMarco = cubre
+    ? (w < 480
+        ? 'fija, cubre el viewport [' + v.x + ',' + v.y + ' ' + v.w + 'x' + v.h + ']'
+        : 'fija, clavada a la columna (centro ' + Math.round(v.x + v.w / 2) + ' ≈ ' + r.columnaCx + ') [' + v.x + ',' + v.y + ' ' + v.w + 'x' + v.h + ']')
+    : '*** NO cuadra (revisar .ventana): ' + JSON.stringify(v) + ' columnaCx=' + r.columnaCx + ' ***';
   if (!(v && v.posicion === 'fixed' && cubre)) problemas++;
 
   const bajo = r.bajoLaGuirnalda;
@@ -104,10 +122,11 @@ if (scrollHorizontal) {
 }
 
 if (problemas) {
-  console.log('*** Problemas (' + problemas + '): el marco no cubre la pantalla o hay scroll horizontal ***');
+  console.log('*** Problemas (' + problemas + '): el marco no cuadra con la columna o hay scroll horizontal ***');
   process.exit(1);
 }
 
-console.log('La guirnalda está fija y abraza el viewport en todos los tamaños. Los textos bajo' +
-  ' un pétalo son el diseño pedido (fondo.png estática siempre en pantalla).');
+console.log('La guirnalda queda clavada a la columna de la invitación (el viewport entero en' +
+  ' celular, la columna de teléfono en pantallas anchas) y no se recorta nunca. Los textos' +
+  ' bajo un pétalo son el diseño pedido (fondo.png estática siempre en pantalla).');
 process.exit(0);
