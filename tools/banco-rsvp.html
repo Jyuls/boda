@@ -376,7 +376,11 @@ prueba('si falta alguien por decidir, avisa', async () => {
    Se prueba contra el primer grupo de la lista real, sea el que sea. */
 
 prueba('CASO todos SÍ', async () => {
-  const c = await correrCaso(() => ['si', 'si']);
+  /* La decisión se aplica a las filas que haya, no a un número fijo. La lista
+     real cambió de 30 invitaciones de 2 personas a 14 de entre 1 y 4, y una
+     prueba que decidiera exactamente dos filas dejaba al resto sin contestar y
+     fallaba sin que el sitio estuviera roto. */
+  const c = await correrCaso(nombres => nombres.map(() => 'si'));
   if (!c.datos) return 'no se guardó nada en el dispositivo';
   if (c.datos.asistiran.length !== c.nombres.length) return 'asistiran=' + JSON.stringify(c.datos.asistiran);
   if (c.datos.no_asistiran.length !== 0) return 'no_asistiran debería estar vacía: ' + JSON.stringify(c.datos.no_asistiran);
@@ -392,7 +396,9 @@ prueba('CASO mixto (alguien sí, alguien no)', async () => {
   const c = await correrCaso(nombres => nombres.map((n, i) => (i === 0 ? 'si' : 'no')));
   if (!c.datos) return 'no se guardó nada en el dispositivo';
   if (c.datos.asistiran.length !== 1 || c.datos.asistiran[0] !== c.nombres[0]) return 'asistiran=' + JSON.stringify(c.datos.asistiran);
-  if (c.datos.no_asistiran.length !== 1 || c.datos.no_asistiran[0] !== c.nombres[1]) return 'no_asistiran=' + JSON.stringify(c.datos.no_asistiran);
+  if (c.datos.no_asistiran.length !== c.nombres.length - 1) return 'no_asistiran=' + JSON.stringify(c.datos.no_asistiran);
+  const faltanNo = c.nombres.slice(1).filter(n => c.datos.no_asistiran.indexOf(n) === -1);
+  if (faltanNo.length) return 'faltan de la lista de no: ' + JSON.stringify(faltanNo);
   if (!c.resumen) return 'no se pintó el resumen';
   if (c.resumen.indexOf('Asistirán') === -1) return 'falta la sección de los que asistirán';
   if (c.resumen.indexOf('No asistirán') === -1) return 'falta la sección de los que no asistirán';
@@ -402,7 +408,7 @@ prueba('CASO mixto (alguien sí, alguien no)', async () => {
 });
 
 prueba('CASO todos NO', async () => {
-  const c = await correrCaso(() => ['no', 'no']);
+  const c = await correrCaso(nombres => nombres.map(() => 'no'));
   if (!c.datos) return 'no se guardó nada en el dispositivo';
   if (c.datos.asistiran.length !== 0) return 'asistiran debería estar vacía: ' + JSON.stringify(c.datos.asistiran);
   if (c.datos.no_asistiran.length !== c.nombres.length) return 'no_asistiran=' + JSON.stringify(c.datos.no_asistiran);
@@ -416,7 +422,7 @@ prueba('CASO todos NO', async () => {
 
 prueba('CASO todos NO: igual se puede cambiar de opinión', async () => {
   await cargar();
-  decidir(() => ['no', 'no']);
+  decidir(nombres => nombres.map(() => 'no'));
   await oprimirEnviar();
   const volver = $('.reintentar');
   if (!volver) return 'no está el botón para cambiar la respuesta';
@@ -431,7 +437,7 @@ prueba('CASO todos NO: igual se puede cambiar de opinión', async () => {
 
 prueba('no se manda lista de acompañantes sin que haya campo', async () => {
   await cargar();
-  decidir(() => ['si', 'no']);
+  decidir(nombres => nombres.map((n, i) => (i === 0 ? 'si' : 'no')));
   await oprimirEnviar();
   const d = guardada();
   if (!d) return 'no hay nada guardado';

@@ -2,7 +2,8 @@
    Invitación de boda — Abril y Johann
    --------------------------------------------------------------------------
    Dirección: "Luz de vela". Luz de una capilla al anochecer: blanco de
-   lavanda, lila pastel, verde salvia y un champán de cera.
+   lavanda, rosas, azules fríos y un champán de cera. El verde de este
+   archivo vive en un solo lugar: el botón "Sí".
 
    Cómo funciona el pastel aquí. Casi todos los pasteles se lavan porque usan
    el mismo tono claro tanto para las superficies como para escribir. Acá el
@@ -21,19 +22,42 @@
   --velo:    #FBF7FC;   /* blanco de lavanda, el papel */
   --lila:    #D6C4EE;   /* lila pastel, el acento */
   --lila-claro: #F1E9FB;  /* el mismo lila, casi velo: para secciones de fondo */
-  --salvia:  #C6D9C2;   /* verde salvia, el contrapeso y el "sí" */
-  --salvia-claro: #E9F1E7;
   --cera:    #E8D8B0;   /* champán de cera. Sólo adornos, nunca texto. */
+
+  /* -- Las rosas y los azules del marco floral --------------------------------
+     La tarjeta pasó de ser verde-salvia a ser rosa, y con ella llegaron el
+     azul y el morado. El reparto es: superficie rosa, superficies frías para
+     lo interactivo, morado para el panel que confirma, y el rosa profundo
+     sólo para acentos de texto.
+
+     Todos estos tonos se eligieron midiendo, no mirando. Sobre la tarjeta
+     rosa queda: tinta 11.6:1, sagrario 6.7:1, rosa-tinta 6.6:1, sí 5.3:1 y
+     no 5.7:1. El botón rojo y el verde siguen leyéndose sobre fondo rosa,
+     que era el riesgo de poner rosa justo donde vive la respuesta. */
+  --rosa:     #F0B9CC;   /* el pétalo. Relleno decorativo, nunca texto */
+  --rosa-claro: #FBE7EE; /* rosa lavada: la superficie de la tarjeta */
+  --azul-claro: #E5EBF8; /* azul lavado: superficies frías */
+  --morado-claro: #EFE6F8; /* morado lavado: el panel de confirmación */
 
   /* -- Texto: la misma familia, mucho más profunda ------------------------------ */
   --tinta:     #382646;  /* berenjena profunda. Nunca #000 ni #111: se ve sucio. */
   --sagrario:  #6B3E86;  /* violeta: mandos, links y textos sobre pastel */
   --ciruela:   #573A6B;
+  --rosa-tinta: #8E2F52; /* rosa profundo: acentos de texto. 6.6:1 sobre la tarjeta */
+  --azul-tinta: #2F4C87; /* azul profundo: 7.0:1 sobre cualquier pastel frío */
+
+  /* Sobre el oro hay que ser concreto. --cera es luz de vela: contra los
+     pasteles nuevos da entre 1.06:1 y 1.19:1, o sea que un tallo pintado con
+     --cera desaparece. --oro es oro antiguo, no pan de oro: es el tono más
+     claro que todavía se distingue de un pastel (3.5:1 contra el más oscuro),
+     y por eso los tallos, las hojas y los separadores usan este, no --cera.
+     Para el texto, ni uno ni otro sirven: el archivo dice #6E5A1F y sigue en pie. */
+  --oro:     #926E2B;   /* oro antiguo. Tallos, hojas y separadores. Nunca texto */
 
   /* -- Los dos lados de la respuesta --------------------------------------------
      El color va con el significado y no con el orden: verde es sí, rojo es no.
-     --salvia y --sagrario ya no se usan para esto, porque el violeta de los
-     mandos no puede ser a la vez el "no". */
+     --sagrario ya no se usa para esto, porque el violeta de los mandos no
+     puede ser a la vez el "no". */
   --si:       #C6D9C2;   /* pastel verde, el relleno del "Sí" marcado */
   --si-texto: #3D6B41;   /* el mismo verde, profundo, para el botón sin marcar */
   --no:       #B23A52;   /* cereza, el relleno del "No" marcado */
@@ -97,10 +121,40 @@ body {
   font-weight: 400;
   line-height: 1.72;          /* la serif pide más aire que una sans */
   -webkit-font-smoothing: antialiased;
-  /* Una trama de papel muy leve. Sin esto el velo plano se ve como pantalla. */
+  /* Una trama de papel muy leve. Sin esto el velo plano se ve como pantalla.
+     El tono es de la paleta nueva, no el lila de la vieja. */
   background-image:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(214, 196, 238, .22), transparent 70%);
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(240, 185, 204, .20), transparent 70%);
   background-attachment: fixed;
+}
+
+/* --------------------------------------------------------------------------
+   La guirnalda estática: fondo.png, siempre en pantalla
+   --------------------------------------------------------------------------
+   La imagen entera de fondo.png, que el usuario pasó en transparente, queda
+   fija por encima de toda la página y no se mueve con el scroll: es un marco
+   botánico que siempre se ve. El contenido rueda por debajo; las flores lo
+   cruzan, y es justo lo que se pidió.
+
+   background-size: cover para que la guirnalda abrace las cuatro orillas del
+   viewport (recortando lo que sobre), center para que el centro claro quede
+   en el centro de la pantalla. pointer-events:none para que el toque pase; en
+   el HTML lleva aria-hidden="true". */
+
+.ventana {
+  position: fixed;
+  top: 0; left: 0;
+  /* 100vw, no right:0: un elemento fijo con right:0 termina en el borde
+     interno del scrollbar clásico y la guirnalda se ve 15px más angosta. El
+     ancho físico de la ventana incluye esa zona. La altura con respaldo dvh,
+     para que no se descuadre cuando la barra de direcciones del teléfono se
+     esconde al hacer scroll. */
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 30;
+  pointer-events: none;
+  background: url(../img/fondo.png) center / cover no-repeat;
 }
 
 h1, h2, h3 { margin: 0; font-weight: 400; }
@@ -154,14 +208,20 @@ a { color: var(--sagrario); }
   height: 1px;
   flex: 1 1 auto;
   max-width: 7rem;
-  background: linear-gradient(90deg, transparent, rgba(184, 151, 79, .55));
+  background: linear-gradient(90deg, transparent, var(--oro));
 }
-.ornamento::after { background: linear-gradient(90deg, rgba(184, 151, 79, .55), transparent); }
+.ornamento::after { background: linear-gradient(90deg, var(--oro), transparent); }
+
+/* El centro del adorno es un trozo real de guirnalda, no un rombo ni una rosa
+   dibujada a mano. Sale de fondo.png, que es una ilustración botánica de
+   verdad, y se muestra con su propia proporción: la pieza es 803 x 238, así que
+   a 132px de ancho le quedan 39px de alto y el filete de los lados se arma con
+   la flexión, no con la imagen. */
 .ornamento__gema {
-  width: 5px; height: 5px;
-  background: var(--cera);
-  transform: rotate(45deg);
+  width: 132px;
+  height: 39px;
   flex: 0 0 auto;
+  background: url(../img/flor-separador.png) center / contain no-repeat;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -173,11 +233,20 @@ a { color: var(--sagrario); }
   position: relative;
   padding: 3.6rem 1.5rem 3.2rem;
   text-align: center;
-  overflow: hidden;
+
+  /* Aquí el marco no es una caja propia: la portada es la primera pantalla,
+     y la guirnalda de fondo.png la encuadra desde .ventana, por encima de
+     todo y fija a la pantalla. Esta sección sólo pone el baño de pastel.
+
+     El verde salvia que se veía en la página salió de aquí. La paleta vieja
+     era lavanda, lila, verde salvia y cera; la tarjeta se pasó a rosa, azul y
+     morado, pero estos degradados se quedaron con la paleta vieja y por eso la
+     esquina inferior izquierda salía verde. Ahora los tres son de la paleta
+     nueva. */
   background:
-    radial-gradient(ellipse 120% 70% at 50% -20%, #E4D4F7 0%, transparent 60%),
-    radial-gradient(ellipse 100% 60% at 15% 110%, #E9F1E7 0%, transparent 65%),
-    radial-gradient(ellipse 100% 60% at 85% 110%, #E8DCF6 0%, transparent 65%),
+    radial-gradient(ellipse 120% 70% at 50% -20%, #F3E4F6 0%, transparent 60%),
+    radial-gradient(ellipse 100% 60% at 15% 110%, #FBE7EE 0%, transparent 65%),
+    radial-gradient(ellipse 100% 60% at 85% 110%, #E5EBF8 0%, transparent 65%),
     var(--velo);
 }
 
@@ -264,27 +333,36 @@ a { color: var(--sagrario); }
    horizontal sin trucos. */
 .pagina { max-width: none; padding: 0; }
 
+/* Todas las secciones van a sangre, y antes sólo lo iban las de color. El
+   cambio parece sólo de fondo, pero no lo es: hace falta para que el marco
+   lateral caiga en el borde de la pantalla y no en el del contenido, que en
+   una pantalla grande deja el marco flotando en mitad de la página al lado de
+   secciones cuyo marco sí está en el borde.
+
+   La medida del texto no se mueve. El ancho de columna queda en
+   min(100% - 2 * --canal, --medida) con cualquiera de las dos formas, así que
+   el texto se acomoda exactamente igual que antes. */
 .bloque {
-  max-width: var(--medida);
+  max-width: none;
   margin-inline: auto;
   padding: var(--aire) var(--canal);
-}
-
-.bloque--velo    { background: transparent; }
-.bloque--salvia  { background: var(--salvia-claro); }
-.bloque--lila    { background: var(--lila-claro); }
-
-/* A sangre: el fondo ocupa la ventana entera y el texto sigue midiendo lo mismo.
-   El max() es lo que hace que esto funcione en un teléfono. Sin él, el calc da
-   negativo en cuanto la pantalla es más angosta que la medida: a 390 px sale
-   (390 - 528) / 2 + 1.5rem = -50 px, el navegador lo recorta a 0, y el texto
-   queda pegado al borde de la pantalla. Con max() el margen nunca baja de
-   --canal, y en una pantalla grande sigue mandando el calc. */
-.bloque--ancho {
-  max-width: none;
   padding-inline: max(var(--canal), calc((100% - var(--medida)) / 2 + var(--canal)));
 }
 
+/* El marco va en .ventana, la guirnalda de fondo.png fija a la pantalla. Un
+   bloque lleva sólo su color de fondo, y por eso se puede usar background-color
+   sin que el atajo borre la imagen de nadie. */
+.bloque--velo    { background-color: transparent; }
+.bloque--rosa    { background-color: var(--rosa-claro); }
+.bloque--lila    { background-color: var(--morado-claro); }
+
+/* El nombre sigue en el HTML y ya no hace falta para nada: lo de ir a sangre
+   es lo que hacen todas las secciones. Se deja la regla para que el nombre no
+   quede como una clase sin estilo. */
+.bloque--ancho { max-width: none; }
+
+/* Ya no hace falta esta regla: todas las secciones van a sangre. El padding
+   lateral y el tope de ancho se absorbieron en .bloque. */
 .marco {
   max-width: var(--medida);
   margin-inline: auto;
@@ -398,7 +476,7 @@ a { color: var(--sagrario); }
 }
 
 .programa__fila:first-child::before { background: var(--cera); }
-.programa__fila:last-child::before  { background: var(--salvia); }
+.programa__fila:last-child::before  { background: var(--rosa-tinta); }
 
 .programa__clave {
   font-family: var(--sans);
@@ -465,7 +543,7 @@ a { color: var(--sagrario); }
   margin: 0 auto;
   aspect-ratio: 4 / 3;
   background:
-    linear-gradient(135deg, var(--lila-claro), var(--salvia-claro));
+    linear-gradient(135deg, var(--rosa-claro), var(--azul-claro));
   border-radius: var(--esquina-suave);
   display: flex;
   align-items: center;
@@ -533,35 +611,51 @@ a { color: var(--sagrario); }
 /* Tarjeta de respuesta                                                        */
 /* -------------------------------------------------------------------------- */
 
+/* La tarjeta pasó de papel lila a rosa lavada. Es el cambio de color más
+   grande del sitio, así que va medido: sobre esta superficie quedan la tinta
+   en 11.6:1, el sagrario en 6.7:1, el "sí" en 5.3:1 y el "no" en 5.7:1. Los
+   dos botones de respuesta son los que más riesgo tenían, porque el "no" es
+   cereza y una tarjeta rosada podía hacerlo pasar por decoración. Aguantan. */
 .tarjeta {
-  background: var(--velo);
-  border: 1px solid rgba(107, 62, 134, .14);
+  background: var(--rosa-claro);
+  border: 1px solid rgba(142, 47, 82, .16);
   border-radius: var(--esquina-suave);
   padding: 2.2rem 1.9rem 1.9rem;
   box-shadow: 0 1px 2px rgba(92, 58, 68, .05);
 }
 
+/* Aquí la opacidad estaba en .55, y .55 deja este texto en 3.21:1 sobre la
+   tarjeta: se veía gris claro y no se leía. Venía así desde antes del cambio de
+   color, o sea que no lo causó la tarjeta rosa, pero se corrigió al medir. A .7
+   queda en 4.84:1 y sigue viéndose más apagado que el resto. */
 .tarjeta__cargando {
   font-style: italic;
-  opacity: .55;
+  opacity: .7;
   font-size: 1.08rem;
 }
 
+/* La dedicatoria es el único texto que se apoya sobre un color de flor, así que
+   aquí se quitó el opacity que tenía: con opacity el color final depende de lo
+   que haya detrás y el contraste deja de estar controlado. En tinta sobre el
+   pétalo queda en 8.2:1. */
 .tarjeta__dedicatoria {
   font-style: italic;
   font-size: 1.08rem;
-  color: var(--ciruela);
-  opacity: .85;
+  color: var(--tinta);
+  background: var(--rosa);
+  border-left: 2px solid var(--oro);
+  border-radius: var(--esquina);
+  padding: .5rem .8rem;
   margin-bottom: .3rem;
 }
 
 .tarjeta__grupo {
   font-size: 1.65rem;
   font-weight: 300;
-  color: var(--tinta);
+  color: var(--rosa-tinta);
   padding-bottom: 1.2rem;
   margin-bottom: 1.4rem;
-  border-bottom: 1px solid rgba(184, 151, 79, .3);
+  border-bottom: 1px solid var(--oro);
 }
 
 .fila {
@@ -634,12 +728,14 @@ a { color: var(--sagrario); }
 /* Campo de texto libre: sólo lo usa el buscador de invitados. Estas reglas
    se llamaban "acompanantes" porque su único usuario era el campo de
    acompañantes, que ya no está en la página. */
+/* La opacidad estaba en .8, y a .8 el azul-tinta sobre la tarjeta rosa queda en
+   4.44:1, apenas por debajo del mínimo. Se quitó la opacidad en vez de oscurecer
+   el azul: el texto gana contraste y sigue siendo un rótulo de etiqueta. */
 .campo__titulo {
   font-family: var(--sans);
   font-size: 1rem;
   line-height: 1.5;
-  color: var(--ciruela);
-  opacity: .8;
+  color: var(--azul-tinta);
   margin: 1.9rem 0 .6rem;
 }
 .campo {
@@ -658,7 +754,17 @@ a { color: var(--sagrario); }
 .campo:focus { outline: none; border-bottom-color: var(--sagrario); }
 .campo::placeholder { color: var(--tinta); opacity: .32; font-style: italic; }
 
-.mensaje { margin-top: 1.7rem; }
+/* El campo de mensaje es la única parte opcional de la tarjeta, y por eso lleva
+   su propia superficie, azul lavada contra el rosa: en frío se lee como "esto
+   va aparte" sin necesidad de rotularlo. La tinta sobre ese azul queda en
+   11.5:1, así que el texto no sacrifica nada. */
+.mensaje {
+  margin-top: 1.7rem;
+  padding: 1rem 1.1rem .5rem;
+  background: var(--azul-claro);
+  border: 1px solid rgba(47, 76, 135, .14);
+  border-radius: var(--esquina);
+}
 .mensaje__campo {
   width: 100%;
   min-height: 5.5rem;
@@ -693,7 +799,7 @@ a { color: var(--sagrario); }
   gap: 1rem 1.8rem;
   margin-top: 2.1rem;
   padding-top: 1.5rem;
-  border-top: 1px solid rgba(184, 151, 79, .3);
+  border-top: 1px solid var(--oro);
 }
 
 /* Durante el envío el botón se deshabilita desde el JS, así que no hace falta
@@ -712,7 +818,8 @@ a { color: var(--sagrario); }
 .tarjeta__hecho-cuadro {
   margin-top: 1.7rem;
   padding: 1.2rem 1.3rem;
-  background: var(--lila-claro);
+  background: var(--morado-claro);
+  border-left: 2px solid var(--oro);
   border-radius: var(--esquina);
   font-size: 1.1rem;
   text-align: left;
@@ -780,6 +887,8 @@ a { color: var(--sagrario); }
 /* -------------------------------------------------------------------------- */
 
 .pie {
+  /* El pie es la última sección y lleva el fondo oscuro, y es el ancla de la
+     página. La guirnalda de fondo.png vive arriba de todo, en .ventana. */
   background: var(--sobre-vela);
   color: var(--sobre-vela-t);
   text-align: center;
@@ -886,7 +995,12 @@ a { color: var(--sagrario); }
     opacity: 1; animation: none;
   }
   .nombres__y, .fecha, .formula { color: var(--tinta); }
-  .bloque--salvia, .bloque--lila { background: none; }
+  .bloque--rosa, .bloque--lila { background: none; }
+  /* Los cuatro marcos se apagan al imprimir, y esta regla tiene que ser
+     explícita para los cuatro. Con el atajo de arriba sólo se apagaba el de los
+     bloques de color, porque el atajo borra la imagen: la portada y el pie se
+     habrían llevado sus flores impresas. */
+  .bloque, .portada, .pie { background-image: none; }
   .cuenta-marco, .marco, .tarjeta, .acciones, .ornamento { display: none !important; }
   .pie { background: none; color: var(--tinta); border-top: 1px solid #ccc; }
   a::after { content: ""; }

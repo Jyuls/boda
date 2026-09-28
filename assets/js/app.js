@@ -204,12 +204,59 @@
     setInterval(actualizar, 30000);
   }
 
+  /* Sólo se usa para diagnosticar, y sólo si se pide con ?debug al final de la
+     dirección. Muestra los números que explican por qué una página se ve a
+     distinta medida en un navegador que en otro: cuánto mide la ventana real,
+     qué escala le puso el navegador, y de qué tamaño quedó la letra base.
+
+     En un móvil normal sale: escala 1, letra 16px. Si en el tuyo sale una
+     escala de 0.8 o una letra de 13, eso no lo decide la página, lo decidió el
+     navegador. */
+  function mostrarDepuracion() {
+    /* El banco de pruebas de la cuenta regresiva corre este archivo en una caja
+       de arena donde no existe window.location. Sin esta guarda, el solo
+       diagnóstico rompía esa prueba. */
+    if (!window.location || !document.body) return;
+    if (!/[?&]debug\b/.test(window.location.search)) return;
+
+    var raiz = document.documentElement;
+    var caja = document.createElement('pre');
+    caja.style.cssText =
+      'position:fixed;left:0;right:0;bottom:0;z-index:9999;margin:0;' +
+      'padding:10px 12px;background:#111;color:#0f0;font:12px/1.5 monospace;' +
+      'white-space:pre-wrap;word-break:break-word;max-height:40vh;overflow:auto';
+
+    function pintar() {
+      var vv = window.visualViewport;
+      caja.textContent = [
+        'ancho de la ventana: ' + raiz.clientWidth + 'px',
+        'alto de la ventana:  ' + raiz.clientHeight + 'px',
+        'escala del navegador: ' + (vv ? vv.scale : 'no informado') +
+          (vv && Math.abs(vv.scale - 1) > 0.001 ? '  <-- el navegador esta reduciendo' : ''),
+        'letra base (html): ' + window.getComputedStyle(raiz).fontSize,
+        'letra del cuerpo:   ' + window.getComputedStyle(document.body).fontSize,
+        'pixeles reales:     ' + window.devicePixelRatio + 'x',
+        'desborde horizontal: ' + (raiz.scrollWidth > raiz.clientWidth + 1
+          ? 'SI, ' + (raiz.scrollWidth - raiz.clientWidth) + 'px de mas'
+          : 'no')
+      ].join('\n');
+    }
+
+    document.body.appendChild(caja);
+    pintar();
+    /* El zoom se puede cambiar con dos dedos sin recargar, así que el cartel
+       tiene que enterarse mientras se mira. */
+    window.addEventListener('resize', pintar);
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', pintar);
+  }
+
   function iniciar() {
     montarMapa();
     montarDireccion();
     montarTelefono();
     montarFotos();
     arrancarCuenta();
+    mostrarDepuracion();
   }
 
   if (document.readyState === 'loading') {

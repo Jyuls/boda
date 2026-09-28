@@ -292,11 +292,101 @@ confirma otra vez, se actualiza su fila en lugar de duplicarse.
 
 ---
 
+## El marco floral y los colores de la tarjeta
+
+Las flores van en los **costados** de cada sección, como el marco de una
+invitación impresa. Arriba y abajo no llevan nada, salvo dos excepciones: la
+portada, que es la primera sección, y el pie, que es la última; esas dos sí
+cierran el marco por los cuatro lados. La tarjeta cambió de verde salvia a rosa,
+con azul y morado. Hay cuatro decisiones acá que conviene no deshacer sin
+pensarlo.
+
+**El marco va como fondo, no como elemento.** `background-image` en `.bloque`, y
+nada más. Un fondo no ocupa lugar: no empuja el texto, no puede provocar una
+barra horizontal y no se acerca a las letras, así que el marco no puede tapar
+nada de lo que ya funciona. La banda lateral mide 20px y el margen de la sección
+es de 24px, o sea que quedan 4px entre la flor y la primera letra.
+
+Se comprobó en el navegador que **ninguna** de las 42 rutas de texto de la página
+cae dentro de una banda, en las cuatro secciones ni en la portada ni en el pie.
+
+Por eso los bloques de color usan `background-color` y no el atajo `background`:
+el atajo pone `background-image` en `none` y el marco se perdía justo en las
+secciones de color. Y en impresión los cuatro marcos se apagan con una regla
+explícita, porque con el atajo anterior sólo se apagaban dos de los cuatro.
+
+**Todas las secciones van a sangre, y antes sólo las de color.** No es un cambio
+de fondo sino de dónde cae el marco: hace falta para que la banda lateral quede
+en el borde de la pantalla y no en el del contenido, que en una pantalla grande
+dejaba el marco flotando en mitad de la página al lado de secciones cuyo marco sí
+está en el borde. La medida del texto no se mueve: el ancho de columna queda en
+`min(100% - 2 * --canal, --medida)` con cualquiera de las dos formas.
+
+**El oro tiene dos tonos y no es un descuido.** `--cera` es luz de vela: contra
+los pasteles nuevos da entre 1.06:1 y 1.19:1, así que un tallo pintado con
+`--cera` desaparece. `--oro` es oro antiguo, `#926E2B`, el tono más claro que
+todavía se distingue de un pastel (3.5:1 contra el más oscuro). Tallos, hojas y
+filetes usan `--oro`; `--cera` sigue donde estaba.
+
+El pie es la excepción: es un bloque oscuro. El marco ya no lo lleva, porque el
+marco es uno solo y vive en la ventana fija, así que la variante en oro claro
+que antes hacía falta aquí ya no se usa.
+
+La tarjeta se pintó midiendo, no mirando. Sobre la superficie rosa `#FBE7EE`
+quedan la tinta en 11.6:1, el violeta en 6.7:1, el rosa de texto en 6.6:1, el
+"Sí" en 5.3:1 y el "No" en 5.7:1. Ese último era el riesgo: el botón de "no" es
+cereza, y sobre una tarjeta rosada podía pasar por decoración. Aguantó, y por eso
+la tarjeta puede ser rosa.
+
+De paso se corrigió un problema que ya venía de antes: el texto "Cargando..." iba
+con `opacity: .55`, que lo dejaba en 3.21:1 sobre la tarjeta. No lo causó el
+cambio de color, pero se encontró al medir. Ahora va en `.7` y queda en 4.8:1.
+
+### El marco es la guirnalda entera de fondo.png, estática siempre en pantalla
+
+`assets/img/fondo.png` es una guirnalda botánica de 1056×1489 con fondo
+transparente de verdad. Es una ilustración de flores reales, no una forma
+dibujada a mano. Hoy se usa **entera**, no recortada: `.ventana` la muestra
+fija encima de toda la página, `background: center / cover` y `z-index: 30`
+(ver "El marco" más abajo).
+
+La única pieza recortada que queda en uso es un trozo de guirnalda horizontal,
+para el centro del adorno de la portada. `node tools/cortar-fondo.js` la genera:
+
+| Pieza | Tamaño | Para qué |
+| --- | --- | --- |
+| `flor-separador.png` | 803×238 | el centro del adorno de la portada |
+
+El mismo `tools/cortar-fondo.js` también corta las cuatro esquinas
+(`flor-esquina-si/sd/ii/id.png`): quedaron de un intento anterior de marco de
+esquinas recortadas y el sitio ya no las usa, pero el corte se conserva por si
+vuelven a servir, y documenta el método -- cada corte se aprieta hasta la última
+fila o columna que todavía sostiene flor, con un mínimo de densidad del 3.5%
+para no arrastrar filamentos sueltos.
+
+El marco, tal y como quedó, es la guirnalda completa y estática: `.ventana` en
+`index.html` es un `<div>` vacío con `position: fixed`, `inset: 0` y
+`background: url(../img/fondo.png) center / cover no-repeat`, y por encima de
+todo (`z-index: 30`) para que se vea siempre en pantalla aunque la página ruede.
+La imagen es transparente a propósito: deja pasar el toque (`pointer-events:
+none`) y no entra en el árbol de lectura (`aria-hidden="true"`). Eso es todo lo
+que hace el marco; no se corta en esquinas para el sitio.
+
+Esto no se eligió por accidente. En su momento se propuso un marco de esquinas
+fijas y un filete de 1px, y se comprobó midiendo que un racimo fijo a la
+pantalla termina tapando texto en cuanto la página rueda: la fecha de la
+portada y el último renglón del pie caían debajo del racimo inferior. El
+compromiso que el usuario prefirió es el que está implementado: la guirnalda
+entera, flotando fija sobre todo, sin importar el scroll.
+
+---
+
 ## Pruebas
 
 Con el servidor local levantado (paso 2), corré:
 
 ```
+node tools/buscar-ajenos.js        letras de otro idioma coladas en el texto
 node tools/reparar-encoding.js    que nadie haya roto la codificación
 node tools/probar-backend.js      85 pruebas del backend, sin Google
 node tools/probar-conexion.js     ¿está desplegado el Web App? (necesita internet)
@@ -304,9 +394,17 @@ node tools/probar-cuenta.js       13 pruebas de la cuenta regresiva
 node tools/probar-estilos.js      CSS: clases, variables, pesos de fuente
 node tools/probar-links.js        los 30 links de invitación, uno por uno
 node tools/probar-movil.js        17 pantallas de teléfono: scroll, táctil y letra chica
+node tools/probar-marco.js         el marco cubre y queda fijo; cuánto texto queda bajo un pétalo
 node tools/probar-panel.js        57 pruebas del panel del resumen y su filtro
 node tools/probar-rsvp.js         20 pruebas de comportamiento del formulario
 ```
+
+`buscar-ajenos.js` existe por una razón concreta: dos veces una traducción
+automática dejó ideogramas chinos dentro de comentarios del CSS, y en un momento
+también se colaron dos ideogramas y una palabra en inglés. Son invisibles a
+simple vista, no rompen nada, y llegan al sitio publicado. El script busca
+escritura china o japonesa, cirílica y árabe o devanagari en el CSS, el HTML, el
+JS y este README.
 
 `probar-backend.js` son 85 pruebas que cubren la instalación, la generación de
 links y códigos, el `data/invitados.js` que produce, el envío de respuestas, el

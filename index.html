@@ -38,6 +38,12 @@
 </head>
 <body>
 
+<!-- La guirnalda de fondo.png, estática y siempre en pantalla. La imagen es
+     transparente a propósito: vive por encima de todo y se queda ahí aunque
+     la página ruede. pointer-events:none deja pasar el toque y aria-hidden la
+     saca del árbol de lectura. -->
+<div class="ventana" aria-hidden="true"></div>
+
 <a class="saltar" href="#respuesta">Ir a confirmar asistencia</a>
 
 <!-- ============================ PORTADA ============================ -->
@@ -115,7 +121,7 @@
   </section>
 
   <!-- ========================= CÓMO LLEGAR ========================= -->
-  <section class="bloque bloque--ancho bloque--salvia">
+  <section class="bloque bloque--ancho bloque--rosa">
     <h2 class="bloque__titulo">Cómo llegar</h2>
 
     <!-- Marco de foto con foto opcional: si assets/img/iglesia.jpg no está,
