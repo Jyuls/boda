@@ -145,17 +145,20 @@ ninguna foto, la página queda igual de linda con los marcos de texto.
 
 Las tres se agregaron a `index.html`; los datos que faltan por completar son:
 
-- **Comida** — barbacoa en la Casa de la familia, de 1:00 pm a 5:00 pm. El
-  botón de mapa apunta al link corto `https://maps.app.goo.gl/TxfZHiPZb3d2xCcZA`
-  (el que pasó la pareja, en el HTML del bloque "La comida"). **Verificar que
-  esa dirección abra el lugar correcto antes de publicar.** La dirección en
-  texto no está: si algún día la quieren escrita, se agrega en el bloque
-  `programa__fila` de "Lugar".
-- **Padrinos** — cuatro tarjetas con rol (Arras, Anillo, Lazo, Velación) ya con
-  nombres. Para corregirlos se edita el bloque `Padrinos` de `index.html`.
-- **Regalos** — dos tarjetas: sobre y transferencia. La CLABE
-  `6381 8001 0118 3935 09` (Nu Bank, a nombre de Johann Vega) está en el bloque
-  "Regalos". **Verificar el número antes de publicar.**
+- **Celebración** — el jueves 22 de octubre de 2026 a la 1:00 p. m. en la Casa
+  de la Familia González. El calendario termina a las 5:00 p. m. y el botón
+  "Ver ubicación" abre `https://maps.app.goo.gl/Wcf1Rp1yFucQYaVm8`. La foto
+  `assets/img/iglesia.jpg` es provisional; no representa la casa.
+- **Ceremonia** — la misa en la Iglesia San Ignacio de Loyola es a las 11:00
+  a. m. del jueves 22 de octubre de 2026. La sección "Lugar de la ceremonia"
+  aparece inmediatamente después de la tarjeta y usa el mapa
+  `https://maps.app.goo.gl/hc42dzcKFi88nMW68` y la foto `assets/img/iglesia.jpg`.
+- **Padrinos** — los roles (Arras, Anillo, Lazo y Velación) aparecen agrupados
+  en una cuadrícula. Para corregirlos se edita el bloque `Padrinos` de
+  `index.html`.
+- **Sobres de Regalo** — una ilustración de un sobre acompaña el aviso de que
+  habrá sobres para cooperar con lo que cada invitado guste para los recién
+  casados. No se muestran datos bancarios.
 
 ---
 
@@ -168,8 +171,8 @@ para que nadie las busque y no las encuentre:
   `gas/Code.gs` los sigue leyendo y sumando en el resumen: lo que se quitó fue
   el formulario. El sitio manda la lista siempre vacía. Si algún día vuelve a
   hacer falta, hay que rearmar el `input` en `rsvp.js`.
-- **El botón de agregar al calendario** y con él todo el código que armaba el
-  archivo `.ics` en `app.js`. Quedó solamente el link de Google Maps.
+- **El archivo `.ics` que se armaba en `app.js`.** Sigue disponible el enlace
+  para agregar la celebración al calendario de Google.
 - **El aviso de recepción** y los textos de "escríbenos y lo arreglamos". El
   `<p class="ayuda">` sigue existiendo porque es donde aparece el error real
   ("falta decidir por..."), pero nace vacío y el CSS lo oculta con
@@ -262,6 +265,13 @@ Para verlas todas en una tabla con botones de copiar, abrí en local
 Alternativa: el Sheet también tiene la pestaña `Generado`, que ya viene con
 código para pegar en `data/invitados.js`. Úsala si querés que el sitio muestre
 las invitaciones por nombre en vez de pedir el código.
+
+Los links personales llevan el código después de `#` (por ejemplo,
+`https://jyuls.github.io/boda/#YZ32`). Ese código se busca en
+`data/invitados.js`: la portada conserva los nombres completos de Abril y
+Johann y muestra debajo el nombre del grupo invitado.
+También se admite el formato `?code=YZ32`. Al pulsar **Abrir**, el sitio marca
+la invitación como abierta sin quitar el código del link.
 
 ---
 

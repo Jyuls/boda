@@ -1,0 +1,17 @@
+const fs = require('fs');
+let s = fs.readFileSync('C:/Users/elegi/Desktop/projects/boda/assets/js/app.js', 'utf8');
+s = s.replace('Gallery', 'Galería');
+s = s.replace('Guestbook', 'Libro de Visitas');
+s = s.replace('View image', 'Ver foto');
+s = s.replace('Previous image', 'Foto anterior');
+s = s.replace('Next image', 'Foto siguiente');
+s = s.replace('Previous photo', 'Foto anterior');
+s = s.replace('Next photo', 'Foto siguiente');
+s = s.replace('View photo', 'Ver foto');
+s = s.replace('The big day', '¡Llegó el gran día!');
+s = s.replace('days', 'días');
+s = s.replace('hours', 'horas');
+s = s.replace('min', 'min');
+s = s.replace('sec', 'seg');
+fs.writeFileSync('C:/Users/elegi/Desktop/projects/boda/assets/js/app.js', s);
+console.log('ok');

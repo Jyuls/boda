@@ -1,0 +1,16 @@
+const fs = require('fs');
+let s = fs.readFileSync('C:/Users/elegi/Desktop/projects/boda/index.html', 'utf8');
+s = s.replace('Wedding Reception Venue', 'Lugar de la Recepción');
+s = s.replace('Marriott Mena House\nCairo, Egypt', 'Hacienda Santa Verónica\nCarretera Tijuana-Tecate km 15.5, El Refugio, Tijuana');
+s = s.replace('Chỉ đường', 'Cómo llegar');
+s = s.replace('maps.embed/v1/place?key=', '#');
+s = s.replace('DRESS CODE', 'CÓDIGO DE VESTIMENTA');
+s = s.replace('Party Attire', 'Formal');
+s = s.replace('WEDDING DAY SCHEDULE', 'ITINERARIO DEL DÍA');
+s = s.replace('Send Wishes', 'Enviar Deseos');
+s = s.replace('Send wishes', 'Enviar Deseos');
+s = s.replace('SEND WISHES', 'ENVIAR DESEOS');
+s = s.replace('Add to Calendar', 'Agregar al calendario');
+s = s.replace('CONFIRM ATTENDANCE', 'CONFIRMAR ASISTENCIA');
+fs.writeFileSync('C:/Users/elegi/Desktop/projects/boda/index.html', s);
+console.log('ok');

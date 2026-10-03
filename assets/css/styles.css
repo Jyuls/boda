@@ -1,939 +1,1182 @@
-/* ==========================================================================
-   styles.css — la invitación de Abril y Johann.
-
-   Paleta del demo "minimalism-dark-blue" de ChungDoi:
-     marfil #F7F5EE   el papel
-     marino #00224C   la tinta y las tarjetas oscuras
-     crema  #ECE4D8   superficies de apoyo (mapas, vestimenta, marcos vacíos)
-     oro    #B58B2F   filetes y adornos
-            #C9A24A   oro claro: rótulos sobre navy (~6.7:1)
-            #7C5E1E   oro tinta: texto dorado sobre marfil (~5.6:1)
-
-   Tipografía (la del demo, y probar-estilos.js vigila que lo pedido en
-   index.html sea lo usado acá):
-     - EB Garamond     cuerpo, con cursivas de verdad (400 y 400 itálica)
-     - Playfair Display rótulos espaciados (400) y títulos (600)
-     - Viaoda Libre    los nombres de la portada
-     - The Nautigal    el ampersand de la portada
-
-   Reglas que NO se pueden borrar sin tocar las pruebas:
-     - .marco--vacio img { display: none }  (sin esto se ve el cuadrito roto)
-     - .ayuda:empty { display: none }
-     - .opcion sin marcar: fondo transparente; marcado: var(--si)/var(--no)
-     - Ningún centro de texto puede quedar dentro del recto de una flor
-       (.flor-banda, .ornamento__gema); lo comprueba probar-marco.js.
-   ========================================================================== */
+/* ============================================================
+   CLON FASE 1 — Abril & Johann (Corregido)
+   Paleta: Morado #7E57C2 · Morado medio #B39DDB · Morado pastel #F3E5F5 · Morado suave #D1C4E9
+   ============================================================ */
 
 :root {
-  --marfil:       #F7F5EE;
-  --marfil-suave: #EFEBDF;
-  --marino:       #00224C;
-  --marino-suave: #10315F;
-  --crema:        #ECE4D8;
-  --oro:          #B58B2F;
-  --oro-claro:    #C9A24A;
-  --oro-tinta:    #7C5E1E;
-  --tinta:        #00224C;
-  --tinta-suave:  rgba(0, 34, 76, .72);
-
-  --si:       #6FB46A;   /* verde de verdad: el "Sí" marcado */
-  --si-texto: #9AD3A0;   /* el "Sí" sin marcar, sobre navy */
-  --no:       #C96874;   /* rojo de verdad: el "No" marcado */
-  --no-texto: #E8A0AB;   /* el "No" sin marcar, sobre navy */
-
-  --filete:       1px solid rgba(0, 34, 76, .14);
-  --filete-suave: 1px solid rgba(247, 245, 238, .16);
-  --filete-oro:   1px solid rgba(181, 139, 47, .45);
-
-  --serif:  'EB Garamond', 'Times New Roman', Georgia, serif;
-  --didone: 'Playfair Display', Georgia, serif;
-  --viaoda: 'Viaoda Libre', 'Times New Roman', serif;
-  --script: 'The Nautigal', cursive;
-
-  --canal:   1.5rem;   /* el aire de los costados de la columna */
-  --esquina: 13px;     /* el radio de las tarjetas */
+  --morado: #7E57C2;
+  --morado-medio: #B39DDB;
+  --morado-pastel: #F3E5F5;
+  --morado-suave: #D1C4E9;
+  --texto-morado: #F7F5FF;
+  --morado-oscuro: #4A148C;
+  --morado-profundo: #5E35B1;
+  --morado-translucido: rgba(94, 53, 177, 0.72);
+  --morado-suave-trans: rgba(94, 53, 177, 0.16);
 }
 
-* { box-sizing: border-box; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-html { font-size: 100%; -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; }
 
 body {
-  margin: 0;
-  font-family: var(--serif);
-  font-weight: 400;
-  font-size: 1.05rem;
-  line-height: 1.72;
-  color: var(--tinta);
-  background: var(--marfil);
-  overflow-x: hidden;
+  background: #ffffff;
+  font-family: Baskerville, "Times New Roman", serif;
+  color: var(--morado-oscuro);
+  -webkit-font-smoothing: antialiased;
 }
 
-img { max-width: 100%; display: block; }
+img { display: block; max-width: 100%; }
+button { font-family: inherit; cursor: pointer; }
+a { color: inherit; }
 
-[hidden] { display: none !important; }
-
-/* La única negrita de toda la página es falsa: EB Garamond no tiene un peso
-   700 pedido, y el navegador la inventaría. Mejor la misma itálica que ya se
-   usa para los acentos. */
-strong { font-family: var(--serif); font-weight: 400; font-style: italic; }
-
-/* -------------------------------------------------------------------------- */
-/* Cifras, enlace para saltar y foco                                            */
-/* -------------------------------------------------------------------------- */
-
-.cifras {
-  font-feature-settings: "onum" 1;
-  font-variant-numeric: oldstyle-nums;
-}
-
-.saltar {
-  position: absolute;
-  left: -9999px;
-  top: 0;
-  display: inline-block;
-  padding: .7rem 1.1rem;
-  background: var(--marino);
-  color: var(--marfil);
-  font-family: var(--didone);
-  font-size: 1rem;
-  text-decoration: none;
-  border-radius: var(--esquina);
-  z-index: 100;
-}
-.saltar:focus { left: 0; }
-
-:focus-visible {
-  outline: 2px solid var(--oro-claro);
-  outline-offset: 3px;
-  border-radius: 3px;
-}
-
-/* -------------------------------------------------------------------------- */
-/* El adorno de la portada: dos florcitas de las esquinas recortadas y un rombo  */
-/* -------------------------------------------------------------------------- */
-
-.ornamento {
+/* ============================================================
+   SOBRE DE APERTURA
+   ============================================================ */
+.sobre {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: .9rem;
-  max-width: 20rem;
-  margin: 2.2rem auto 0;
-  color: var(--oro);
+  gap: 18px;
+  padding: 24px 16px;
+  background: radial-gradient(circle at 50% 18%, #9575CD 0%, #7E57C2 55%, #4A148C 100%);
+  overflow-x: hidden;
+  overflow-y: auto;
+  transition: opacity .55s ease, visibility .55s ease;
 }
-
-/* Las esquinas recortadas de la guirnalda (flor-esquina-si/sd.png). Viven en
-   el aire del adorno, lejos de cualquier texto: probar-marco.js se encarga
-   de que no haya centros de texto encima de una flor. */
-.ornamento__gema {
-  display: block;
-  width: 3.2rem;
-  height: auto;
-  flex: 0 0 auto;
-}
-
-.ornamento__centro {
-  width: .58rem;
-  height: .58rem;
-  background: var(--oro);
-  transform: rotate(45deg);
-  border-radius: 2px;
-}
-
-/* -------------------------------------------------------------------------- */
-/* Portada — la primera pantalla                                                */
-/* -------------------------------------------------------------------------- */
-
-.portada {
-  position: relative;
-  text-align: center;
-  padding: 3.6rem 1.5rem 3.4rem;
-  background:
-    radial-gradient(120% 80% at 50% -15%, rgba(236, 228, 216, .95) 0%, transparent 55%),
-    var(--marfil);
-}
-
-.portada__interior {
-  max-width: 33rem;
-  margin: 0 auto;
-  position: relative;
-}
-
-/* El corazón en llamas es el emblema de San Ignacio de Loyola, patrono de la
-   parroquia. Es el único elemento de la página que se mueve: la flama titila
-   como una vela. */
-.sello {
-  display: block;
-  width: 3.2rem;
-  height: auto;
-  margin: 0 auto 1.9rem;
-  color: var(--oro);
-  overflow: visible;
-}
-
-.sello__flama {
-  transform-origin: 32px 26px;
-  animation: titilar 3.4s ease-in-out infinite;
-}
-@keyframes titilar {
-  0%, 100% { opacity: .55; transform: scaleY(1)    scaleX(1); }
-  28%      { opacity: 1;   transform: scaleY(1.16) scaleX(.92); }
-  55%      { opacity: .68; transform: scaleY(.95)  scaleX(1.05); }
-  76%      { opacity: .95; transform: scaleY(1.09) scaleX(.97); }
-}
-
-.formula {
-  font-style: italic;
-  font-size: 1.04rem;
-  line-height: 1.62;
-  color: var(--tinta-suave);
-  margin-bottom: 2.1rem;
-}
-
-.nombres {
-  font-family: var(--viaoda);
-  font-size: clamp(1.55rem, 5.6vw, 2.1rem);
-  line-height: 1.16;
-  letter-spacing: .02em;
-  color: var(--marino);
-  margin-bottom: .6rem;
-}
-.nombres__linea { display: block; }
-
-.nombres__y {
-  display: block;
-  font-family: var(--script);
-  font-size: 2em;
-  line-height: 1;
-  color: var(--oro);
-  padding: .12em 0 .18em;
-}
-
-.fecha {
-  font-style: italic;
-  font-size: 1.06rem;
-  line-height: 1.55;
-  color: var(--tinta);
-  margin-top: 1.5rem;
-}
-.destello {
-  font-style: normal;
-  font-size: .9em;
-  color: var(--oro);
-  padding: 0 .35em;
-}
-
-/* -------------------------------------------------------------------------- */
-/* La columna: en pantallas anchas la invitación vive en una columna de         */
-/* teléfono centrada, para que cada sección se vea como en el celular.          */
-/* -------------------------------------------------------------------------- */
-
-.pagina { display: block; max-width: none; padding: 0; }
-
-.bloque {
-  max-width: none;
-  margin-inline: auto;
-  padding: 0 var(--canal) 3rem;
-}
-
-.bloque__titulo {
-  font-family: var(--didone);
-  font-weight: 600;
-  font-size: 1.7rem;
-  line-height: 1.25;
-  color: var(--marino);
-  margin: 0 0 1.4rem;
-  padding-bottom: .7rem;
-  border-bottom: var(--filete-oro);
-}
-
-.bloque__texto {
-  font-size: 1.05rem;
-  color: var(--tinta);
-  margin: 0 0 1.3rem;
-}
-
-/* -------------------------------------------------------------------------- */
-/* Las tarjetas navy y la banda de flores del borde superior                     */
-/* -------------------------------------------------------------------------- */
-
-.panel {
-  position: relative;
-  overflow: hidden;
-  border-radius: var(--esquina);
-  background:
-    radial-gradient(120% 90% at 88% -12%, rgba(201, 162, 74, .18) 0%, transparent 55%),
-    var(--marino);
-  color: var(--marfil);
-  padding: 3.1rem 1.5rem 2.3rem;
-}
-.panel + .panel { margin-top: 1.2rem; }
-
-/* "Cómo llegar" y "Vestimenta": tarjetas crema, para que la página respire
-   entre las dos tarjetas oscuras. */
-.panel--mapa {
-  background: var(--crema);
-  color: var(--marino);
-  padding-top: 2.5rem;
-}
-
-.panel__titulo {
-  font-family: var(--didone);
-  font-weight: 600;
-  font-size: .95rem;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--oro-tinta);
-  margin: 0 0 1.1rem;
-}
-
-.panel:not(.panel--mapa) .bloque__texto { color: var(--marfil); }
-
-/* La banda de flores nace y muere en el aire de arriba de la tarjeta: está
-   en el borde superior, y el texto empieza más abajo del padding de la
-   tarjeta. Es decorativa (aria-hidden) y nunca se acerca a una letra. */
-.flor-banda {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1.5rem;
-  background: url(../img/flor-separador.png) top center no-repeat;
-  background-size: cover;
-  opacity: .85;
+.sobre.abierto {
+  opacity: 0;
+  visibility: hidden;
   pointer-events: none;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Marcos de foto: con o sin foto, nunca un cuadrito roto                       */
-/* -------------------------------------------------------------------------- */
+.sobre-sparkle,
+.sobre-detalle { display: none; }
 
-.marco {
+.sobre-card {
   position: relative;
+  z-index: 4;
+  width: 310px;
+  max-width: 92vw;
+  background: rgba(243, 229, 245, 0.98);
+  border: 1px solid rgba(94, 53, 177, 0.15);
+  border-radius: 8px;
+  padding: 92px 22px 34px;
+  text-align: center;
+  box-shadow: 0 25px 60px -12px rgba(74, 20, 140, 0.45), 0 8px 24px rgba(74, 20, 140, 0.2), 0 0 40px rgba(94, 53, 177, 0.15);
+  overflow: hidden;
+}
+@media (min-width: 640px)  { .sobre-card { width: 340px; } }
+@media (min-width: 768px)  { .sobre-card { width: 520px; } }
+@media (min-width: 1024px) { .sobre-card { width: 600px; padding: 100px 40px 38px; } }
+
+.sello {
+  position: absolute;
+  left: 50%;
+  top: 44px;
+  width: 56px;
+  height: 56px;
+  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  aspect-ratio: 4 / 3;
-  overflow: hidden;
-  border-radius: var(--esquina);
-  background: linear-gradient(160deg, var(--crema) 0%, #E3D8C4 100%);
-  color: var(--tinta);
-  text-align: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #7E57C2, #4A148C);
+  box-shadow: 0 4px 20px rgba(74, 20, 140, 0.5), inset 0 2px 4px rgba(255,255,255,0.3);
+  animation: seal-pulse 2s ease-in-out infinite;
+  z-index: 5;
+}
+@keyframes seal-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50%      { transform: translate(-50%, -50%) scale(1.05); }
 }
 
-/* cada foto tiene su proporción, para que el recorte no se coma las caras */
-.marco--iglesia { aspect-ratio: 5 / 3; }
-.marco--pareja  { aspect-ratio: 3 / 4; }
-.marco--galeria { aspect-ratio: 4 / 3; }
+.sobre-flor {
+  position: absolute;
+  width: 84px;
+  pointer-events: none;
+  opacity: .9;
+  filter: hue-rotate(130deg) saturate(.42) brightness(1.35) contrast(.9);
+}
+.sobre-flor.f1 { top: -5%; left: -10px;  transform: rotate(25deg); }
+.sobre-flor.f2 { top: -5%; right: -10px; transform: rotate(-25deg) scaleX(-1); }
+.sobre-flor.f3 { bottom: -6%; left: -10px; transform: rotate(155deg); }
+.sobre-flor.f4 { bottom: -6%; right: -10px; transform: rotate(205deg) scaleX(-1); }
 
-.marco img {
+.sobre-nombres {
+  font-family: "Lora", Baskerville, serif;
+  color: var(--morado-oscuro);
+  font-weight: 400;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.15;
+  width: 100%;
+  font-size: clamp(17px, 4.5vw, 28px);
+}
+.sobre-nombres .amp { font-family: Baskerville, "Times New Roman", serif; font-size: clamp(16px, 3.2vw, 21px); line-height: 1.1; }
+
+.orn-linea { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 14px 0 12px; }
+.orn-linea i { width: 40px; height: 1px; }
+.orn-linea i:first-child { background: linear-gradient(to right, transparent, var(--morado)); }
+.orn-linea i:last-child  { background: linear-gradient(to left,  transparent, var(--morado)); }
+
+.sobre-fecha {
+  font-family: "Lora", "Times New Roman", serif;
+  color: var(--morado-translucido);
+  font-size: 18px;
+  margin-bottom: 22px;
+}
+.sobre-invita {
+  font-family: "Lora", "Times New Roman", serif;
+  font-weight: 300;
+  color: var(--morado-translucido);
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+.sobre-chip {
+  display: inline-block;
+  background: var(--morado-suave-trans);
+  border-radius: 12px;
+  padding: 10px 20px;
+  margin-bottom: 12px;
+  max-width: 100%;
+  font-family: "Lora", "Times New Roman", serif;
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--morado-oscuro);
+  overflow-wrap: anywhere;
+}
+.sobre-chip:empty { display: none; }
+@media (min-width: 640px) { .sobre-chip { font-weight: 500; font-size: 20px; } }
+.sobre-celebra {
+  font-family: "Lora", "Times New Roman", serif;
+  font-weight: 300;
+  color: var(--morado-translucido);
+  font-size: 16px;
+  margin-bottom: 26px;
+}
+
+.btn-open {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  padding: 10px 32px;
+  border-radius: 999px;
+  background: var(--morado);
+  color: #ffffff;
+  text-decoration: none;
+  font-family: "Lora", "Times New Roman", serif;
+  font-weight: 600;
+  font-size: 18px;
+  box-shadow: 0 4px 14px rgba(94, 53, 177, 0.35);
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: transform .2s ease;
+}
+.btn-open:hover { transform: scale(1.045); }
+.btn-open .shine {
+  position: absolute;
+  top: 0;
+  left: -20%;
+  height: 100%;
+  width: 32px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: shine 3s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes shine {
+  0%   { left: -20%; }
+  55%  { left: 110%; }
+  100% { left: 110%; }
+}
+
+.sobre-card.salir {
+  animation: envelope-away .85s cubic-bezier(.55,0,.55,.2) forwards;
+  pointer-events: none;
+}
+@keyframes envelope-away {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  15%  { transform: translateY(10px) rotate(.5deg); opacity: 1; }
+  100% { transform: translateY(-120vh) rotate(-2deg); opacity: 0; }
+}
+.sobre .particula {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  margin: -4px 0 0 -4px;
+  z-index: 40;
+  pointer-events: none;
+  animation: particle-burst .9s ease-out forwards;
+  will-change: transform, opacity;
+  background: var(--morado-suave) !important;
+}
+@keyframes particle-burst {
+  0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(.2); opacity: 0; }
+}
+
+/* ============================================================
+   TARJETA PRINCIPAL
+   ============================================================ */
+#tarjeta { background: #ffffff; }
+
+.card {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  max-width: 480px;
+  background-color: var(--morado-pastel);
+  color: var(--morado-oscuro);
+  overflow: hidden;
+}
+@media (min-width: 768px) {
+  .card {
+    max-width: 900px;
+    margin: 0 auto;
+    border: 1px solid rgba(94, 53, 177, 0.18);
+  }
+}
+
+.paper {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url("../img/minimalism/paper.webp");
+  background-size: 666px 1000px;
+  background-repeat: repeat;
+  background-position: left top;
+  mix-blend-mode: multiply;
+  opacity: .4;
+}
+
+/* ---------------------- Portada ---------------------- */
+.portada {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px 24px 56px;
+  overflow-x: clip;
+}
+.bg-castillo {
+  position: absolute;
+  left: -61%;
+  top: 0;
+  width: 212%;
+  max-width: none;
+  object-fit: contain;
+  opacity: .2;
+  transform: scaleX(-1);
+  pointer-events: none;
+}
+.linea-oro {
+  position: relative;
+  z-index: 10;
+  width: 82px;
+  max-width: none;
+  object-fit: contain;
+  margin-bottom: 12px;
+  filter: hue-rotate(290deg) saturate(1.25);
+}
+@media (min-width: 768px) { .linea-oro { width: 104px; } }
+.save {
+  position: relative;
+  z-index: 10;
+  font-family: "Playfair Display", "Times New Roman", serif;
+  font-weight: 600;
+  color: var(--morado-oscuro);
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  font-size: 15px;
+  white-space: pre-line;
+}
+@media (min-width: 768px) { .save { font-size: 18px; } }
+
+/* Colección */
+.colaje {
+  position: relative;
+  z-index: 10;
+  width: 64.2%;
+  max-width: 300px;
+  margin-top: 30.6%;
+}
+@media (min-width: 768px) { .colaje { max-width: 380px; } }
+.colaje-rel { position: relative; aspect-ratio: 283 / 328; }
+.flor-fondo {
+  position: absolute;
+  left: -32.9%;
+  top: 0;
+  width: 57.6%;
+  max-width: none;
+  object-fit: contain;
+  filter: drop-shadow(3px 4px 3px rgba(0,0,0,0.1)) hue-rotate(130deg) saturate(.42) brightness(1.35) contrast(.9);
+  pointer-events: none;
+  z-index: 15;
+}
+.env-fondo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  z-index: 10;
+  pointer-events: none;
+}
+.polaroid {
+  position: absolute;
+  z-index: 21;
+  background: #fff;
+  border: 6px solid #fff;
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.25);
+}
+.polaroid img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.polaroid.p1 {
+  left: 0.9%;
+  top: -15.7%;
+  width: 67.4%;
+  aspect-ratio: 191 / 255;
+  transform: rotate(-9.93deg);
+  animation: dbFloat 6.5s ease-in-out .2s infinite;
+  will-change: transform;
+}
+.polaroid.p2 {
+  left: 31%;
+  top: 8.8%;
+  width: 59.2%;
+  aspect-ratio: 167 / 219;
+  transform: rotate(17.26deg);
+  animation: dbFloat 7s ease-in-out .8s infinite;
+  will-change: transform;
+}
+@media (min-width: 768px) { .polaroid { border-width: 8px; } }
+.env-tapa {
+  position: absolute;
+  left: 0;
+  top: 42.7%;
+  width: 100%;
+  max-width: none;
+  z-index: 30;
+  pointer-events: none;
+}
+.flor-db-wrap {
+  position: absolute;
+  left: 75.3%;
+  top: 33.8%;
+  width: 50.5%;
+  z-index: 35;
+  pointer-events: none;
+  display: block;
+}
+.flor-db-wrap img {
+  width: 100%;
+  max-width: none;
+  object-fit: contain;
+  filter: drop-shadow(3px 4px 3px rgba(0,0,0,0.1)) hue-rotate(130deg) saturate(.42) brightness(1.35) contrast(.9);
+}
+.db { animation: dbFloat 6s ease-in-out infinite; will-change: transform; display: block; }
+@keyframes dbFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+/* Nombres */
+.nombres {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 19px;
+  margin-top: 24%;
+}
+.nombres p {
+  font-family: "Lora", Baskerville, serif;
+  color: var(--morado-oscuro);
+  font-size: clamp(24px, 7vw, 34px);
+  line-height: 1.15;
+}
+@media (min-width: 768px) { .nombres p { font-size: 42px; } }
+.amp-fantasma {
+  position: absolute;
+  top: 37%;
+  transform: translateY(-50%);
+  font-family: "The Nautigal", cursive;
+  color: rgba(94, 53, 177, 0.15);
+  font-size: 100px;
+  line-height: 1;
+  pointer-events: none;
+}
+@media (min-width: 768px) { .amp-fantasma { font-size: 128px; } }
+
+/* Secciones */
+.seccion {
+  position: relative;
+  z-index: 10;
+  margin: 0 auto;
+  width: 88%;
+  max-width: 420px;
+}
+@media (min-width: 768px) { .seccion { max-width: 560px; } }
+
+.flor-wrap {
+  position: absolute;
+  z-index: 20;
+  pointer-events: none;
+  display: block;
+}
+.flor-wrap img {
+  width: 100%;
+  max-width: none;
+  object-fit: contain;
+  filter: drop-shadow(3px 4px 3px rgba(0,0,0,0.1)) hue-rotate(130deg) saturate(.42) brightness(1.35) contrast(.9);
+}
+.flor-wrap .invertido { transform: rotate(180deg) scaleY(-1); }
+.flor-wrap.pos1 { left: -30%;   top: 41.7%;  width: 41.7%; }
+.flor-wrap.pos2 { left: 85%;    top: 28.7%;  width: 37%; }
+.flor-wrap.pos3 { left: -43.9%; top: 22.8%;  width: 54.2%; }
+.flor-wrap.pos4 { left: 83.7%;  bottom: 5%;  width: 37.6%; }
+.flor-wrap.pos5 { left: 84.9%;  top: -10%;   width: 40.8%; }
+.flor-wrap.pos6 { left: -6.4%;  top: 60.3%;  width: 32.1%; }
+
+.card-navy {
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  box-shadow: 4px 4px 10px rgba(0,0,0,0.25);
+  padding: 36px 20px 40px;
+  border-radius: 13px;
+}
+.card-navy .fondo-navy { position: absolute; inset: 0; background-color: var(--morado); }
+.card-navy .textura {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+  max-width: none;
   object-fit: cover;
-}
-
-.marco__pie {
-  position: relative;
-  font-style: italic;
-  font-size: 1rem;
-  color: var(--tinta);
-  opacity: .75;
-  margin: 0;
-  padding: 0 1rem;
-}
-
-/* El corazón del contrato con las pruebas: sin foto, la imagen se esconde (a
-   propósito) y queda la leyenda; con foto, al revés. */
-.marco--vacio img { display: none; }
-.marco:not(.marco--vacio) .marco__pie { display: none; }
-
-/* -------------------------------------------------------------------------- */
-/* Programa de la ceremonia / de la comida (dentro de las tarjetas navy)        */
-/* -------------------------------------------------------------------------- */
-
-.programa { margin: 1.4rem 0 0; }
-
-.programa__fila {
-  display: grid;
-  grid-template-columns: minmax(7.5rem, .4fr) 1fr;
-  gap: .6rem 1rem;
-  padding: .8rem 0;
-  border-top: var(--filete-suave);
-}
-.programa__fila:first-child { border-top: 0; }
-
-.programa__clave {
-  font-family: var(--didone);
-  font-size: .95rem;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  color: var(--oro-claro);
-}
-
-.programa__valor {
-  margin: 0;
-  font-size: 1.05rem;
-  color: var(--marfil);
-}
-
-.panel--mapa .programa__clave { color: var(--oro-tinta); }
-.panel--mapa .programa__valor { color: var(--marino); }
-
-.comida__nota {
-  font-size: .95rem;
-  font-style: italic;
-  color: var(--crema);
-  opacity: .8;
-}
-
-/* -------------------------------------------------------------------------- */
-/* Dirección y botones                                                          */
-/* -------------------------------------------------------------------------- */
-
-.direccion {
-  border-left: 2px solid var(--oro);
-  padding: .3rem 0 .4rem 1rem;
-  font-style: normal;
-  line-height: 1.65;
-  color: var(--marino);
-  margin-bottom: 1.3rem;
-}
-.direccion--dentro { border-left: 0; padding-left: 0; margin-bottom: 1.2rem; }
-.direccion__linea { display: block; font-size: 1.05rem; }
-
-.acciones { margin: 1.5rem 0 0; }
-
-.boton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 52px;
-  padding: .7rem 1.4rem;
-  border: 0;
-  border-radius: var(--esquina);
-  background: var(--marino);
-  color: var(--marfil);
-  font-family: var(--didone);
-  font-weight: 400;
-  font-size: 1rem;
-  letter-spacing: .04em;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background-color .15s ease;
-}
-.boton:hover { background: var(--marino-suave); }
-
-/* El botón de la comida vive dentro de una tarjeta navy: ahí va dorado. */
-.panel:not(.panel--mapa) .boton {
-  background: var(--oro-claro);
-  color: var(--marino);
-}
-.panel:not(.panel--mapa) .boton:hover { background: var(--oro); }
-
-.boton--discreto {
-  display: inline-flex;
-  align-items: center;
-  min-height: 48px;
-  padding: .45rem .1rem;
-  background: none;
-  border: 0;
-  border-bottom: 1px solid var(--oro);
-  border-radius: 0;
-  color: var(--oro-tinta);
-  font-family: var(--didone);
-  font-size: 1rem;
-  letter-spacing: .02em;
-  text-decoration: none;
-  cursor: pointer;
-}
-.tarjeta .boton--discreto {
-  color: var(--oro-claro);
-  border-bottom-color: rgba(201, 162, 74, .5);
-}
-
-/* -------------------------------------------------------------------------- */
-/* Galería — el carrusel de fotos                                               */
-/* -------------------------------------------------------------------------- */
-
-.galeria { margin: 1.4rem 0 0; }
-.galeria__cinta { position: relative; }
-
-/* Todo el carrusel es una tira de marcos; el slide activo es el que lleva
-   .activa. Los ocultos se esconden de verdad (display:none), así que no
-   cuentan para los lectores de pantalla ni para las mediciones del banco. */
-.galeria__cinta .marco { display: none; }
-.galeria__cinta .marco.activa { display: flex; }
-
-.galeria__reglilla {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1.1rem;
-  margin-top: 1.2rem;
-}
-.galeria__boton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  border: 1px solid var(--oro);
-  border-radius: 50%;
-  background: var(--marfil-suave);
-  color: var(--marino);
-  font-size: 1.4rem;
-  line-height: 1;
-  cursor: pointer;
-}
-.galeria__boton:hover { background: var(--crema); }
-.galeria__contador {
-  font-family: var(--didone);
-  font-size: 1rem;
-  letter-spacing: .08em;
-  color: var(--oro-tinta);
-}
-
-/* -------------------------------------------------------------------------- */
-/* Cronograma y la cuenta regresiva                                             */
-/* -------------------------------------------------------------------------- */
-
-.cronograma {
-  list-style: none;
-  margin: 0 0 1.7rem;
-  padding: 0;
-  border-top: var(--filete);
-}
-.cronograma__fila {
-  display: flex;
-  align-items: baseline;
-  gap: 1.2rem;
-  padding: .9rem 0;
-  border-bottom: var(--filete);
-}
-.cronograma__hora {
-  font-family: var(--didone);
-  font-weight: 600;
-  font-size: 1.05rem;
-  color: var(--oro-tinta);
-  white-space: nowrap;
-}
-.cronograma__texto { font-size: 1.05rem; color: var(--tinta); }
-
-/* La cuenta regresiva vive en su propia tarjeta navy, como el demo. */
-.cuenta-marco {
-  position: relative;
-  overflow: hidden;
-  border-radius: var(--esquina);
-  background:
-    radial-gradient(120% 90% at 88% -12%, rgba(201, 162, 74, .18) 0%, transparent 55%),
-    var(--marino);
-  color: var(--marfil);
-  text-align: center;
-  padding: 3rem 1.4rem 1.9rem;
-}
-.cuenta-rotulo {
-  display: block;
-  font-family: var(--didone);
-  font-size: .95rem;
-  letter-spacing: .18em;
-  text-transform: uppercase;
-  color: var(--oro-claro);
-  margin-bottom: 1.1rem;
-}
-
-.cuenta { display: flex; justify-content: center; }
-.cuenta__unidad { padding: 0 .95rem; min-width: 0; }
-.cuenta__unidad + .cuenta__unidad { border-left: var(--filete-suave); }
-.cuenta__numero {
-  display: block;
-  font-family: var(--didone);
-  font-weight: 400;
-  font-size: clamp(1.6rem, 7vw, 2.1rem);
-  line-height: 1.05;
-  color: var(--marfil);
-}
-.cuenta__etiqueta {
-  display: block;
-  font-family: var(--didone);
-  font-size: 1rem;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: var(--crema);
-  margin-top: .4rem;
-}
-
-.cuenta--terminada { display: block; }
-.cuenta__frase {
-  font-style: italic;
-  font-size: 1.05rem;
-  color: var(--marfil);
-  margin: 0;
-}
-
-/* -------------------------------------------------------------------------- */
-/* Padrinos y regalos                                                           */
-/* -------------------------------------------------------------------------- */
-
-.padrinos {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
-}
-.padrino {
-  background: var(--marfil-suave);
-  border: var(--filete);
-  border-radius: var(--esquina);
-  padding: 1.15rem 1.25rem;
-}
-.padrino__rol {
-  font-family: var(--didone);
-  font-size: .95rem;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: var(--oro-tinta);
-  margin: 0 0 .4rem;
-}
-.padrino__nombres {
-  font-size: 1.05rem;
-  line-height: 1.45;
-  margin: 0;
-}
-
-.detalles {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
-}
-.detalle {
-  background: var(--marfil-suave);
-  border: var(--filete);
-  border-radius: var(--esquina);
-  padding: 1.3rem 1.3rem 1.15rem;
-}
-.detalle__rol {
-  font-family: var(--didone);
-  font-size: .95rem;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: var(--oro-tinta);
-  margin: 0 0 .5rem;
-}
-.detalle__texto { margin: 0 0 .9rem; font-size: 1.05rem; }
-
-.clabe {
-  font-family: var(--didone);
-  font-size: 1.15rem;
-  letter-spacing: .08em;
-  color: var(--marino);
-  background: var(--marfil);
-  border: var(--filete-oro);
-  border-radius: var(--esquina);
-  padding: .7rem .9rem;
-  text-align: center;
-  margin: 0;
-  user-select: all;
-  cursor: copy;
-}
-.detalle__nota {
-  font-size: .95rem;
-  font-style: italic;
-  color: var(--oro-tinta);
-  opacity: .85;
-  margin-top: .6rem;
-}
-
-/* -------------------------------------------------------------------------- */
-/* La tarjeta de respuesta                                                     */
-/* -------------------------------------------------------------------------- */
-
-.tarjeta {
-  border-radius: var(--esquina);
-  background:
-    radial-gradient(120% 90% at 88% -12%, rgba(201, 162, 74, .16) 0%, transparent 55%),
-    var(--marino);
-  color: var(--marfil);
-  padding: 1.8rem 1.4rem 1.5rem;
-}
-
-.tarjeta__cargando { font-style: italic; color: var(--crema); opacity: .7; margin: 0; }
-.tarjeta__dedicatoria { font-style: italic; font-size: 1rem; color: var(--crema); margin: 0 0 .55rem; }
-
-.tarjeta__grupo {
-  font-family: var(--didone);
-  font-weight: 600;
-  font-size: 1.45rem;
-  line-height: 1.3;
-  color: var(--oro-claro);
-  margin: 0 0 1.2rem;
-  padding-bottom: .9rem;
-  border-bottom: var(--filete-suave);
-}
-
-.fila {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: .5rem 1rem;
-  padding: .8rem 0;
-  border-top: var(--filete-suave);
-}
-.fila__nombre { font-size: 1.05rem; color: var(--marfil); min-width: 0; }
-.fila__opciones { display: flex; gap: .6rem; }
-
-/* Los dos botones de cada nombre. Antes de tocar son transparentes con su
-   propio color de letra (verde para "Sí", cereza para "No"), y al marcar se
-   llenan de verdad: ese contrato lo vigila banco-rsvp.html. */
-.opcion {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 4.25rem;
-  min-height: 54px;
-  padding: .35rem 1.1rem;
-  border: 1px solid rgba(247, 245, 238, .3);
-  border-radius: var(--esquina);
-  background: transparent;
-  font-family: var(--serif);
-  font-size: 1.02rem;
-  cursor: pointer;
-  transition: background-color .15s ease, color .15s ease, border-color .15s ease;
-}
-.opcion:hover { border-color: rgba(247, 245, 238, .55); }
-
-.opcion[aria-pressed="true"] { padding-right: 2.3rem; }
-
-/* El visto del botón marcado: sin él, en el teléfono no se alcanza a ver si
-   la respuesta quedó guardada. */
-.opcion[aria-pressed="true"]::after {
-  content: '\2713';
-  position: absolute;
-  right: .8rem;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 1.06rem;
-  line-height: 1;
+  mix-blend-mode: multiply;
+  opacity: .35;
   pointer-events: none;
 }
-
-.opcion--si { color: var(--si-texto); }
-.opcion--no { color: var(--no-texto); }
-.opcion--si[aria-pressed="true"] { background: var(--si); border-color: var(--si); color: var(--marino); }
-.opcion--no[aria-pressed="true"] { background: var(--no); border-color: var(--no); color: var(--marfil); }
-
-/* Buscador de nombres: las filas usan .opcion pero llenas de ancho. */
-.buscador { margin: 0; padding: 0; }
-.buscador .opcion {
-  justify-content: flex-start;
-  min-width: 0;
-  min-height: 48px;
-  width: 100%;
-  padding: .8rem .2rem;
-  border: 0;
-  border-radius: 0;
-  border-bottom: var(--filete-suave);
-  text-align: left;
-  opacity: 1;
-}
-
-.campo__titulo {
-  font-family: var(--didone);
-  font-size: .95rem;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--oro-claro);
-  margin: 1.2rem 0 .45rem;
-}
-.campo {
-  display: block;
-  width: 100%;
-  min-height: 44px;
-  padding: .55rem .1rem;
-  border: 0;
-  border-bottom: 2px solid rgba(201, 162, 74, .55);
-  border-radius: 0;
-  background: transparent;
-  color: var(--marfil);
-  font-family: var(--serif);
-  font-size: 1.06rem;   /* ≥16px: si no, iOS hace zoom al escribir */
-  transition: border-color .18s ease;
-}
-.campo:focus { outline: none; border-bottom-color: var(--oro-claro); }
-.campo::placeholder { color: rgba(247, 245, 238, .55); font-style: italic; }
-
-.mensaje {
-  margin-top: 1.5rem;
-  padding: 1rem 1.1rem .6rem;
-  background: var(--marino-suave);
-  border: 1px solid rgba(247, 245, 238, .12);
-  border-radius: var(--esquina);
-}
-.mensaje__campo {
-  display: block;
-  width: 100%;
-  min-height: 3.2rem;
-  padding: .55rem .1rem;
-  border: 0;
-  border-bottom: 1px solid rgba(201, 162, 74, .4);
-  border-radius: 0;
-  background: transparent;
-  color: var(--marfil);
-  font-family: var(--serif);
-  font-size: 1rem;      /* ≥16px: si no, iOS hace zoom al escribir */
-  line-height: 1.6;
-  resize: vertical;
-}
-.mensaje__campo:focus { outline: none; border-bottom-color: var(--oro-claro); }
-.mensaje__campo::placeholder { color: rgba(247, 245, 238, .55); font-style: italic; }
-
-/* Honeypot: fuera de la vista, pero presente para los bots. */
-.trampa {
-  position: absolute !important;
-  left: -9999px !important;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  opacity: 0;
-}
-
-.tarjeta__pie {
+.card-navy .contenido {
+  position: relative;
+  z-index: 10;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: center;
-  gap: 1rem 1.8rem;
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: var(--filete-suave);
+  gap: 24px;
 }
+.r13 { border-radius: 13px; }
+.r10 { border-radius: 10px; }
 
-.tarjeta__hecho { text-align: center; padding: .6rem 0 .2rem; }
-.tarjeta__hecho-titulo {
-  font-family: var(--didone);
-  font-weight: 600;
-  font-size: 1.6rem;
-  line-height: 1.25;
-  color: var(--oro-claro);
-  margin-bottom: .9rem;
-}
-.tarjeta__hecho-texto { color: var(--crema); font-size: 1rem; }
-
-.tarjeta__hecho-cuadro {
-  margin-top: 1.7rem;
-  padding: 1.1rem 1.3rem;
-  background: var(--marino-suave);
-  border-left: 2px solid var(--oro);
-  border-radius: var(--esquina);
-  font-size: 1.05rem;
-  text-align: left;
-}
-.tarjeta__hecho-cuadro dt {
-  font-family: var(--didone);
-  font-size: .95rem;
-  letter-spacing: .12em;
+.titulo {
   text-transform: uppercase;
-  color: var(--oro-claro);
-  margin-top: .7rem;
+  font-family: "Times New Roman", serif;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  font-size: 20px;
+  color: var(--texto-morado);
 }
-.tarjeta__hecho-cuadro dt:first-child { margin-top: 0; }
-.tarjeta__hecho-cuadro dd { margin: 0; color: var(--marfil); }
 
-.reintentar {
+/* Ceremonia */
+.invita-linea {
+  max-width: 34ch;
+  font-size: 16px;
+  line-height: 1.55;
+  color: rgba(247, 245, 255, 0.92);
+  text-align: center;
+}
+.pareja {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+}
+.pareja h3 {
+  width: 100%;
+  font-family: "Lora", Baskerville, serif;
+  font-weight: 400;
+  font-size: clamp(19px, 5.2vw, 28px);
+  line-height: 1.35;
+  color: var(--texto-morado);
+  overflow-wrap: anywhere;
+}
+.amp-madi { font-family: "Ms Madi", cursive; font-size: 35px; color: var(--texto-morado); }
+.at-fila {
+  display: flex;
+  max-width: 210px;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  text-transform: uppercase;
+  color: rgba(247, 245, 255, 0.8);
+  gap: 16px;
+}
+.fecha-bloque {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--texto-morado);
+}
+.fecha-bloque .dia { font-size: 46px; line-height: 1; }
+.fecha-bloque .sep { width: 1px; height: 46px; background-color: rgba(247, 245, 255, 0.45); }
+.fecha-bloque .mes { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.fecha-bloque .mes span:first-child { font-size: 16px; text-transform: uppercase; }
+.fecha-bloque .mes span:last-child  { font-size: 20px; text-transform: uppercase; }
+.ceremonia__datos {
+  width: 100%;
+  max-width: 340px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(247, 245, 255, 0.32);
+  color: var(--texto-morado);
+  text-align: center;
+}
+.ceremonia__tipo {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.ceremonia__iglesia {
+  margin-top: 6px;
+  color: rgba(247, 245, 255, 0.88);
+  font-size: 16px;
+}
+.ceremonia__fecha {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 18px;
+  font-size: 15px;
+}
+.ceremonia__fecha span:first-child {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+/* Galería */
+.galeria-wrap { position: relative; z-index: 10; overflow-x: clip; }
+.galeria {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 24px 20px;
+}
+.galeria h2 {
+  text-transform: uppercase;
+  font-family: "Times New Roman", serif;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: .03em;
+  color: var(--morado-oscuro);
+  text-align: center;
+}
+.carrusel {
+  position: relative;
+  margin-top: 20px;
+  width: 100%;
+  max-width: 380px;
+  height: 340px;
+  touch-action: pan-y;
+}
+@media (min-width: 768px) { .carrusel { max-width: 600px; height: 520px; } }
+.flecha {
+  display: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 200;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  background: rgba(126, 87, 194, 0.15);
+  color: var(--morado-oscuro);
+  transition: background .2s;
+}
+.flecha:hover { background: rgba(126, 87, 194, 0.25); }
+.flecha svg { width: 18px; height: 18px; }
+.flecha.prev { left: 0; }
+.flecha.next { right: 0; }
+@media (min-width: 768px) { .flecha { display: flex; } }
+.escena {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1000px;
+}
+.gslide {
+  position: absolute;
+  height: 92%;
+  aspect-ratio: 0.8 / 1;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px -10px rgba(74, 20, 140, 0.25);
+  cursor: pointer;
+  transition: all 1000ms ease;
+  outline: 2px solid rgba(255,255,255,0.35);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+.gslide img { width: 100%; height: 100%; object-fit: cover; }
+.contador {
+  margin-top: 12px;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  color: rgba(74, 20, 140, 0.6);
+}
+
+/* Celebración */
+.rec-titulo {
+  font-weight: 400;
+  color: var(--texto-morado);
+  font-size: 20px;
+}
+@media (min-width: 768px) { .rec-titulo { font-size: 26px; } }
+.count-titulo { margin-top: 16px; color: rgba(247, 245, 255, 0.85); font-size: 20px; }
+.count { margin-top: 6px; font-size: 15px; color: rgba(247, 245, 255, 0.85); }
+@media (min-width: 768px) { .count { font-size: 18px; } }
+
+.cal-holder {
+  margin-top: 12px;
+  border-radius: 10px;
+  padding: 8px 16px 16px;
+  background-color: #fff;
+}
+.cal { width: 280px; color: var(--morado-oscuro); }
+@media (min-width: 768px) { .cal { width: 330px; } }
+.cal-mes {
+  border-bottom: 1px solid rgba(94, 53, 177, 0.25);
+  font-family: "The Nautigal", cursive;
+  font-size: 26px;
+  text-align: center;
+  padding: 4px 0 8px;
+  color: var(--morado-oscuro);
+}
+.cal-dias {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 2px solid var(--morado);
+  padding: 4px 0;
+}
+.cal-dias span {
+  text-align: center;
+  font-size: 11px;
+  opacity: .7;
+}
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 8px 4px 2px;
+  row-gap: 4px;
+}
+.cal-grid span, .cal-grid i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  font-size: 13px;
+}
+.cal-grid .dia-boda {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 26px;
+  margin: 0 auto;
+}
+.cal-grid .dia-boda svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cal-grid .dia-boda span {
+  position: relative;
+  z-index: 10;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+}
+.cal-link {
+  margin-top: 12px;
+  display: inline-flex;
+  color: var(--morado);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  font-size: 14px;
+}
+
+/* RSVP */
+.rsvp-wrap { margin-top: 24px; display: flex; justify-content: center; }
+.btn-rsvp {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 28px;
+  font-size: 13px;
+  text-transform: uppercase;
+  background: var(--morado);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(94, 53, 177, 0.25);
+  transition: transform .2s ease;
+}
+.btn-rsvp:hover { transform: scale(1.03); }
+
+/* Mapa */
+.mapa-wrap { position: relative; z-index: 10; }
+.mapa {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 24px 24px;
+}
+.mapa h3 {
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: .03em;
+  color: var(--morado-oscuro);
+}
+.direccion {
+  white-space: pre-line;
+  margin-top: 8px;
+  max-width: 320px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--morado-translucido);
+}
+.mapa-foto {
+  margin-top: 16px;
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+  aspect-ratio: 5 / 3;
+  object-fit: cover;
+  border-radius: 15px;
+}
+@media (min-width: 768px) { .mapa-foto { max-width: 560px; } }
+.btn-ruta {
+  margin-top: 16px;
   display: inline-flex;
   align-items: center;
-  margin-top: 1.6rem;
-  background: none;
-  border: 0;
-  border-bottom: 1px solid rgba(201, 162, 74, .5);
-  padding: .5rem .1rem;
-  min-height: 48px;
-  color: var(--oro-claro);
-  font-family: var(--didone);
-  font-size: 1.02rem;
-  cursor: pointer;
+  gap: 8px;
+  padding: 8px 20px;
+  border-radius: 999px;
+  background: rgba(126, 87, 194, 0.1);
+  color: var(--morado);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform .2s ease;
 }
-.reintentar:hover { border-bottom-color: var(--oro-claro); }
+.btn-ruta:hover { transform: scale(1.03); }
+.btn-ruta svg { width: 16px; height: 16px; }
 
-/* El <p class="ayuda"> nace siempre vacío; sólo se llena si hay algo que
-   avisar. Con :empty no deja un margen fantasma debajo del botón. */
-.ayuda {
-  margin-top: 1.2rem;
-  font-family: var(--serif);
-  font-size: .98rem;
-  line-height: 1.62;
-  color: var(--crema);
-  opacity: .85;
+/* Dress code */
+.dress-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 24px 40px;
+  gap: 16px;
 }
-.ayuda:empty { display: none; }
+.dress-wrap h2 {
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: .03em;
+  color: var(--morado-oscuro);
+}
+.dress-wrap p { color: var(--morado-translucido); }
+.chip-colores { display: flex; gap: 16px; }
+.chip-colores i {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  box-shadow: 0 4px 8px -2px rgba(74, 20, 140, 0.25);
+}
+@media (min-width: 768px) { .chip-colores i { width: 48px; height: 48px; } }
 
-/* -------------------------------------------------------------------------- */
-/* Pie — el ancla oscura de la página                                           */
-/* -------------------------------------------------------------------------- */
+/* Timeline */
+.timeline {
+  position: relative;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 460px;
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 16px minmax(0,1fr);
+  align-items: center;
+  column-gap: 24px;
+  row-gap: 32px;
+  list-style: none;
+}
+.timeline li { display: contents; }
+.timeline .hora {
+  text-align: right;
+  font-size: 16px;
+  color: var(--texto-morado);
+  position: relative;
+}
+.timeline .icono {
+  position: absolute;
+  right: calc(100% + 30px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 46px;
+  height: 47px;
+}
+.punto-fila {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+}
+.punto-fila .linea {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 50%;
+  bottom: -32px;
+  width: 1px;
+  background-color: rgba(247, 245, 255, 0.4);
+}
+.punto-fila .linea.corta { bottom: 50%; }
+.punto-fila .punto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--texto-morado);
+  box-shadow: rgba(247, 245, 255, 0.4) 0 0 0 2px;
+}
+.timeline .texto {
+  font-size: 13px;
+  color: rgba(247, 245, 255, 0.85);
+}
+@media (min-width: 768px) { .timeline .texto { font-size: 15px; } }
 
-.pie {
-  background: var(--marino);
-  color: var(--marfil);
+/* Guestbook */
+.card-blanca {
+  border-radius: 10px;
+  background: #fff;
+  padding: 32px 16px;
+  box-shadow: 4px 4px 10px rgba(74, 20, 140, 0.15);
+}
+.card-blanca h2 {
   text-align: center;
-  padding: 3.2rem 1.5rem 3.6rem;
-  margin-top: 1.2rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: .03em;
+  color: var(--morado-oscuro);
 }
-.pie__linea {
+.padrinos__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 16px;
+  margin-top: 24px;
+}
+.padrinos__item {
+  min-width: 0;
+  text-align: center;
+  line-height: 1.5;
+}
+.padrinos__item h3 {
+  margin-bottom: 6px;
+  color: var(--morado);
+  font-size: 15px;
+  font-weight: 600;
+}
+.padrinos__item p {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 360px) {
+  .padrinos__grid { grid-template-columns: 1fr; }
+}
+#forma-wishes {
+  margin: 24px auto 0;
+  width: 100%;
+  max-width: 280px;
+}
+@media (min-width: 768px) { #forma-wishes { max-width: 380px; } }
+#forma-wishes input,
+#forma-wishes textarea {
+  width: 100%;
+  border: 1px solid var(--morado);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  background: transparent;
+  color: var(--morado-oscuro);
+  font-family: inherit;
+}
+#forma-wishes input { margin-bottom: 16px; }
+#forma-wishes textarea { height: 80px; resize: none; }
+.btn-enviar {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--morado);
+  transition: transform .2s ease;
+}
+.btn-enviar:hover { transform: scale(1.05); }
+.mensajes {
+  margin: 24px auto 0;
+  max-width: 280px;
+  max-height: 420px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+@media (min-width: 768px) { .mensajes { max-width: 380px; } }
+.mensaje {
+  border: 1px solid rgba(94, 53, 177, 0.2);
+  background: rgba(126, 87, 194, 0.05);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.mensaje .cabeza { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.mensaje .nombre { font-weight: 600; color: var(--morado-oscuro); }
+.mensaje .fecha { font-size: 12px; opacity: .7; }
+.mensaje p { margin-top: 8px; line-height: 1.6; color: var(--morado-oscuro); }
+
+/* Gift */
+.gift-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 24px;
+  overflow-x: clip;
+}
+.bg-castle2, .bg-castle3 {
+  position: absolute;
+  max-width: none;
+  opacity: .2;
+  pointer-events: none;
+  filter: hue-rotate(290deg) saturate(1.15);
+}
+.bg-castle2 { left: 52%; top: -14%; width: 62%; }
+.bg-castle3 { left: 22%; top: -18%; width: 64%; }
+.gift-wrap h2 {
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: .03em;
+  color: var(--morado-oscuro);
+  margin-bottom: 8px;
+}
+.gift-illustration {
+  position: relative;
+  width: 260px;
+  height: 190px;
+}
+.gift-escena { position: relative; height: 100%; display: flex; align-items: center; justify-content: center; }
+.gift-sombra {
+  position: absolute;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 112px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(74,20,140,0.18);
+  filter: blur(6px);
+}
+.gift-sobre {
+  position: relative;
+  display: block;
+  width: 156px;
+  height: 104px;
+  transform: rotate(-5deg);
+  filter: drop-shadow(0 12px 12px rgba(74,20,140,0.2));
+  animation: gift-bob 3s ease-in-out infinite;
+}
+.gift-sobre__cuerpo {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border: 1px solid rgba(94,53,177,.22);
+  border-radius: 5px;
+  background: linear-gradient(145deg, #fff 0%, #f3e5f5 100%);
+}
+.gift-sobre__cuerpo::before,
+.gift-sobre__cuerpo::after {
+  position: absolute;
+  bottom: -42px;
+  width: 112px;
+  height: 112px;
+  content: "";
+  background: linear-gradient(145deg, #e4d4f0, #d1c4e9);
+  transform: rotate(45deg);
+}
+.gift-sobre__cuerpo::before { left: -64px; }
+.gift-sobre__cuerpo::after { right: -64px; }
+.gift-sobre__solapa {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 74%;
+  background: linear-gradient(155deg, #e4d4f0, #c9b2e1);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  transform-origin: top;
+  transition: transform .35s ease;
+}
+.gift-sobre__sello {
+  position: absolute;
+  z-index: 2;
+  top: 43%;
+  left: 50%;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-content: center;
+  border: 1px solid rgba(255,255,255,.7);
+  border-radius: 50%;
+  background: var(--morado);
+  color: white;
+  font-family: "Lora", Baskerville, serif;
+  font-size: 12px;
+  line-height: .9;
+  transform: translate(-50%, -50%);
+}
+.gift-sobre__sello span { text-align: center; font-size: 10px; }
+@keyframes gift-bob {
+  0%, 100% { transform: translateY(0) rotate(-5deg); }
+  50%      { transform: translateY(-9px) rotate(-2deg); }
+}
+.gift-descripcion {
+  max-width: 34ch;
+  margin-top: 8px;
+  color: var(--morado-translucido);
+  font-size: 15px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* Footer */
+.pie {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 24px 24px;
+  text-align: center;
+  gap: 12px;
+}
+.pie p { font-size: 13px; color: var(--morado-oscuro); }
+.linea-oro3 {
+  width: 45px;
+  filter: hue-rotate(290deg) saturate(1.25);
+}
+
+/* Visor */
+@media (prefers-reduced-motion: reduce) {
+  .gift-sobre { animation: none; }
+}
+.visor {
+  border: none;
+  padding: 0;
   margin: 0;
-  font-family: var(--viaoda);
-  font-size: 2rem;
-  line-height: 1.3;
-  letter-spacing: .04em;
+  width: 100vw;
+  height: 100dvh;
+  background: rgba(0,0,0,0.92);
+  display: none;
+  flex-direction: column;
 }
-
-/* -------------------------------------------------------------------------- */
-/* Sin JavaScript                                                               */
-/* -------------------------------------------------------------------------- */
-
-.sin-js {
-  background: var(--crema);
-  border-left: 3px solid var(--oro);
-  border-radius: var(--esquina);
-  padding: 1rem 1.2rem;
-  color: var(--marino);
-  font-size: 1rem;
-  margin: 0 0 1.3rem;
+.visor[open] { display: flex; }
+.visor-cerrar {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  font-size: 20px;
+  z-index: 10;
 }
-
-/* -------------------------------------------------------------------------- */
-/* Pantallas                                                                     */
-/* -------------------------------------------------------------------------- */
-
-@media (max-width: 29.98rem) {
-  .fila { grid-template-columns: 1fr; gap: .5rem; }
-  .fila__opciones { justify-content: flex-start; }
+.visor-contador {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  font-size: 14px;
+  z-index: 10;
 }
-
-@media (min-width: 30rem) {
-  .padrinos { grid-template-columns: repeat(2, 1fr); }
-  /* minmax(0, 1fr): sin este límite, una celda con un dato largo (la CLABE)
-     empuja su columna y las dos tarjetas quedan de distinto ancho. */
-  .detalles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.visor-escena {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 48px 16px;
+  position: relative;
 }
-
-/* En pantallas anchas la invitación se ve como en el celular: una columna de
-   ancho de teléfono centrada. Así cada sección se lee igual en cualquier lado. */
-@media (min-width: 30rem) {
-  body { max-width: 26rem; margin-inline: auto; }
+.visor-img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 12px;
+  object-fit: contain;
+  box-shadow: 0 25px 60px -12px rgba(0,0,0,0.6);
 }
-
-/* -------------------------------------------------------------------------- */
-/* Impresión                                                                     */
-/* -------------------------------------------------------------------------- */
-
-@media print {
-  .flor-banda,
-  .ornamento,
-  .galeria__boton { display: none !important; }
-  body { max-width: none; }
-  .pagina, .bloque { padding-inline: 0; }
+.visor-flecha {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  font-size: 28px;
 }
+.visor-flecha.v-prev { left: 8px; }
+.visor-flecha.v-next { right: 8px; }
+.visor-thumbs {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  overflow-x: auto;
+  padding: 12px 16px 20px;
+  max-width: 90vw;
+  margin: 0 auto;
+}
+.visor-thumbs button {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 8px;
+  overflow: hidden;
+  opacity: .5;
+  transition: opacity .2s, transform .2s;
+}
+.visor-thumbs button.activo { opacity: 1; transform: scale(1.05); outline: 2px solid var(--morado); outline-offset: 2px; }
+.visor-thumbs img { width: 100%; height: 100%; object-fit: cover; }
