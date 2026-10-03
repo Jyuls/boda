@@ -9,6 +9,12 @@ desktop.ini
 # Node (sólo se usa para node --check y las pruebas locales)
 node_modules/
 
+# Artefactos locales de OpenCode: copia de la skill frontend-design y su
+# registro. Son de la herramienta, no de la invitación, y cada máquina los
+# regenera sola.
+.agents/
+skills-lock.json
+
 # Capturas de la revisión visual. Ojo: la negación tiene que ser del archivo
 # exacto, no "assets/img/*.png", porque eso también dejaría pasar cualquier
 # captura que se cuele en esa carpeta.

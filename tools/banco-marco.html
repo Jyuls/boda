@@ -1,22 +1,23 @@
 <!DOCTYPE html>
 <!--
-  Banco de pruebas del marco. Carga la invitación en iframes de distintos
-  tamaños para comprobar cómo se lleva la guirnalda estática de fondo.png con
-  el texto, en las dos posiciones de scroll extremas.
+  Banco de pruebas de las flores. Carga la invitación en iframes de distintos
+  tamaños para comprobar cómo se llevan las flores decorativas con el texto,
+  en las dos posiciones de scroll extremas (arriba y abajo).
 
-  El marco actual NO es una caja que deba evitar el texto: es la guirnalda
-  completa de fondo.png, fija a la pantalla (position:fixed) y por encima de
-  todo (z-index:30), y el usuario pidió que se vea siempre aunque la página
-  ruede. Eso significa que la guirnalda SÍ cruza texto; no es un fallo, es el
-  diseño pedido. Por eso este banco ya no falla: mide y reporta.
+  Las flores nuevas viven en dos lugares:
+    - ".flor-banda": la banda de flores del borde superior de las tarjetas
+      navy (ceremonia, comida y cuenta regresiva), pegada al borde de la
+      tarjeta (absolute, top:0). Es decorativa: los paddings de la tarjeta
+      hacen que el texto empiece bien abajo, lejos de la banda.
+    - ".ornamento__gema": las florcitas de las esquinas recortadas que
+      flanquean el rombo del adorno de la portada.
 
   Lo que se mide:
-    - que .ventana esté fija y cubra el viewport entero en ambos extremos de
-      scroll (si no abrazara las cuatro orillas, el marco se vería recortado);
-    - cuántos nodos de texto visibles tienen su CENTRO sobre un pétalo opaco de
-      la guirnalda (muestreo del canal alfa de fondo.png reproducir con
-      background-size:cover). Ese número es informativo: es el precio que se
-      aceptó pagar y conviene verlo, no ignorarlo.
+    - que existan .flor-banda y .ornamento__gema y que ninguna esté clavada a
+      la pantalla con position:fixed (la decoración se mueve con la página);
+    - cuántos nodos de texto visibles tienen su CENTRO dentro del recto de
+      una flor. Ese número tiene que ser cero: es la regla del diseño.
+    - que no haya scroll horizontal.
 
   Uso:  python -m http.server 8000
         node tools/probar-marco.js
@@ -24,7 +25,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<title>banco del marco</title>
+<title>banco de las flores</title>
 <style>
   body { font: 13px/1.5 system-ui, sans-serif; margin: 0; padding: 12px; background: #222; color: #eee; }
   .caso { margin-bottom: 18px; border: 1px solid #555; padding: 6px; }
@@ -47,59 +48,12 @@ const TAMANOS = [
   { nombre: 'escritorio',        w: 1440, h: 900 }
 ];
 
-/* Las mismas medidas que el CSS de fondo.png, para reproducir el cover. */
-const FUENTE = { w: 1056, h: 1489 };
-const UMBRAL_ALFA = 40; /* más opaco que esto cuenta como pétalo */
-/* El "celular en pantallas anchas": la columna de --ancho-celular (26rem) y
-   el corte de la @media (30rem). Sólo para saber dónde está la guirnalda. */
-const CELULAR_MAX = 480;
-const ANCHO_CELULAR = 416;
-
 const dormir = ms => new Promise(r => setTimeout(r, ms));
 
 /* Los nodos que de verdad llevan letras. Los <span> entran porque algunos
    nombres de invitado están dentro de un span y si no, un choque ahí pasaría
    desapercibido. */
 const SELECTOR = 'h1, h2, h3, p, li, dt, dd, a, button, label, span, input, .fila__nombre';
-
-/* La guirnalda, lista para muestrear alfa. Se pinta en un canvas del mismo
-   tamaño que el iframe (el viewport de la invitación), con el mismo
-   escalado de un background center/cover. El resultado se cachea por tamaño. */
-const IMG = new Image();
-const alfaPorTam = new Map();
-
-function mascaraPara(w, h) {
-  const clave = w + 'x' + h;
-  let data = alfaPorTam.get(clave);
-  if (!data) {
-    const escala = Math.max(w / FUENTE.w, h / FUENTE.h);
-    const dw = FUENTE.w * escala, dh = FUENTE.h * escala;
-    const canvas = document.createElement('canvas');
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(IMG, (w - dw) / 2, (h - dh) / 2, dw, dh);
-    data = ctx.getImageData(0, 0, w, h).data;
-    alfaPorTam.set(clave, data);
-  }
-  return data;
-}
-
-/* ¿El punto (x,y) del viewport vive sobre un pétalo opaco de la guirnalda?
-   La guirnalda no siempre abarca todo: en pantallas anchas está clavada a la
-   columna del teléfono (rect r), así que fuera de ese rectángulo no hay
-   pétalo que pisar. Dentro, se muestrea el alfa con el mismo cover. */
-function sobrePetalo(r, x, y) {
-  if (x < r.left || x >= r.right || y < r.top || y >= r.bottom) return false;
-  const ovW = Math.round(r.width), ovH = Math.round(r.height);
-  const data = mascaraPara(ovW, ovH);
-  const escala = Math.max(ovW / FUENTE.w, ovH / FUENTE.h);
-  const dw = FUENTE.w * escala, dh = FUENTE.h * escala;
-  const sx = Math.round(((x - r.left) - (ovW - dw) / 2) / escala);
-  const sy = Math.round(((y - r.top) - (ovH - dh) / 2) / escala);
-  if (sx < 0 || sy < 0 || sx >= FUENTE.w || sy >= FUENTE.h) return false;
-  return data[((sy * ovW) + sx) * 4 + 3] > UMBRAL_ALFA;
-}
 
 function posicionar(iframe, y) {
   const doc = iframe.contentDocument;
@@ -116,8 +70,19 @@ function medir(iframe, tam) {
   const doc = iframe.contentDocument;
   const win = iframe.contentWindow;
 
-  const vis = doc.querySelector('.ventana');
-  const rc = vis ? vis.getBoundingClientRect() : null;
+  const flores = [];
+  for (const sel of ['.flor-banda', '.ornamento__gema']) {
+    for (const f of doc.querySelectorAll(sel)) {
+      const rc = f.getBoundingClientRect();
+      const rect = [Math.round(rc.left), Math.round(rc.top), Math.round(rc.width), Math.round(rc.height)];
+      flores.push({
+        clase: sel.slice(1),
+        rect,
+        posicion: win.getComputedStyle(f).position,
+        visible: rect[1] + rect[3] >= 0 && rect[1] <= win.innerHeight
+      });
+    }
+  }
 
   const nodos = [];
   for (const n of doc.querySelectorAll(SELECTOR)) {
@@ -129,8 +94,6 @@ function medir(iframe, tam) {
     if (c.width === 0 || c.height === 0) continue;
     /* La trampa de bots vive a -9999px a propósito: no cuenta. */
     if (c.bottom < -1000) continue;
-    /* El marco mismo no se prueba contra sí mismo. */
-    if (n.closest('.ventana')) continue;
     /* Sólo los que están en pantalla en este momento. */
     if (c.bottom < 0 || c.top > win.innerHeight) continue;
 
@@ -140,49 +103,35 @@ function medir(iframe, tam) {
     });
   }
 
-  const bajo = nodos.filter(o => {
-    const cx = Math.round(o.caja[0] + o.caja[2] / 2);
-    const cy = Math.round(o.caja[1] + o.caja[3] / 2);
-    return rc ? sobrePetalo(rc, cx, cy) : false;
-  });
+  /* El centro de cada texto, ¿cae dentro del recto de una flor? */
+  const bajoFlor = [];
+  for (const o of nodos) {
+    const cx = o.caja[0] + o.caja[2] / 2;
+    const cy = o.caja[1] + o.caja[3] / 2;
+    for (const fl of flores) {
+      const [x, y, w, h] = fl.rect;
+      if (cx >= x && cx <= x + w && cy >= y && cy <= y + h) {
+        bajoFlor.push({ nodo: o.nodo, caja: o.caja, flor: fl.clase });
+        break;
+      }
+    }
+  }
 
-  const r = {
+  return {
     nombre: tam.nombre,
     tam: tam.w + 'x' + tam.h,
     scrollY: win.scrollY,
-    scrollEl: doc.scrollingElement ? doc.scrollingElement.tagName : 'ninguno',
     docAltura: doc.documentElement.scrollHeight,
-    ventana: rc ? {
-      x: Math.round(rc.left), y: Math.round(rc.top),
-      w: Math.round(rc.width), h: Math.round(rc.height),
-      posicion: getComputedStyle(vis).position
-    } : null,
-    /* El centro horizontal del cuerpo: en pantallas anchas el body es la
-       columna de teléfono centrada, y la guirnalda debe estar clavada a ese
-       centro (no al del viewport, que incluye el scrollbar). */
-    columnaCx: doc.body ? Math.round(doc.body.getBoundingClientRect().left +
-      doc.body.getBoundingClientRect().width / 2) : null,
+    flores: flores.length,
+    floresVisibles: flores.filter(f => f.visible).length,
+    fijas: flores.filter(f => f.posicion === 'fixed').map(f => f.clase),
     visibles: nodos.length,
-    bajoLaGuirnalda: bajo.length,
-    bajo: bajo,
-    pieDesde: doc.querySelector('.pie') ? Math.round(doc.querySelector('.pie').getBoundingClientRect().top + win.scrollY) : null,
-    secciones: [...doc.querySelectorAll('.portada, .cuenta-marco, #respuesta')].map(el => ({
-      clase: String(el.className).split(' ')[0],
-      desde: Math.round(el.getBoundingClientRect().top + win.scrollY),
-      alto: Math.round(el.getBoundingClientRect().height)
-    })),
+    bajoFlor,
     scrollHorizontal: doc.documentElement.scrollWidth > doc.documentElement.clientWidth + 1
   };
-  return r;
 }
 
 async function correr() {
-  /* La guirnalda debe estar lista antes de medir: esperar su carga. */
-  if (!IMG.complete) await new Promise(r => {
-    IMG.onload = r;
-    IMG.onerror = () => { IMG.complete = false; r(); };
-  });
-
   const contenedor = document.getElementById('casos');
   const resultados = [];
 
@@ -199,14 +148,15 @@ async function correr() {
     const listo = new Promise(rob => iframe.addEventListener('load', rob, { once: true }));
     iframe.src = '/index.html?t=' + Date.now();
     await listo;
+    /* Dejar que las fotos y los scripts terminen de acomodar la página. */
     await dormir(700);
 
-    /* Arriba: la portada, donde la guirnalda cruza el primer renglón. */
+    /* Arriba: la portada, donde viven las gemas del adorno. */
     posicionar(iframe, 0);
     await dormir(250);
     const arriba = medir(iframe, tam);
 
-    /* Abajo: el pie, donde la guirnalda cruza el último renglón. */
+    /* Abajo: el pie, donde quedan las tarjetas navy y sus bandas de flores. */
     posicionar(iframe, 1e6);
     await dormir(250);
     const abajo = medir(iframe, tam);
@@ -218,9 +168,6 @@ async function correr() {
     'RESULTADO_JSON' + JSON.stringify(resultados) + 'FIN_JSON';
 }
 
-/* Cargar la guirnalda desde ya, para que al llegar el primer `correr()` ya
-   esté lista. */
-IMG.src = '/assets/img/fondo.png';
 correr();
 </script>
 </body>

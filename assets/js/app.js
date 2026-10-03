@@ -1,5 +1,5 @@
 /* ==========================================================================
-   app.js — la página en sí: el link del mapa y la cuenta regresiva.
+   app.js — la página en sí: el link del mapa, la galería y la cuenta.
    Nada de esto habla con un servidor.
    ========================================================================== */
 
@@ -104,6 +104,84 @@
         }
       })(marcos[i]);
     }
+  }
+
+  /* --------------------------------------------------------------------- */
+  /* Galería                                                                */
+  /* --------------------------------------------------------------------- */
+
+  /* De qué proporción es cada foto, para que el recorte no se coma las caras.
+     Se decide por el nombre del archivo: el resto entra como panorámica. */
+  function claseDeFoto(src) {
+    if (/iglesia/i.test(src)) return 'marco--iglesia';
+    if (/pareja|nuestros/i.test(src)) return 'marco--pareja';
+    return 'marco--galeria';
+  }
+
+  /* La galería es un carrusel de fotos que se arma solo: lee la lista de
+     config.js (galeria). Vacía, cae a las dos fotos de la pareja, la de la
+     iglesia y la de nosotros. Cada foto entra como un marco igual al de la
+     ceremonia, con su propio data-foto (así montarFotos la destapa o la tapa
+     sola), y el carrusel queda con su slide visible (clase .activa), su
+     contador y sus botones. Soporta rutas como string o como {src, pie}. */
+  function montarGaleria() {
+    var cinta = buscar('[data-cinta]');
+    if (!cinta) return;
+
+    var galeria = CFG.galeria;
+    var lista = Array.isArray(galeria) && galeria.length
+      ? galeria
+      : [texto('fotoIglesia'), texto('fotoPareja')].filter(Boolean);
+
+    if (!lista.length) {
+      var colgante = buscar('[data-galeria]');
+      if (colgante) colgante.hidden = true;
+      return;
+    }
+
+    lista.forEach(function (item, indice) {
+      var src = typeof item === 'string' ? item : item.src;
+      var pie = typeof item === 'string' ? '' : (item.pie || '');
+
+      var figura = document.createElement('figure');
+      figura.className = 'marco marco--vacio ' + claseDeFoto(src);
+      figura.setAttribute('data-foto', '');
+
+      var img = document.createElement('img');
+      img.src = src;
+      img.alt = pie || 'Fotografía de la boda';
+      figura.appendChild(img);
+
+      if (pie) {
+        var leyenda = document.createElement('figcaption');
+        leyenda.className = 'marco__pie';
+        leyenda.textContent = pie;
+        figura.appendChild(leyenda);
+      }
+
+      if (indice === 0) figura.classList.add('activa');
+      cinta.appendChild(figura);
+    });
+
+    var total = lista.length;
+    var contador = buscar('[data-contador]');
+    var actual = 0;
+
+    function mostrar(nuevo) {
+      actual = (nuevo + total) % total;
+      var slides = cinta.querySelectorAll('.marco');
+      for (var i = 0; i < slides.length; i++) {
+        slides[i].classList.toggle('activa', i === actual);
+      }
+      if (contador) contador.textContent = (actual + 1) + ' / ' + total;
+    }
+
+    if (contador) contador.textContent = '1 / ' + total;
+
+    var anterior = buscar('[data-anterior]');
+    var siguiente = buscar('[data-siguiente]');
+    if (anterior) anterior.addEventListener('click', function () { mostrar(actual - 1); });
+    if (siguiente) siguiente.addEventListener('click', function () { mostrar(actual + 1); });
   }
 
   /* --------------------------------------------------------------------- */
@@ -254,6 +332,9 @@
     montarMapa();
     montarDireccion();
     montarTelefono();
+    /* La galería se monta primero para que sus marcos tengan data-foto y
+       montarFotos les ponga los oídos de load/error como a los demás. */
+    montarGaleria();
     montarFotos();
     arrancarCuenta();
     mostrarDepuracion();

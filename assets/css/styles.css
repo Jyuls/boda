@@ -1,208 +1,116 @@
 /* ==========================================================================
-   Invitación de boda — Abril y Johann
-   --------------------------------------------------------------------------
-   Dirección: "Luz de vela". Luz de una capilla al anochecer: blanco de
-   lavanda, rosas, azules fríos y un champán de cera. El verde de este
-   archivo vive en un solo lugar: el botón "Sí".
+   styles.css — la invitación de Abril y Johann.
 
-   Cómo funciona el pastel aquí. Casi todos los pasteles se lavan porque usan
-   el mismo tono claro tanto para las superficies como para escribir. Acá el
-   pastel vive en las superficies, y el texto usa la misma familia dos pasos
-   más profunda: --lila en los mandos, --tinta en el cuerpo. Esa diferencia
-   de valor es lo que separa "lila pastel" de "lila de-jardín-infantil".
+   Paleta del demo "minimalism-dark-blue" de ChungDoi:
+     marfil #F7F5EE   el papel
+     marino #00224C   la tinta y las tarjetas oscuras
+     crema  #ECE4D8   superficies de apoyo (mapas, vestimenta, marcos vacíos)
+     oro    #B58B2F   filetes y adornos
+            #C9A24A   oro claro: rótulos sobre navy (~6.7:1)
+            #7C5E1E   oro tinta: texto dorado sobre marfil (~5.6:1)
 
-   Sobre el champán: --cera es luz de vela, no pan de oro. Contra el velo queda
-   muy por debajo de 4.5:1, así que NUNCA escribe con él. Sólo filetes,
-   grabados y adornos. Si alguna vez necesitas escribir en ese tono,
-   oscúrecelo a #6E5A1F.
+   Tipografía (la del demo, y probar-estilos.js vigila que lo pedido en
+   index.html sea lo usado acá):
+     - EB Garamond     cuerpo, con cursivas de verdad (400 y 400 itálica)
+     - Playfair Display rótulos espaciados (400) y títulos (600)
+     - Viaoda Libre    los nombres de la portada
+     - The Nautigal    el ampersand de la portada
+
+   Reglas que NO se pueden borrar sin tocar las pruebas:
+     - .marco--vacio img { display: none }  (sin esto se ve el cuadrito roto)
+     - .ayuda:empty { display: none }
+     - .opcion sin marcar: fondo transparente; marcado: var(--si)/var(--no)
+     - Ningún centro de texto puede quedar dentro del recto de una flor
+       (.flor-banda, .ornamento__gema); lo comprueba probar-marco.js.
    ========================================================================== */
 
 :root {
-  /* -- Superficies: los pasteles ------------------------------------------------ */
-  --velo:    #FBF7FC;   /* blanco de lavanda, el papel */
-  --lila:    #D6C4EE;   /* lila pastel, el acento */
-  --lila-claro: #F1E9FB;  /* el mismo lila, casi velo: para secciones de fondo */
-  --cera:    #E8D8B0;   /* champán de cera. Sólo adornos, nunca texto. */
+  --marfil:       #F7F5EE;
+  --marfil-suave: #EFEBDF;
+  --marino:       #00224C;
+  --marino-suave: #10315F;
+  --crema:        #ECE4D8;
+  --oro:          #B58B2F;
+  --oro-claro:    #C9A24A;
+  --oro-tinta:    #7C5E1E;
+  --tinta:        #00224C;
+  --tinta-suave:  rgba(0, 34, 76, .72);
 
-  /* -- Las rosas y los azules del marco floral --------------------------------
-     La tarjeta pasó de ser verde-salvia a ser rosa, y con ella llegaron el
-     azul y el morado. El reparto es: superficie rosa, superficies frías para
-     lo interactivo, morado para el panel que confirma, y el rosa profundo
-     sólo para acentos de texto.
+  --si:       #6FB46A;   /* verde de verdad: el "Sí" marcado */
+  --si-texto: #9AD3A0;   /* el "Sí" sin marcar, sobre navy */
+  --no:       #C96874;   /* rojo de verdad: el "No" marcado */
+  --no-texto: #E8A0AB;   /* el "No" sin marcar, sobre navy */
 
-     Todos estos tonos se eligieron midiendo, no mirando. Sobre la tarjeta
-     rosa queda: tinta 11.6:1, sagrario 6.7:1, rosa-tinta 6.6:1, sí 5.3:1 y
-     no 5.7:1. El botón rojo y el verde siguen leyéndose sobre fondo rosa,
-     que era el riesgo de poner rosa justo donde vive la respuesta. */
-  --rosa:     #F0B9CC;   /* el pétalo. Relleno decorativo, nunca texto */
-  --rosa-claro: #FBE7EE; /* rosa lavada: la superficie de la tarjeta */
-  --azul-claro: #E5EBF8; /* azul lavado: superficies frías */
-  --morado-claro: #EFE6F8; /* morado lavado: el panel de confirmación */
+  --filete:       1px solid rgba(0, 34, 76, .14);
+  --filete-suave: 1px solid rgba(247, 245, 238, .16);
+  --filete-oro:   1px solid rgba(181, 139, 47, .45);
 
-  /* -- Texto: la misma familia, mucho más profunda ------------------------------ */
-  --tinta:     #382646;  /* berenjena profunda. Nunca #000 ni #111: se ve sucio. */
-  --sagrario:  #6B3E86;  /* violeta: mandos, links y textos sobre pastel */
-  --ciruela:   #573A6B;
-  --rosa-tinta: #8E2F52; /* rosa profundo: acentos de texto. 6.6:1 sobre la tarjeta */
-  --azul-tinta: #2F4C87; /* azul profundo: 7.0:1 sobre cualquier pastel frío */
+  --serif:  'EB Garamond', 'Times New Roman', Georgia, serif;
+  --didone: 'Playfair Display', Georgia, serif;
+  --viaoda: 'Viaoda Libre', 'Times New Roman', serif;
+  --script: 'The Nautigal', cursive;
 
-  /* Sobre el oro hay que ser concreto. --cera es luz de vela: contra los
-     pasteles nuevos da entre 1.06:1 y 1.19:1, o sea que un tallo pintado con
-     --cera desaparece. --oro es oro antiguo, no pan de oro: es el tono más
-     claro que todavía se distingue de un pastel (3.5:1 contra el más oscuro),
-     y por eso los tallos, las hojas y los separadores usan este, no --cera.
-     Para el texto, ni uno ni otro sirven: el archivo dice #6E5A1F y sigue en pie. */
-  --oro:     #926E2B;   /* oro antiguo. Tallos, hojas y separadores. Nunca texto */
-
-  /* -- Los dos lados de la respuesta --------------------------------------------
-     El color va con el significado y no con el orden: verde es sí, rojo es no.
-     --sagrario ya no se usa para esto, porque el violeta de los mandos no
-     puede ser a la vez el "no". */
-  --si:       #C6D9C2;   /* pastel verde, el relleno del "Sí" marcado */
-  --si-texto: #3D6B41;   /* el mismo verde, profundo, para el botón sin marcar */
-  --no:       #B23A52;   /* cereza, el relleno del "No" marcado */
-  --no-texto: #A23345;   /* la misma cereza, profunda, para el botón sin marcar */
-
-  --sobre-vela:  #40285A;  /* el pie, el único bloque oscuro de la página */
-  --sobre-vela-t: #F1E8F9; /* y su texto */
-
-  --filete-rosa: 1px solid rgba(107, 62, 134, .18);
-
-  /* -- Tipografía -------------------------------------------------------------- */
-  --serif: 'Cormorant Infant', 'Cormorant Garamond', Garamond, Georgia, serif;
-  --sans:  'Jost', 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
-
-  /* -- Medida: una columna angosta, ~62 caracteres ------------------------------ */
-  --medida: 33rem;
-  --medida-ancha: 38rem;
-
-  /* -- El celular en pantallas anchas -------------------------------------------
-     En un navegador de escritorio la invitación se ve como en el teléfono: una
-     columna de este ancho, centrada, y la guirnalda de fondo.png clavada a
-     ella. 26rem son ~416px, un teléfono grande. La misma medida que ya usaba
-     .cuenta-marco. */
-  --ancho-celular: 26rem;
-
-  /* -- Ritmo ------------------------------------------------------------------- */
-  /* El margen que separa el texto del borde de la pantalla. Vive en una variable
-     porque aparece en varios sitios y antes cada uno tenía su propio número,
-     que además se pisaban entre sí. */
-  --canal: 1.5rem;
-  --aire: 4.2rem;
-  --esquina: 5px;
-  --esquina-suave: 10px;
+  --canal:   1.5rem;   /* el aire de los costados de la columna */
+  --esquina: 13px;     /* el radio de las tarjetas */
 }
 
-/* -------------------------------------------------------------------------- */
-/* Base                                                                        */
-/* -------------------------------------------------------------------------- */
+* { box-sizing: border-box; }
 
-*, *::before, *::after { box-sizing: border-box; }
-
-html {
-  /* Todo el diseño está medido en rem, así que de qué tan grande es la letra
-     base depende de que el navegador no la cambie por su cuenta. Chrome en
-     Android ajusta el texto automáticamente en algunos casos y en otros no, y
-     eso hacía que la misma invitación se viera de un tamaño en Chrome y de otro
-     en el navegador de otra app. Con 100% se le quita esa libertad, pero sin
-     fijar un tamaño absoluto: si alguien agranda la letra en su navegador
-     porque le cuesta leer, la página sigue agrandándose. */
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-  /* 100% y no 16px a secas: 100% sigue respetando la preferencia de letra del
-     sistema, que es una ayuda de accesibilidad que no hay que pisar. */
-  font-size: 100%;
-  scroll-behavior: smooth;
-}
+html { font-size: 100%; -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
-  /* Las secciones a sangre llegan al borde de la pantalla. Sin esto, la barra
-     de desplazamiento hace que 100vw sea más ancho que la ventana y aparece
-     un scroll horizontal de un dedoón. */
-  overflow-x: hidden;
-  background: var(--velo);
-  color: var(--tinta);
   font-family: var(--serif);
-  font-size: 1.16rem;
   font-weight: 400;
-  line-height: 1.72;          /* la serif pide más aire que una sans */
-  -webkit-font-smoothing: antialiased;
-  /* Una trama de papel muy leve. Sin esto el velo plano se ve como pantalla.
-     El tono es de la paleta nueva, no el lila de la vieja. */
-  background-image:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(240, 185, 204, .20), transparent 70%);
-  background-attachment: fixed;
+  font-size: 1.05rem;
+  line-height: 1.72;
+  color: var(--tinta);
+  background: var(--marfil);
+  overflow-x: hidden;
 }
 
-/* --------------------------------------------------------------------------
-   La guirnalda: fondo.png clavada a la columna de la invitación
-   --------------------------------------------------------------------------
-   La imagen entera de fondo.png, que el usuario pasó en transparente, queda
-   fija por encima de todo, sin moverse con el scroll. En el celular la columna
-   de la invitación es toda la pantalla, y la guirnalda abraza las cuatro
-   orillas del viewport. En una pantalla ancha la invitación se ve como en el
-   celular (una columna de ancho de teléfono centrada) y la guirnalda se clava
-   a esa misma columna: por eso las flores nunca se recortan ni se pierden al
-   hacer la ventana más ancha o más horizontal.
+img { max-width: 100%; display: block; }
 
-   background-size: cover para que la guirnalda abrace las orillas de la
-   columna (recortando lo que sobre del ancho o del alto, según la proporción),
-   center para que el centro claro quede en el centro. pointer-events:none para
-   que el toque pase; en el HTML lleva aria-hidden="true". */
+[hidden] { display: none !important; }
 
-.ventana {
-  position: fixed;
-  top: 0; left: 0;
-  /* 100vw, no right:0: un elemento fijo con right:0 termina en el borde
-     interno del scrollbar clásico y la guirnalda se ve 15px más angosta. El
-     ancho físico de la ventana incluye esa zona. En pantallas anchas la
-     `@media (min-width: 30rem)` de abajo la reemplaza por el ancho de la
-     columna de teléfono. La altura con respaldo dvh, para que no se descuadre
-     cuando la barra de direcciones del teléfono se esconde al hacer scroll. */
-  width: 100vw;
-  height: 100vh;
-  height: 100dvh;
-  z-index: 30;
-  pointer-events: none;
-  background: url(../img/fondo.png) center / cover no-repeat;
+/* La única negrita de toda la página es falsa: EB Garamond no tiene un peso
+   700 pedido, y el navegador la inventaría. Mejor la misma itálica que ya se
+   usa para los acentos. */
+strong { font-family: var(--serif); font-weight: 400; font-style: italic; }
+
+/* -------------------------------------------------------------------------- */
+/* Cifras, enlace para saltar y foco                                            */
+/* -------------------------------------------------------------------------- */
+
+.cifras {
+  font-feature-settings: "onum" 1;
+  font-variant-numeric: oldstyle-nums;
 }
-
-h1, h2, h3 { margin: 0; font-weight: 400; }
-p  { margin: 0; }
-dl, dd { margin: 0; }
-button { font: inherit; color: inherit; }
-
-a { color: var(--sagrario); }
-
-/* Cifras en versalitas viejas: dan textura sin gritar. */
-.cifras { font-feature-settings: "onum" 1; font-variant-numeric: oldstyle-nums; }
 
 .saltar {
   position: absolute;
   left: -9999px;
   top: 0;
-  background: var(--sagrario);
-  color: var(--velo);
+  display: inline-block;
   padding: .7rem 1.1rem;
-  font-family: var(--sans);
+  background: var(--marino);
+  color: var(--marfil);
+  font-family: var(--didone);
   font-size: 1rem;
   text-decoration: none;
-  z-index: 100;
   border-radius: var(--esquina);
+  z-index: 100;
 }
 .saltar:focus { left: 0; }
 
 :focus-visible {
-  outline: 2px solid var(--sagrario);
+  outline: 2px solid var(--oro-claro);
   outline-offset: 3px;
   border-radius: 3px;
 }
 
 /* -------------------------------------------------------------------------- */
-/* El adorno: filete de oro con un rombo al centro                             */
-/* Se usa entre secciones. Encena información —aquí separa partes de una      */
-/* misma secuencia— en vez de ser una raya decorativa sin motivo.             */
+/* El adorno de la portada: dos florcitas de las esquinas recortadas y un rombo  */
 /* -------------------------------------------------------------------------- */
 
 .ornamento {
@@ -210,76 +118,60 @@ a { color: var(--sagrario); }
   align-items: center;
   justify-content: center;
   gap: .9rem;
-  margin: 0 auto;
-  color: var(--cera);
+  max-width: 20rem;
+  margin: 2.2rem auto 0;
+  color: var(--oro);
 }
-.ornamento::before,
-.ornamento::after {
-  content: "";
-  height: 1px;
-  flex: 1 1 auto;
-  max-width: 7rem;
-  background: linear-gradient(90deg, transparent, var(--oro));
-}
-.ornamento::after { background: linear-gradient(90deg, var(--oro), transparent); }
 
-/* El centro del adorno es un trozo real de guirnalda, no un rombo ni una rosa
-   dibujada a mano. Sale de fondo.png, que es una ilustración botánica de
-   verdad, y se muestra con su propia proporción: la pieza es 803 x 238, así que
-   a 132px de ancho le quedan 39px de alto y el filete de los lados se arma con
-   la flexión, no con la imagen. */
+/* Las esquinas recortadas de la guirnalda (flor-esquina-si/sd.png). Viven en
+   el aire del adorno, lejos de cualquier texto: probar-marco.js se encarga
+   de que no haya centros de texto encima de una flor. */
 .ornamento__gema {
-  width: 132px;
-  height: 39px;
+  display: block;
+  width: 3.2rem;
+  height: auto;
   flex: 0 0 auto;
-  background: url(../img/flor-separador.png) center / contain no-repeat;
+}
+
+.ornamento__centro {
+  width: .58rem;
+  height: .58rem;
+  background: var(--oro);
+  transform: rotate(45deg);
+  border-radius: 2px;
 }
 
 /* -------------------------------------------------------------------------- */
-/* Portada — el único momento audaz de la página                               */
-/* Baño pastel en tres bandas, como luz que entra por una ventana alta.        */
+/* Portada — la primera pantalla                                                */
 /* -------------------------------------------------------------------------- */
 
 .portada {
   position: relative;
-  padding: 3.6rem 1.5rem 3.2rem;
   text-align: center;
-
-  /* Aquí el marco no es una caja propia: la portada es la primera pantalla,
-     y la guirnalda de fondo.png la encuadra desde .ventana, por encima de
-     todo y fija a la pantalla. Esta sección sólo pone el baño de pastel.
-
-     El verde salvia que se veía en la página salió de aquí. La paleta vieja
-     era lavanda, lila, verde salvia y cera; la tarjeta se pasó a rosa, azul y
-     morado, pero estos degradados se quedaron con la paleta vieja y por eso la
-     esquina inferior izquierda salía verde. Ahora los tres son de la paleta
-     nueva. */
+  padding: 3.6rem 1.5rem 3.4rem;
   background:
-    radial-gradient(ellipse 120% 70% at 50% -20%, #F3E4F6 0%, transparent 60%),
-    radial-gradient(ellipse 100% 60% at 15% 110%, #FBE7EE 0%, transparent 65%),
-    radial-gradient(ellipse 100% 60% at 85% 110%, #E5EBF8 0%, transparent 65%),
-    var(--velo);
+    radial-gradient(120% 80% at 50% -15%, rgba(236, 228, 216, .95) 0%, transparent 55%),
+    var(--marfil);
 }
 
 .portada__interior {
-  max-width: var(--medida-ancha);
+  max-width: 33rem;
   margin: 0 auto;
   position: relative;
 }
 
 /* El corazón en llamas es el emblema de San Ignacio de Loyola, patrono de la
-   parroquia. Este es el elemento único que se recuerda de la página, así que
-   es el único que se mueve. */
+   parroquia. Es el único elemento de la página que se mueve: la flama titila
+   como una vela. */
 .sello {
   display: block;
   width: 3.2rem;
   height: auto;
   margin: 0 auto 1.9rem;
-  color: #B8974F;
+  color: var(--oro);
   overflow: visible;
 }
 
-/* La flama. Sube y se apaga, muy despacio, como una vela. */
 .sello__flama {
   transform-origin: 32px 26px;
   animation: titilar 3.4s ease-in-out infinite;
@@ -292,381 +184,495 @@ a { color: var(--sagrario); }
 }
 
 .formula {
-  font-size: 1.04rem;
   font-style: italic;
-  font-weight: 300;
+  font-size: 1.04rem;
   line-height: 1.62;
-  color: var(--ciruela);
-  opacity: .82;
+  color: var(--tinta-suave);
   margin-bottom: 2.1rem;
 }
 
 .nombres {
-  font-size: clamp(2.1rem, 8.5vw, 3.6rem);
-  font-weight: 300;
-  line-height: 1.14;
-  letter-spacing: .005em;
-  color: var(--tinta);
+  font-family: var(--viaoda);
+  font-size: clamp(1.55rem, 5.6vw, 2.1rem);
+  line-height: 1.16;
+  letter-spacing: .02em;
+  color: var(--marino);
   margin-bottom: .6rem;
 }
-
 .nombres__linea { display: block; }
 
 .nombres__y {
   display: block;
-  font-style: italic;
-  font-size: .5em;
-  color: var(--sagrario);
-  padding: .18em 0 .26em;
-  letter-spacing: .06em;
+  font-family: var(--script);
+  font-size: 2em;
+  line-height: 1;
+  color: var(--oro);
+  padding: .12em 0 .18em;
 }
 
 .fecha {
-  font-size: clamp(1.05rem, 3.4vw, 1.3rem);
   font-style: italic;
-  font-weight: 300;
-  line-height: 1.5;
-  color: var(--ciruela);
+  font-size: 1.06rem;
+  line-height: 1.55;
+  color: var(--tinta);
   margin-top: 1.5rem;
+}
+.destello {
+  font-style: normal;
+  font-size: .9em;
+  color: var(--oro);
+  padding: 0 .35em;
 }
 
 /* -------------------------------------------------------------------------- */
-/* Columna principal                                                          */
-/* Las secciones alternan el suelo para que la página se lea como una tira     */
-/* de papel, no como una hoja con renglones.                                    */
+/* La columna: en pantallas anchas la invitación vive en una columna de         */
+/* teléfono centrada, para que cada sección se vea como en el celular.          */
 /* -------------------------------------------------------------------------- */
 
-/* La columna no se limita: se limita el CONTENIDO de cada bloque. La razón
-   es que las secciones a sangre necesitan llegar al borde de la pantalla, y
-   la forma de lograrlo con márgenes negativos exige 100vw, que incluye la
-   barra de desplazamiento y se pasa siempre por unos 8 píxeles. Medir en
-   porcentaje de .pagina (que ya es el ancho de la ventana) evita el scroll
-   horizontal sin trucos. */
-.pagina { max-width: none; padding: 0; }
+.pagina { display: block; max-width: none; padding: 0; }
 
-/* Todas las secciones van a sangre, y antes sólo lo iban las de color. El
-   cambio parece sólo de fondo, pero no lo es: hace falta para que el marco
-   lateral caiga en el borde de la pantalla y no en el del contenido, que en
-   una pantalla grande deja el marco flotando en mitad de la página al lado de
-   secciones cuyo marco sí está en el borde.
-
-   La medida del texto no se mueve. El ancho de columna queda en
-   min(100% - 2 * --canal, --medida) con cualquiera de las dos formas, así que
-   el texto se acomoda exactamente igual que antes. */
 .bloque {
   max-width: none;
   margin-inline: auto;
-  padding: var(--aire) var(--canal);
-  padding-inline: max(var(--canal), calc((100% - var(--medida)) / 2 + var(--canal)));
-}
-
-/* El marco va en .ventana, la guirnalda de fondo.png fija a la pantalla. Un
-   bloque lleva sólo su color de fondo, y por eso se puede usar background-color
-   sin que el atajo borre la imagen de nadie. */
-.bloque--velo    { background-color: transparent; }
-.bloque--rosa    { background-color: var(--rosa-claro); }
-.bloque--lila    { background-color: var(--morado-claro); }
-
-/* El nombre sigue en el HTML y ya no hace falta para nada: lo de ir a sangre
-   es lo que hacen todas las secciones. Se deja la regla para que el nombre no
-   quede como una clase sin estilo. */
-.bloque--ancho { max-width: none; }
-
-/* Ya no hace falta esta regla: todas las secciones van a sangre. El padding
-   lateral y el tope de ancho se absorbieron en .bloque. */
-.marco {
-  max-width: var(--medida);
-  margin-inline: auto;
+  padding: 0 var(--canal) 3rem;
 }
 
 .bloque__titulo {
-  font-size: 1.9rem;
-  font-weight: 300;
-  line-height: 1.22;
+  font-family: var(--didone);
+  font-weight: 600;
+  font-size: 1.7rem;
+  line-height: 1.25;
+  color: var(--marino);
+  margin: 0 0 1.4rem;
+  padding-bottom: .7rem;
+  border-bottom: var(--filete-oro);
+}
+
+.bloque__texto {
+  font-size: 1.05rem;
   color: var(--tinta);
-  margin-bottom: 1.5rem;
+  margin: 0 0 1.3rem;
 }
 
-.bloque__texto { margin-bottom: 1.7rem; }
-
 /* -------------------------------------------------------------------------- */
-/* Cuenta regresiva                                                            */
-/* En una píldora de rosa claro: es la única "caja" de la portada hacia abajo, */
-/* y funciona como el dato que la gente viene a ver.                            */
+/* Las tarjetas navy y la banda de flores del borde superior                     */
 /* -------------------------------------------------------------------------- */
 
-.cuenta-marco {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: .9rem;
-  padding: 1.5rem 2.2rem;
-  background: rgba(249, 231, 230, .8);
-  border: var(--filete-rosa);
-  border-radius: var(--esquina-suave);
-  max-width: 100%;
+.panel {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--esquina);
+  background:
+    radial-gradient(120% 90% at 88% -12%, rgba(201, 162, 74, .18) 0%, transparent 55%),
+    var(--marino);
+  color: var(--marfil);
+  padding: 3.1rem 1.5rem 2.3rem;
+}
+.panel + .panel { margin-top: 1.2rem; }
+
+/* "Cómo llegar" y "Vestimenta": tarjetas crema, para que la página respire
+   entre las dos tarjetas oscuras. */
+.panel--mapa {
+  background: var(--crema);
+  color: var(--marino);
+  padding-top: 2.5rem;
 }
 
-.cuenta-rotulo {
-  font-family: var(--sans);
-  font-size: .98rem;
-  font-weight: 400;
+.panel__titulo {
+  font-family: var(--didone);
+  font-weight: 600;
+  font-size: .95rem;
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: var(--sagrario);
-  opacity: .75;
+  color: var(--oro-tinta);
+  margin: 0 0 1.1rem;
 }
 
-.cuenta { display: flex; justify-content: center; align-items: flex-start; }
+.panel:not(.panel--mapa) .bloque__texto { color: var(--marfil); }
 
-.cuenta__unidad { flex: 1 1 0; text-align: center; padding: 0 .85rem; }
-
-.cuenta__unidad + .cuenta__unidad {
-  border-left: 1px solid rgba(107, 62, 134, .14);
+/* La banda de flores nace y muere en el aire de arriba de la tarjeta: está
+   en el borde superior, y el texto empieza más abajo del padding de la
+   tarjeta. Es decorativa (aria-hidden) y nunca se acerca a una letra. */
+.flor-banda {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1.5rem;
+  background: url(../img/flor-separador.png) top center no-repeat;
+  background-size: cover;
+  opacity: .85;
+  pointer-events: none;
 }
 
-.cuenta__numero {
-  display: block;
-  font-size: clamp(1.9rem, 8vw, 2.7rem);
-  font-weight: 300;
-  line-height: 1;
-  color: var(--tinta);
-}
+/* -------------------------------------------------------------------------- */
+/* Marcos de foto: con o sin foto, nunca un cuadrito roto                       */
+/* -------------------------------------------------------------------------- */
 
-.cuenta__etiqueta {
-  display: block;
-  margin-top: .5rem;
-  font-family: var(--sans);
-  font-size: 1rem;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--sagrario);
-  opacity: .6;
-}
-
-/* Cuando ya pasó o ya empezó, el bloque se lee como una frase, no como datos. */
-.cuenta--terminada .cuenta__numero { display: none; }
-.cuenta--terminada p.cuenta__frase {
-  display: block;
-  font-size: 1.35rem;
-  font-style: italic;
+.marco {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: var(--esquina);
+  background: linear-gradient(160deg, var(--crema) 0%, #E3D8C4 100%);
   color: var(--tinta);
   text-align: center;
-  margin: 0;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Programa del evento — línea de tiempo                                       */
-/* Acá sí hay una secuencia real (llegar, misa, lugar), así que los puntos   */
-/* y la raíl codifican el orden. No es decoración: es el horario.              */
-/* -------------------------------------------------------------------------- */
+/* cada foto tiene su proporción, para que el recorte no se coma las caras */
+.marco--iglesia { aspect-ratio: 5 / 3; }
+.marco--pareja  { aspect-ratio: 3 / 4; }
+.marco--galeria { aspect-ratio: 4 / 3; }
 
-.programa { position: relative; padding-left: 1.5rem; }
-
-.programa::before {
-  content: "";
+.marco img {
   position: absolute;
-  left: 4px; top: .7rem; bottom: 1.4rem;
-  width: 1px;
-  background: linear-gradient(180deg, transparent, rgba(184,151,79,.5) 12%, rgba(184,151,79,.5) 88%, transparent);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
+
+.marco__pie {
+  position: relative;
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--tinta);
+  opacity: .75;
+  margin: 0;
+  padding: 0 1rem;
+}
+
+/* El corazón del contrato con las pruebas: sin foto, la imagen se esconde (a
+   propósito) y queda la leyenda; con foto, al revés. */
+.marco--vacio img { display: none; }
+.marco:not(.marco--vacio) .marco__pie { display: none; }
+
+/* -------------------------------------------------------------------------- */
+/* Programa de la ceremonia / de la comida (dentro de las tarjetas navy)        */
+/* -------------------------------------------------------------------------- */
+
+.programa { margin: 1.4rem 0 0; }
 
 .programa__fila {
-  position: relative;
-  padding: .7rem 0 1rem;
+  display: grid;
+  grid-template-columns: minmax(7.5rem, .4fr) 1fr;
+  gap: .6rem 1rem;
+  padding: .8rem 0;
+  border-top: var(--filete-suave);
 }
-
-.programa__fila::before {
-  content: "";
-  position: absolute;
-  left: -1.5rem; top: 1.05rem;
-  width: 9px; height: 9px;
-  border-radius: 50%;
-  background: var(--lila);
-  box-shadow: 0 0 0 3px var(--velo);
-}
-
-.programa__fila:first-child::before { background: var(--cera); }
-.programa__fila:last-child::before  { background: var(--rosa-tinta); }
+.programa__fila:first-child { border-top: 0; }
 
 .programa__clave {
-  font-family: var(--sans);
-  font-size: 1rem;
-  letter-spacing: .13em;
+  font-family: var(--didone);
+  font-size: .95rem;
+  letter-spacing: .12em;
   text-transform: uppercase;
-  color: var(--sagrario);
-  opacity: .72;
-  margin-bottom: .1rem;
+  color: var(--oro-claro);
 }
 
-.programa__valor { font-size: 1.2rem; color: var(--tinta); }
-
-/* -------------------------------------------------------------------------- */
-/* Acciones                                                                   */
-/* -------------------------------------------------------------------------- */
-
-.acciones {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: .9rem 1.5rem;
+.programa__valor {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--marfil);
 }
+
+.panel--mapa .programa__clave { color: var(--oro-tinta); }
+.panel--mapa .programa__valor { color: var(--marino); }
+
+.comida__nota {
+  font-size: .95rem;
+  font-style: italic;
+  color: var(--crema);
+  opacity: .8;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Dirección y botones                                                          */
+/* -------------------------------------------------------------------------- */
+
+.direccion {
+  border-left: 2px solid var(--oro);
+  padding: .3rem 0 .4rem 1rem;
+  font-style: normal;
+  line-height: 1.65;
+  color: var(--marino);
+  margin-bottom: 1.3rem;
+}
+.direccion--dentro { border-left: 0; padding-left: 0; margin-bottom: 1.2rem; }
+.direccion__linea { display: block; font-size: 1.05rem; }
+
+.acciones { margin: 1.5rem 0 0; }
 
 .boton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 52px;            /* área táctil mínima cómoda */
-  padding: .6rem 1.5rem;
-  background: var(--sagrario);
-  color: var(--velo);
-  border: 1px solid var(--sagrario);
+  min-height: 52px;
+  padding: .7rem 1.4rem;
+  border: 0;
   border-radius: var(--esquina);
-  font-family: var(--sans);
-  font-size: 1.04rem;
-  letter-spacing: .01em;
-  text-align: center;
+  background: var(--marino);
+  color: var(--marfil);
+  font-family: var(--didone);
+  font-weight: 400;
+  font-size: 1rem;
+  letter-spacing: .04em;
   text-decoration: none;
   cursor: pointer;
-  transition: background-color .2s ease, color .2s ease, border-color .2s ease;
+  transition: background-color .15s ease;
 }
-.boton:hover { background: var(--tinta); border-color: var(--tinta); }
+.boton:hover { background: var(--marino-suave); }
 
-/* El enlace de calendario no merece el mismo peso que el mapa, pero sí el
-   mismo tamaño de dedo: si es más chico, nadie lo toca. */
+/* El botón de la comida vive dentro de una tarjeta navy: ahí va dorado. */
+.panel:not(.panel--mapa) .boton {
+  background: var(--oro-claro);
+  color: var(--marino);
+}
+.panel:not(.panel--mapa) .boton:hover { background: var(--oro); }
+
 .boton--discreto {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: .45rem .1rem;
   background: none;
   border: 0;
-  padding: .35rem 0;
-  color: var(--sagrario);
-  border-bottom: 1px solid var(--cera);
+  border-bottom: 1px solid var(--oro);
   border-radius: 0;
+  color: var(--oro-tinta);
+  font-family: var(--didone);
+  font-size: 1rem;
+  letter-spacing: .02em;
+  text-decoration: none;
+  cursor: pointer;
 }
-.boton--discreto:hover { background: none; color: var(--tinta); border-bottom-color: var(--tinta); }
+.tarjeta .boton--discreto {
+  color: var(--oro-claro);
+  border-bottom-color: rgba(201, 162, 74, .5);
+}
 
 /* -------------------------------------------------------------------------- */
-/* Marco para foto                                                             */
+/* Galería — el carrusel de fotos                                               */
 /* -------------------------------------------------------------------------- */
 
-.marco {
-  position: relative;
-  /* "auto" a los lados para centrarlo; el ancho lo pone el bloque de arriba. */
-  margin: 0 auto;
-  aspect-ratio: 4 / 3;
-  background:
-    linear-gradient(135deg, var(--rosa-claro), var(--azul-claro));
-  border-radius: var(--esquina-suave);
+.galeria { margin: 1.4rem 0 0; }
+.galeria__cinta { position: relative; }
+
+/* Todo el carrusel es una tira de marcos; el slide activo es el que lleva
+   .activa. Los ocultos se esconden de verdad (display:none), así que no
+   cuentan para los lectores de pantalla ni para las mediciones del banco. */
+.galeria__cinta .marco { display: none; }
+.galeria__cinta .marco.activa { display: flex; }
+
+.galeria__reglilla {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem;
+  gap: 1.1rem;
+  margin-top: 1.2rem;
+}
+.galeria__boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--oro);
+  border-radius: 50%;
+  background: var(--marfil-suave);
+  color: var(--marino);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.galeria__boton:hover { background: var(--crema); }
+.galeria__contador {
+  font-family: var(--didone);
+  font-size: 1rem;
+  letter-spacing: .08em;
+  color: var(--oro-tinta);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Cronograma y la cuenta regresiva                                             */
+/* -------------------------------------------------------------------------- */
+
+.cronograma {
+  list-style: none;
+  margin: 0 0 1.7rem;
+  padding: 0;
+  border-top: var(--filete);
+}
+.cronograma__fila {
+  display: flex;
+  align-items: baseline;
+  gap: 1.2rem;
+  padding: .9rem 0;
+  border-bottom: var(--filete);
+}
+.cronograma__hora {
+  font-family: var(--didone);
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--oro-tinta);
+  white-space: nowrap;
+}
+.cronograma__texto { font-size: 1.05rem; color: var(--tinta); }
+
+/* La cuenta regresiva vive en su propia tarjeta navy, como el demo. */
+.cuenta-marco {
+  position: relative;
   overflow: hidden;
-}
-
-/* Cada marco usa la proporción de su foto, para que `object-fit: cover` no
-   recorte nada. Si se cambian las fotos, hay que cambiar estos dos números:
-     - iglesia 1261x751 -> 5:3  (panorámica, se ve la fachada entera)
-     - pareja  1201x1600 -> 3:4 (vertical; en 4:3 se perderían las caras) */
-.marco--iglesia { aspect-ratio: 5 / 3; }
-.marco--pareja { aspect-ratio: 3 / 4; }
-
-.marco__pie {
-  font-style: italic;
-  font-size: 1.08rem;
-  color: var(--ciruela);
-  opacity: .6;
-  text-align: center;
-  max-width: 20rem;
-  line-height: 1.6;
-}
-
-.marco img { width: 100%; height: 100%; object-fit: cover; display: block; }
-
-/* El `padding` de arriba existe para que el texto de reemplazo respire. Con la
-   foto puesta estorba: dejaría una franja de gradiente rodeando la imagen.
-   Sin padding la foto ocupa el marco entero y el borde redondeado lo recorta. */
-.marco:not(.marco--vacio) { padding: 0; }
-
-/* La foto es opcional. Mientras el archivo no exista, el marco se queda con su
-   texto. Ojo: esto no puede hacerse con el atributo `hidden`, porque
-   `.marco img` pone `display: block` y le gana al `[hidden]` del navegador: la
-   imagen se vería (o se vería el cuadrito roto) igual. Por eso la visibilidad
-   la lleva una clase, que sí gana por especificidad. */
-.marco--vacio img { display: none; }
-
-/* La leyenda desaparece sola cuando la foto sí está, para no quedar un texto
-   abajo de la imagen. */
-.marco--vacio .marco__pie { display: block; }
-.marco:not(.marco--vacio) .marco__pie { display: none; }
-
-/* -------------------------------------------------------------------------- */
-/* Dirección de la iglesia                                                     */
-/* -------------------------------------------------------------------------- */
-
-.direccion {
-  font-style: normal;
-  margin: 0 0 1.9rem;
-  padding: 1.15rem 1.3rem;
-  background: var(--velo);
-  border: 1px solid rgba(107, 62, 134, .14);
-  border-left: 3px solid var(--lila);
-  border-radius: 0 var(--esquina-suave) var(--esquina-suave) 0;
-  line-height: 1.65;
-}
-
-.direccion__linea { display: block; }
-
-.direccion__linea:first-child { font-weight: 600; }
-
-/* -------------------------------------------------------------------------- */
-/* Tarjeta de respuesta                                                        */
-/* -------------------------------------------------------------------------- */
-
-/* La tarjeta pasó de papel lila a rosa lavada. Es el cambio de color más
-   grande del sitio, así que va medido: sobre esta superficie quedan la tinta
-   en 11.6:1, el sagrario en 6.7:1, el "sí" en 5.3:1 y el "no" en 5.7:1. Los
-   dos botones de respuesta son los que más riesgo tenían, porque el "no" es
-   cereza y una tarjeta rosada podía hacerlo pasar por decoración. Aguantan. */
-.tarjeta {
-  background: var(--rosa-claro);
-  border: 1px solid rgba(142, 47, 82, .16);
-  border-radius: var(--esquina-suave);
-  padding: 2.2rem 1.9rem 1.9rem;
-  box-shadow: 0 1px 2px rgba(92, 58, 68, .05);
-}
-
-/* Aquí la opacidad estaba en .55, y .55 deja este texto en 3.21:1 sobre la
-   tarjeta: se veía gris claro y no se leía. Venía así desde antes del cambio de
-   color, o sea que no lo causó la tarjeta rosa, pero se corrigió al medir. A .7
-   queda en 4.84:1 y sigue viéndose más apagado que el resto. */
-.tarjeta__cargando {
-  font-style: italic;
-  opacity: .7;
-  font-size: 1.08rem;
-}
-
-/* La dedicatoria es el único texto que se apoya sobre un color de flor, así que
-   aquí se quitó el opacity que tenía: con opacity el color final depende de lo
-   que haya detrás y el contraste deja de estar controlado. En tinta sobre el
-   pétalo queda en 8.2:1. */
-.tarjeta__dedicatoria {
-  font-style: italic;
-  font-size: 1.08rem;
-  color: var(--tinta);
-  background: var(--rosa);
-  border-left: 2px solid var(--oro);
   border-radius: var(--esquina);
-  padding: .5rem .8rem;
-  margin-bottom: .3rem;
+  background:
+    radial-gradient(120% 90% at 88% -12%, rgba(201, 162, 74, .18) 0%, transparent 55%),
+    var(--marino);
+  color: var(--marfil);
+  text-align: center;
+  padding: 3rem 1.4rem 1.9rem;
 }
+.cuenta-rotulo {
+  display: block;
+  font-family: var(--didone);
+  font-size: .95rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--oro-claro);
+  margin-bottom: 1.1rem;
+}
+
+.cuenta { display: flex; justify-content: center; }
+.cuenta__unidad { padding: 0 .95rem; min-width: 0; }
+.cuenta__unidad + .cuenta__unidad { border-left: var(--filete-suave); }
+.cuenta__numero {
+  display: block;
+  font-family: var(--didone);
+  font-weight: 400;
+  font-size: clamp(1.6rem, 7vw, 2.1rem);
+  line-height: 1.05;
+  color: var(--marfil);
+}
+.cuenta__etiqueta {
+  display: block;
+  font-family: var(--didone);
+  font-size: 1rem;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--crema);
+  margin-top: .4rem;
+}
+
+.cuenta--terminada { display: block; }
+.cuenta__frase {
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--marfil);
+  margin: 0;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Padrinos y regalos                                                           */
+/* -------------------------------------------------------------------------- */
+
+.padrinos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+.padrino {
+  background: var(--marfil-suave);
+  border: var(--filete);
+  border-radius: var(--esquina);
+  padding: 1.15rem 1.25rem;
+}
+.padrino__rol {
+  font-family: var(--didone);
+  font-size: .95rem;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--oro-tinta);
+  margin: 0 0 .4rem;
+}
+.padrino__nombres {
+  font-size: 1.05rem;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.detalles {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+.detalle {
+  background: var(--marfil-suave);
+  border: var(--filete);
+  border-radius: var(--esquina);
+  padding: 1.3rem 1.3rem 1.15rem;
+}
+.detalle__rol {
+  font-family: var(--didone);
+  font-size: .95rem;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--oro-tinta);
+  margin: 0 0 .5rem;
+}
+.detalle__texto { margin: 0 0 .9rem; font-size: 1.05rem; }
+
+.clabe {
+  font-family: var(--didone);
+  font-size: 1.15rem;
+  letter-spacing: .08em;
+  color: var(--marino);
+  background: var(--marfil);
+  border: var(--filete-oro);
+  border-radius: var(--esquina);
+  padding: .7rem .9rem;
+  text-align: center;
+  margin: 0;
+  user-select: all;
+  cursor: copy;
+}
+.detalle__nota {
+  font-size: .95rem;
+  font-style: italic;
+  color: var(--oro-tinta);
+  opacity: .85;
+  margin-top: .6rem;
+}
+
+/* -------------------------------------------------------------------------- */
+/* La tarjeta de respuesta                                                     */
+/* -------------------------------------------------------------------------- */
+
+.tarjeta {
+  border-radius: var(--esquina);
+  background:
+    radial-gradient(120% 90% at 88% -12%, rgba(201, 162, 74, .16) 0%, transparent 55%),
+    var(--marino);
+  color: var(--marfil);
+  padding: 1.8rem 1.4rem 1.5rem;
+}
+
+.tarjeta__cargando { font-style: italic; color: var(--crema); opacity: .7; margin: 0; }
+.tarjeta__dedicatoria { font-style: italic; font-size: 1rem; color: var(--crema); margin: 0 0 .55rem; }
 
 .tarjeta__grupo {
-  font-size: 1.65rem;
-  font-weight: 300;
-  color: var(--rosa-tinta);
-  padding-bottom: 1.2rem;
-  margin-bottom: 1.4rem;
-  border-bottom: 1px solid var(--oro);
+  font-family: var(--didone);
+  font-weight: 600;
+  font-size: 1.45rem;
+  line-height: 1.3;
+  color: var(--oro-claro);
+  margin: 0 0 1.2rem;
+  padding-bottom: .9rem;
+  border-bottom: var(--filete-suave);
 }
 
 .fila {
@@ -675,48 +681,36 @@ a { color: var(--sagrario); }
   align-items: center;
   gap: .5rem 1rem;
   padding: .8rem 0;
-  border-bottom: 1px solid rgba(107, 62, 134, .08);
+  border-top: var(--filete-suave);
 }
+.fila__nombre { font-size: 1.05rem; color: var(--marfil); min-width: 0; }
+.fila__opciones { display: flex; gap: .6rem; }
 
-.fila__nombre { font-size: 1.2rem; color: var(--tinta); }
-.fila__opciones { display: flex; gap: .45rem; }
-
-/* Los dos botones de cada nombre.
-   Antes medían 43x35 y 49x35 px, bastante por debajo de los 44 px que se
-   recomiendan. Eso importa más de lo que parece: es el control donde el
-   invitado decide si va a la boda, y dos botones chicos pegados hacen que
-   la gente atine mal y tenga que corregir. Ahora miden 54 px de alto, se
-   separan más, y el que está elegido se queda marcado con aria-pressed. */
+/* Los dos botones de cada nombre. Antes de tocar son transparentes con su
+   propio color de letra (verde para "Sí", cereza para "No"), y al marcar se
+   llenan de verdad: ese contrato lo vigila banco-rsvp.html. */
 .opcion {
   position: relative;
-  font-family: var(--sans);
-  font-size: 1.02rem;
-  min-width: 4.25rem;
-  min-height: 54px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-width: 4.25rem;
+  min-height: 54px;
   padding: .35rem 1.1rem;
-  background: none;
-  border: 1px solid rgba(107, 62, 134, .3);
+  border: 1px solid rgba(247, 245, 238, .3);
   border-radius: var(--esquina);
-  color: var(--sagrario);
+  background: transparent;
+  font-family: var(--serif);
+  font-size: 1.02rem;
   cursor: pointer;
-  opacity: .6;
-  transition: opacity .15s ease, background-color .15s ease, color .15s ease, border-color .15s ease;
+  transition: background-color .15s ease, color .15s ease, border-color .15s ease;
 }
-.opcion:hover { opacity: .9; }
+.opcion:hover { border-color: rgba(247, 245, 238, .55); }
 
-/* --- el botón elegido ---------------------------------------------------
-   Antes el único aviso era que el relleno cambiara de color, y en el
-   teléfono no se alcanzaba a ver que la respuesta se había quedado
-   guardada. Ahora lo marcado lleva un ✓, se hunde y tiene un borde doble,
-   para que se distinga de un vistazo sin tener que volver a leerlo. */
-.opcion[aria-pressed="true"] {
-  opacity: 1;
-  padding-right: 2.3rem;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .28);
-}
+.opcion[aria-pressed="true"] { padding-right: 2.3rem; }
+
+/* El visto del botón marcado: sin él, en el teléfono no se alcanza a ver si
+   la respuesta quedó guardada. */
 .opcion[aria-pressed="true"]::after {
   content: '\2713';
   position: absolute;
@@ -727,78 +721,83 @@ a { color: var(--sagrario); }
   line-height: 1;
   pointer-events: none;
 }
-/* El color va con el significado y no con el orden: verde es "sí" y el vino
-   es "no", como lo lee cualquiera aunque no lea. Además el botón sin marcar ya
-   lleva su propio tono, así que se distingue de entrada cuál es cuál y no
-   hace falta apretar para enterarse. */
-.opcion--si { color: var(--si-texto); border-color: rgba(61, 107, 65, .38); }
-.opcion--no { color: var(--no-texto); border-color: rgba(162, 51, 69, .38); }
-.opcion--si[aria-pressed="true"] { background: var(--si);  border-color: var(--si-texto); color: var(--tinta); }
-.opcion--no[aria-pressed="true"] { background: var(--no);  border-color: var(--no-texto); color: var(--velo); }
 
-/* Campo de texto libre: sólo lo usa el buscador de invitados. Estas reglas
-   se llamaban "acompanantes" porque su único usuario era el campo de
-   acompañantes, que ya no está en la página. */
-/* La opacidad estaba en .8, y a .8 el azul-tinta sobre la tarjeta rosa queda en
-   4.44:1, apenas por debajo del mínimo. Se quitó la opacidad en vez de oscurecer
-   el azul: el texto gana contraste y sigue siendo un rótulo de etiqueta. */
+.opcion--si { color: var(--si-texto); }
+.opcion--no { color: var(--no-texto); }
+.opcion--si[aria-pressed="true"] { background: var(--si); border-color: var(--si); color: var(--marino); }
+.opcion--no[aria-pressed="true"] { background: var(--no); border-color: var(--no); color: var(--marfil); }
+
+/* Buscador de nombres: las filas usan .opcion pero llenas de ancho. */
+.buscador { margin: 0; padding: 0; }
+.buscador .opcion {
+  justify-content: flex-start;
+  min-width: 0;
+  min-height: 48px;
+  width: 100%;
+  padding: .8rem .2rem;
+  border: 0;
+  border-radius: 0;
+  border-bottom: var(--filete-suave);
+  text-align: left;
+  opacity: 1;
+}
+
 .campo__titulo {
-  font-family: var(--sans);
-  font-size: 1rem;
-  line-height: 1.5;
-  color: var(--azul-tinta);
-  margin: 1.9rem 0 .6rem;
+  font-family: var(--didone);
+  font-size: .95rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--oro-claro);
+  margin: 1.2rem 0 .45rem;
 }
 .campo {
+  display: block;
   width: 100%;
   min-height: 44px;
   padding: .55rem .1rem;
   border: 0;
-  border-bottom: 1px solid rgba(107, 62, 134, .28);
-  background: none;
-  color: var(--tinta);
-  font-family: var(--serif);
-  font-size: 1.08rem;   /* arriba de 16px: si no, iOS hace zoom al escribir */
+  border-bottom: 2px solid rgba(201, 162, 74, .55);
   border-radius: 0;
+  background: transparent;
+  color: var(--marfil);
+  font-family: var(--serif);
+  font-size: 1.06rem;   /* ≥16px: si no, iOS hace zoom al escribir */
   transition: border-color .18s ease;
 }
-.campo:focus { outline: none; border-bottom-color: var(--sagrario); }
-.campo::placeholder { color: var(--tinta); opacity: .32; font-style: italic; }
+.campo:focus { outline: none; border-bottom-color: var(--oro-claro); }
+.campo::placeholder { color: rgba(247, 245, 238, .55); font-style: italic; }
 
-/* El campo de mensaje es la única parte opcional de la tarjeta, y por eso lleva
-   su propia superficie, azul lavada contra el rosa: en frío se lee como "esto
-   va aparte" sin necesidad de rotularlo. La tinta sobre ese azul queda en
-   11.5:1, así que el texto no sacrifica nada. */
 .mensaje {
-  margin-top: 1.7rem;
-  padding: 1rem 1.1rem .5rem;
-  background: var(--azul-claro);
-  border: 1px solid rgba(47, 76, 135, .14);
+  margin-top: 1.5rem;
+  padding: 1rem 1.1rem .6rem;
+  background: var(--marino-suave);
+  border: 1px solid rgba(247, 245, 238, .12);
   border-radius: var(--esquina);
 }
 .mensaje__campo {
+  display: block;
   width: 100%;
-  min-height: 5.5rem;
+  min-height: 3.2rem;
   padding: .55rem .1rem;
   border: 0;
-  border-bottom: 1px solid rgba(107, 62, 134, .28);
-  background: none;
-  color: var(--tinta);
+  border-bottom: 1px solid rgba(201, 162, 74, .4);
+  border-radius: 0;
+  background: transparent;
+  color: var(--marfil);
   font-family: var(--serif);
-  font-size: 1.08rem;   /* arriba de 16px, por lo del zoom de iOS */
+  font-size: 1rem;      /* ≥16px: si no, iOS hace zoom al escribir */
   line-height: 1.6;
   resize: vertical;
-  border-radius: 0;
-  transition: border-color .18s ease;
 }
-.mensaje__campo:focus { outline: none; border-bottom-color: var(--sagrario); }
-.mensaje__campo::placeholder { color: var(--tinta); opacity: .32; font-style: italic; }
+.mensaje__campo:focus { outline: none; border-bottom-color: var(--oro-claro); }
+.mensaje__campo::placeholder { color: rgba(247, 245, 238, .55); font-style: italic; }
 
 /* Honeypot: fuera de la vista, pero presente para los bots. */
 .trampa {
   position: absolute !important;
   left: -9999px !important;
-  width: 1px; height: 1px;
+  width: 1px;
+  height: 1px;
   overflow: hidden;
   opacity: 0;
 }
@@ -808,240 +807,133 @@ a { color: var(--sagrario); }
   flex-wrap: wrap;
   align-items: center;
   gap: 1rem 1.8rem;
-  margin-top: 2.1rem;
+  margin-top: 2rem;
   padding-top: 1.5rem;
-  border-top: 1px solid var(--oro);
+  border-top: var(--filete-suave);
 }
-
-/* Durante el envío el botón se deshabilita desde el JS, así que no hace falta
-   una clase para apagarlo. */
 
 .tarjeta__hecho { text-align: center; padding: .6rem 0 .2rem; }
 .tarjeta__hecho-titulo {
-  font-size: 1.75rem;
-  font-weight: 300;
-  font-style: italic;
-  color: var(--tinta);
+  font-family: var(--didone);
+  font-weight: 600;
+  font-size: 1.6rem;
+  line-height: 1.25;
+  color: var(--oro-claro);
   margin-bottom: .9rem;
 }
-.tarjeta__hecho-texto { color: var(--ciruela); }
+.tarjeta__hecho-texto { color: var(--crema); font-size: 1rem; }
 
 .tarjeta__hecho-cuadro {
   margin-top: 1.7rem;
-  padding: 1.2rem 1.3rem;
-  background: var(--morado-claro);
+  padding: 1.1rem 1.3rem;
+  background: var(--marino-suave);
   border-left: 2px solid var(--oro);
   border-radius: var(--esquina);
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   text-align: left;
 }
 .tarjeta__hecho-cuadro dt {
-  font-family: var(--sans);
-  font-size: 1rem;
-  letter-spacing: .1em;
+  font-family: var(--didone);
+  font-size: .95rem;
+  letter-spacing: .12em;
   text-transform: uppercase;
-  color: var(--sagrario);
-  opacity: .75;
+  color: var(--oro-claro);
   margin-top: .7rem;
 }
 .tarjeta__hecho-cuadro dt:first-child { margin-top: 0; }
-.tarjeta__hecho-cuadro dd { margin: 0; color: var(--tinta); }
+.tarjeta__hecho-cuadro dd { margin: 0; color: var(--marfil); }
 
 .reintentar {
+  display: inline-flex;
+  align-items: center;
   margin-top: 1.6rem;
   background: none;
   border: 0;
-  border-bottom: 1px solid var(--cera);
-  padding: .5rem 0;
+  border-bottom: 1px solid rgba(201, 162, 74, .5);
+  padding: .5rem .1rem;
   min-height: 48px;
-  color: var(--sagrario);
-  font-family: var(--sans);
+  color: var(--oro-claro);
+  font-family: var(--didone);
   font-size: 1.02rem;
   cursor: pointer;
 }
-.reintentar:hover { color: var(--tinta); border-bottom-color: var(--tinta); }
+.reintentar:hover { border-bottom-color: var(--oro-claro); }
 
+/* El <p class="ayuda"> nace siempre vacío; sólo se llena si hay algo que
+   avisar. Con :empty no deja un margen fantasma debajo del botón. */
 .ayuda {
-  margin-top: 1.3rem;
-  font-family: var(--sans);
+  margin-top: 1.2rem;
+  font-family: var(--serif);
   font-size: .98rem;
   line-height: 1.62;
-  color: var(--ciruela);
+  color: var(--crema);
   opacity: .85;
 }
-/* El <p class="ayuda"> de la tarjeta se crea siempre vacío y sólo se llena si
-   hay algo que avisar. Sin esto dejaría un margen fantasma debajo del botón. */
 .ayuda:empty { display: none; }
 
-/* Buscador (rsvp.js). Sobrescribe el ancho y la forma de .opcion, pero
-   conserva el alto táctil de 48px. */
-.buscador { font-family: var(--sans); }
-.buscador .opcion {
-  font-family: var(--serif);
-  font-size: 1.1rem;
-  min-width: 0;
-  min-height: 48px;
-  justify-content: flex-start;
-  color: var(--tinta);
-  border: 0;
-  border-bottom: 1px solid rgba(107, 62, 134, .1);
-  border-radius: 0;
-  padding: .8rem .2rem;
-  width: 100%;
-  text-align: left;
-  opacity: 1;
-}
-.buscador .opcion:hover { background: var(--lila-claro); }
-
 /* -------------------------------------------------------------------------- */
-/* Pie — el único bloque oscuro, y por eso es el ancla de la página            */
+/* Pie — el ancla oscura de la página                                           */
 /* -------------------------------------------------------------------------- */
 
 .pie {
-  /* El pie es la última sección y lleva el fondo oscuro, y es el ancla de la
-     página. La guirnalda de fondo.png vive arriba de todo, en .ventana. */
-  background: var(--sobre-vela);
-  color: var(--sobre-vela-t);
+  background: var(--marino);
+  color: var(--marfil);
   text-align: center;
-  padding: 3.4rem var(--canal) 3.6rem;
-  margin-top: 0;
+  padding: 3.2rem 1.5rem 3.6rem;
+  margin-top: 1.2rem;
 }
-/* El pie es un bloque a sangre pero su texto son dos líneas cortas: si se
-   dejaran correr de borde a borde se leerían como un subtítulo de pantano.
-   Con un tope de ancho y centrado quedan como una firma. */
 .pie__linea {
-  font-size: 1.18rem;
-  max-width: 26rem;
-  margin-inline: auto;
-}
-.pie__linea--tenue {
-  font-style: italic;
-  font-size: 1.06rem;
-  opacity: .62;
-  margin-top: .4rem;
-  line-height: 1.55;
+  margin: 0;
+  font-family: var(--viaoda);
+  font-size: 2rem;
+  line-height: 1.3;
+  letter-spacing: .04em;
 }
 
 /* -------------------------------------------------------------------------- */
-/* Sin JavaScript: la invitación se lee igual, sólo no se puede confirmar.     */
+/* Sin JavaScript                                                               */
 /* -------------------------------------------------------------------------- */
 
 .sin-js {
-  padding: 1.2rem 1.3rem;
-  background: var(--lila-claro);
+  background: var(--crema);
+  border-left: 3px solid var(--oro);
   border-radius: var(--esquina);
-  font-size: 1.06rem;
-  color: var(--ciruela);
-  margin-bottom: 1.4rem;
+  padding: 1rem 1.2rem;
+  color: var(--marino);
+  font-size: 1rem;
+  margin: 0 0 1.3rem;
 }
 
 /* -------------------------------------------------------------------------- */
-/* Pantallas chicas                                                            */
+/* Pantallas                                                                     */
 /* -------------------------------------------------------------------------- */
 
-@media (max-width: 32rem) {
-  /* El cuerpo baja muy poco y sólo para que no quede una sola palabra sola en
-     las pantallas de 320 px. Antes bajaba a 1.06rem, que en la práctica
-     dejaba la invitación más chica en el teléfono que en la computadora, al
-     revés de lo que hace el resto de las webs. */
-  body { font-size: 1.12rem; }
-  :root { --aire: 3.2rem; }
-  .tarjeta { padding: 1.7rem 1.2rem 1.5rem; }
-  .cuenta-marco { padding: 1.3rem 1rem; }
-  .cuenta__unidad { padding: 0 .5rem; }
+@media (max-width: 29.98rem) {
   .fila { grid-template-columns: 1fr; gap: .5rem; }
   .fila__opciones { justify-content: flex-start; }
-  .acciones .boton { width: 100%; text-align: center; }
 }
 
-/* -------------------------------------------------------------------------- */
-/* Movimiento — un solo momento, en la carga                                   */
-/* -------------------------------------------------------------------------- */
-
-.portada .sello,
-.portada .formula,
-.portada .nombres,
-.portada .fecha,
-.portada .ornamento {
-  opacity: 0;
-  animation: aparecer .95s cubic-bezier(.2, .7, .3, 1) forwards;
-}
-.portada .sello     { animation-delay: .05s; }
-.portada .formula   { animation-delay: .3s;  }
-.portada .nombres   { animation-delay: .5s;  }
-.portada .fecha     { animation-delay: .72s; }
-.portada .ornamento { animation-delay: .86s; }
-
-@keyframes aparecer {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: none; }
-}
-
-.tarjeta__hecho { animation: aparecer .5s ease-out both; }
-
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  /* La flama se apaga del todo: una llama que titila puede ser incómoda. */
-  .sello__flama { animation: none; opacity: .7; }
-  .portada .sello, .portada .formula, .portada .nombres, .portada .fecha, .portada .ornamento {
-    opacity: 1;
-    animation: none;
-  }
-  .tarjeta__hecho { animation: none; }
-  *, *::before, *::after { transition-duration: .01ms !important; }
-}
-
-/* -------------------------------------------------------------------------- */
-/* Impresión: por si alguien decide imprimir la invitación                      */
-/* -------------------------------------------------------------------------- */
-
-/* En una pantalla ancha (desde 30rem, ~480px, o sea cualquier cosa que no sea
-   un celular en vertical) la invitación se ve como en el celular: el ancho del
-   documento baja al de un teléfono y todo queda centrado. Las secciones dejan
-   de ir a sangre y quedan dentro de la columna. La guirnalda de .ventana se
-   clava a esa columna (mismo ancho, mismo centro), así que las flores de
-   fondo.png se comportan igual que en el teléfono: siempre a la vista, sin
-   recortes raros cuando la ventana es más ancha o más horizontal. */
 @media (min-width: 30rem) {
-  /* El telón fuera del "celular": un lila lavado, para que la columna se lea
-     como una pantalla y no como una página que no usa el ancho. */
-  html { background: #EDE7F5; }
-
-  body {
-    max-width: var(--ancho-celular);
-    margin-inline: auto;
-  }
-
-  .ventana {
-    left: 50%;
-    transform: translateX(-50%);
-    width: var(--ancho-celular);
-  }
+  .padrinos { grid-template-columns: repeat(2, 1fr); }
+  /* minmax(0, 1fr): sin este límite, una celda con un dato largo (la CLABE)
+     empuja su columna y las dos tarjetas quedan de distinto ancho. */
+  .detalles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* En pantallas anchas la invitación se ve como en el celular: una columna de
+   ancho de teléfono centrada. Así cada sección se lee igual en cualquier lado. */
+@media (min-width: 30rem) {
+  body { max-width: 26rem; margin-inline: auto; }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Impresión                                                                     */
+/* -------------------------------------------------------------------------- */
 
 @media print {
-  body { background: #fff; font-size: 11pt; }
-  /* El "celular" es cosa de pantalla: al imprimir la columna vuelve a ser toda
-     la hoja, el telón se apaga y la guirnalda fija no se lleva a la página. */
-  html { background: #fff; }
-  body { max-width: none; margin: 0; }
-  .ventana { display: none; }
-  .portada {
-    background: none;
-    color: var(--tinta);
-    padding: 0 0 1.5rem;
-  }
-  .portada .sello, .portada .formula, .portada .nombres, .portada .fecha, .portada .ornamento {
-    opacity: 1; animation: none;
-  }
-  .nombres__y, .fecha, .formula { color: var(--tinta); }
-  .bloque--rosa, .bloque--lila { background: none; }
-  /* Los cuatro marcos se apagan al imprimir, y esta regla tiene que ser
-     explícita para los cuatro. Con el atajo de arriba sólo se apagaba el de los
-     bloques de color, porque el atajo borra la imagen: la portada y el pie se
-     habrían llevado sus flores impresas. */
-  .bloque, .portada, .pie { background-image: none; }
-  .cuenta-marco, .marco, .tarjeta, .acciones, .ornamento { display: none !important; }
-  .pie { background: none; color: var(--tinta); border-top: 1px solid #ccc; }
-  a::after { content: ""; }
+  .flor-banda,
+  .ornamento,
+  .galeria__boton { display: none !important; }
+  body { max-width: none; }
+  .pagina, .bloque { padding-inline: 0; }
 }

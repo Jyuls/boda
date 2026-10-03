@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Abril y Johann, 22 de octubre de 2026</title>
 <meta name="description" content="Invitación a nuestra boda. Jueves 22 de octubre de 2026 a las 11:00, Parroquia San Ignacio de Loyola, Tijuana.">
-<meta name="theme-color" content="#F9E7E6">
+<meta name="theme-color" content="#F7F5EE">
 
 <link rel="canonical" href="https://jyuls.github.io/boda/">
 
@@ -24,25 +24,26 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<!-- Sólo los pesos que se usan de verdad, y sólo dos familias.
-     Cormorant Infant: 300 y 400, normal e itálico (los siete 300 del CSS y las
-     doce cursivas). Jost: únicamente 400, porque todos sus usos heredan el
-     peso normal del body.
+<!-- Cuatro familias, y cada peso que se pide tiene su uso en el CSS:
+     - EB Garamond: el cuerpo del texto (400) y las cursivas (400 itálica).
+       Las cursivas son de verdad, no "falsas": la fórmula de la portada, los
+       pies de los marcos y las dedicatorias de la tarjeta respiran así.
+     - Playfair Display: los rótulos en versalitas espaciadas (400) y los
+       títulos de sección (600), como los rótulos del demo minimalismo.
+     - Viaoda Libre: los nombres de los novios en la portada, a una sola
+       caja. Es la vara del demo; por eso el nombre en mayúsculas no parece
+       un grito sino una placa de iglesia.
+     - The Nautigal: el ampersand "y" de la portada, en script.
      Pedir un peso de más no es gratis: son 26 KB por archivo WOFF2 que cada
-     invitado descarga con datos móviles para no verlos nunca. -->
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Infant:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@400&display=swap" rel="stylesheet">
+     invitado descarga con datos móviles para no verlos nunca; probar-estilos.js
+     vigila que lo pedido sea lo usado. -->
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;1,400&family=Playfair+Display:wght@400;600&family=Viaoda+Libre&family=The+Nautigal&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/styles.css">
 
 <!-- El emblema de San Ignacio de Loyola también sirve de favicon. -->
 <link rel="icon" href="assets/img/sello.svg" type="image/svg+xml">
 </head>
 <body>
-
-<!-- La guirnalda de fondo.png, estática y siempre en pantalla. La imagen es
-     transparente a propósito: vive por encima de todo y se queda ahí aunque
-     la página ruede. pointer-events:none deja pasar el toque y aria-hidden la
-     saca del árbol de lectura. -->
-<div class="ventana" aria-hidden="true"></div>
 
 <a class="saltar" href="#respuesta">Ir a confirmar asistencia</a>
 
@@ -72,23 +73,184 @@
 
     <h1 class="nombres">
       <span class="nombres__linea">Abril Cristina&nbsp;Carrillo Sánchez</span>
-      <span class="nombres__y">y</span>
+      <span class="nombres__y">&amp;</span>
       <span class="nombres__linea">Johann Ezequiel&nbsp;Vega González</span>
     </h1>
 
-    <p class="fecha">Jueves 22 de octubre de 2026</p>
+    <p class="fecha">
+      <span class="destello" aria-hidden="true">✦</span>
+      Jueves 22 de octubre de 2026
+      <span class="destello" aria-hidden="true">✦</span>
+    </p>
 
-    <div class="ornamento" style="max-width: 18rem; margin-top: 2.2rem;">
-      <span class="ornamento__gema"></span>
+    <div class="ornamento">
+      <img class="ornamento__gema" src="assets/img/flor-esquina-si.png" alt="" aria-hidden="true">
+      <span class="ornamento__centro" aria-hidden="true"></span>
+      <img class="ornamento__gema" src="assets/img/flor-esquina-sd.png" alt="" aria-hidden="true">
     </div>
   </div>
 </header>
 
 <main class="pagina">
 
-  <!-- ======================= CUENTA REGRESIVA ======================= -->
-  <section class="bloque bloque--velo" style="text-align: center;">
+  <!-- ========================= LA CEREMONIA ========================= -->
+  <section class="bloque" aria-labelledby="ceremonia-titulo">
+    <h2 class="bloque__titulo" id="ceremonia-titulo">La ceremonia</h2>
+
+    <!-- La tarjeta azul marino. La banda de flores del borde superior es
+         decorativa y vive en el aire de arriba de la tarjeta, así que nunca
+         se acerca al texto (se comprueba en probar-marco.js). -->
+    <div class="panel">
+      <span class="flor-banda" aria-hidden="true"></span>
+
+      <!-- Marco de foto con foto opcional: si assets/img/iglesia.jpg no está,
+           el <img> se esconde y queda sólo el texto de abajo. No hay que editar
+           nada cuando llegue la foto.
+           `marco--iglesia` le da la proporción 5:3 en el CSS, que es la de la
+           foto (panorámica, para que se vea la fachada entera). -->
+      <figure class="marco marco--iglesia marco--vacio" data-foto>
+        <img src="assets/img/iglesia.jpg"
+             alt="La Parroquia San Ignacio de Loyola, en Nueva Tijuana">
+        <figcaption class="marco__pie">Parroquia San Ignacio de Loyola</figcaption>
+      </figure>
+
+      <dl class="programa">
+        <div class="programa__fila">
+          <dt class="programa__clave">Llegada</dt>
+          <dd class="programa__valor"><span class="cifras">10:30</span></dd>
+        </div>
+        <div class="programa__fila">
+          <dt class="programa__clave">Misa</dt>
+          <dd class="programa__valor"><span class="cifras">11:00</span></dd>
+        </div>
+        <div class="programa__fila">
+          <dt class="programa__clave">Lugar</dt>
+          <dd class="programa__valor">Parroquia San Ignacio de Loyola<br>Tijuana, Baja California</dd>
+        </div>
+        <div class="programa__fila">
+          <dt class="programa__clave">Celebrante</dt>
+          <dd class="programa__valor">Pbro. Marco Aurelio Castillo Aguilar</dd>
+        </div>
+      </dl>
+    </div>
+
+    <!-- Cómo llegar (el mapa de la ceremonia). La dirección se arma con
+         config.js, no se edita acá. -->
+    <div class="panel panel--mapa">
+      <h3 class="panel__titulo">Cómo llegar</h3>
+
+      <address class="direccion direccion--dentro">
+        <span class="direccion__linea" data-lugar></span>
+        <span class="direccion__linea" data-direccion></span>
+        <span class="direccion__linea"><span data-colonia></span>, C.P. <span data-cp></span></span>
+        <span class="direccion__linea" data-ciudad></span>
+      </address>
+
+      <p class="acciones">
+        <a class="boton" data-maps href="#" target="_blank" rel="noopener">Ver en Google Maps</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- =========================== GALERÍA ============================ -->
+  <!-- Carrusel de fotos. app.js arma los marcos dentro de [data-cinta];
+       las fotos salen de los archivos que se anotan en CFG.galeria
+       (config.js). Si la lista está vacía, se usa la foto de la iglesia y la
+       de la pareja, que ya están en assets/img/. -->
+  <section class="bloque" aria-labelledby="galeria-titulo">
+    <h2 class="bloque__titulo" id="galeria-titulo">Nuestras fotos</h2>
+
+    <div class="galeria" data-galeria>
+      <div class="galeria__cinta" data-cinta>
+        <!-- app.js pone acá un figure.marco por foto -->
+      </div>
+      <div class="galeria__reglilla">
+        <button class="galeria__boton" type="button" data-anterior aria-label="Foto anterior">‹</button>
+        <span class="galeria__contador" data-contador>1 / 1</span>
+        <button class="galeria__boton" type="button" data-siguiente aria-label="Siguiente foto">›</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================== LA COMIDA ========================== -->
+  <!-- La recepción para comer, después de la misa. El lugar es la "Casa de
+       la familia" y el mapa es el link corto que pasó la pareja; la dirección
+       en texto se puede agregar acá abajo si algún día la quieren escrita. -->
+  <section class="bloque" aria-labelledby="comida-titulo">
+    <h2 class="bloque__titulo" id="comida-titulo">La comida</h2>
+
+    <div class="panel">
+      <span class="flor-banda" aria-hidden="true"></span>
+
+      <p class="bloque__texto">
+        Al salir de la misa nos vamos a la <strong>Casa de la familia</strong> a
+        celebrar con barbacoa. Los esperamos desde la <span class="cifras">1:00 pm</span>
+        y pensamos quedarnos hasta las <span class="cifras">5:00 pm</span>.
+      </p>
+
+      <dl class="programa">
+        <div class="programa__fila">
+          <dt class="programa__clave">Comida</dt>
+          <dd class="programa__valor">Barbacoa en la Casa de la familia</dd>
+        </div>
+        <div class="programa__fila">
+          <dt class="programa__clave">Horario</dt>
+          <dd class="programa__valor">De la <span class="cifras">1:00 pm</span> a las <span class="cifras">5:00 pm</span></dd>
+        </div>
+        <div class="programa__fila">
+          <dt class="programa__clave">Lugar</dt>
+          <dd class="programa__valor">Casa de la familia<br>
+            <span class="comida__nota">la dirección exacta va en el mapa</span>
+          </dd>
+        </div>
+      </dl>
+
+      <p class="acciones">
+        <a class="boton" href="https://maps.app.goo.gl/TxfZHiPZb3d2xCcZA" target="_blank" rel="noopener">Ver en Google Maps</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ====================== CÓDIGO DE VESTIMENTA ==================== -->
+  <section class="bloque" aria-labelledby="vestimenta-titulo">
+    <h2 class="bloque__titulo" id="vestimenta-titulo">Código de vestimenta</h2>
+
+    <div class="panel panel--mapa">
+      <h3 class="panel__titulo">Vestimenta</h3>
+      <p class="bloque__texto">
+        Traje para ellos, vestido largo o a la rodilla para ellas.
+        Colores a elección, evita el blanco (es el color de la novia).
+      </p>
+    </div>
+  </section>
+
+  <!-- ========================== CRONOGRAMA ========================== -->
+  <section class="bloque" aria-labelledby="cronograma-titulo">
+    <h2 class="bloque__titulo" id="cronograma-titulo">Cronograma</h2>
+
+    <ol class="cronograma">
+      <li class="cronograma__fila">
+        <span class="cronograma__hora cifras">10:30</span>
+        <span class="cronograma__texto">Llegada de invitados</span>
+      </li>
+      <li class="cronograma__fila">
+        <span class="cronograma__hora cifras">11:00</span>
+        <span class="cronograma__texto">Misa en San Ignacio</span>
+      </li>
+      <li class="cronograma__fila">
+        <span class="cronograma__hora cifras">1:00 pm</span>
+        <span class="cronograma__texto">Comida en la casa de la familia</span>
+      </li>
+      <li class="cronograma__fila">
+        <span class="cronograma__hora cifras">5:00 pm</span>
+        <span class="cronograma__texto">Despedida</span>
+      </li>
+    </ol>
+
+    <!-- La cuenta regresiva vive con el cronograma, como el demo: es una
+         tarjeta oscura aparte. app.js rellena [data-cuenta]. -->
     <div class="cuenta-marco">
+      <span class="flor-banda" aria-hidden="true"></span>
       <span class="cuenta-rotulo">Falta para la boda</span>
       <div class="cuenta" data-cuenta>
         <!-- app.js rellena esto -->
@@ -96,76 +258,70 @@
     </div>
   </section>
 
-  <!-- ========================= LA CEREMONIA ========================= -->
-  <section class="bloque bloque--velo">
-    <h2 class="bloque__titulo">La ceremonia</h2>
-
-    <dl class="programa">
-      <div class="programa__fila">
-        <dt class="programa__clave">Llegada</dt>
-        <dd class="programa__valor"><span class="cifras">10:30</span></dd>
-      </div>
-      <div class="programa__fila">
-        <dt class="programa__clave">Misa</dt>
-        <dd class="programa__valor"><span class="cifras">11:00</span></dd>
-      </div>
-      <div class="programa__fila">
-        <dt class="programa__clave">Lugar</dt>
-        <dd class="programa__valor">Parroquia San Ignacio de Loyola<br>Tijuana, Baja California</dd>
-      </div>
-      <div class="programa__fila">
-        <dt class="programa__clave">Celebrante</dt>
-        <dd class="programa__valor">Pbro. Marco Aurelio Castillo Aguilar</dd>
-      </div>
-    </dl>
-  </section>
-
-  <!-- ========================= CÓMO LLEGAR ========================= -->
-  <section class="bloque bloque--ancho bloque--rosa">
-    <h2 class="bloque__titulo">Cómo llegar</h2>
-
-    <!-- Marco de foto con foto opcional: si assets/img/iglesia.jpg no está,
-         el <img> se esconde y queda sólo el texto de abajo. No hay que editar
-         nada cuando llegue la foto.
-         `marco--iglesia` le da la proporción 5:3 en el CSS, que es la de la
-         foto (panorámica, para que se vea la fachada entera). -->
-    <figure class="marco marco--iglesia marco--vacio" data-foto>
-      <img src="assets/img/iglesia.jpg"
-           alt="La Parroquia San Ignacio de Loyola, en Nueva Tijuana">
-      <figcaption class="marco__pie">Parroquia San Ignacio de Loyola</figcaption>
-    </figure>
+  <!-- =========================== PADRINOS =========================== -->
+  <!-- Padrinos: los cuatro roles ya tienen nombres; corregir acá si
+       cambia algo antes de imprimir. -->
+  <section class="bloque" aria-labelledby="padrinos-titulo">
+    <h2 class="bloque__titulo" id="padrinos-titulo">Padrinos</h2>
 
     <p class="bloque__texto">
-      La ceremonia es en la <strong>Parroquia San Ignacio de Loyola</strong>.
-      Les dejamos la dirección y el mapa listos para que no se pierdan.
+      Quienes nos acompañan en el camino hasta el altar.
     </p>
 
-    <address class="direccion">
-      <span class="direccion__linea" data-lugar></span>
-      <span class="direccion__linea" data-direccion></span>
-      <span class="direccion__linea"><span data-colonia></span>, C.P. <span data-cp></span></span>
-      <span class="direccion__linea" data-ciudad></span>
-    </address>
-
-    <p class="acciones">
-      <a class="boton" data-maps href="#" target="_blank" rel="noopener">Ver en Google Maps</a>
-      <a class="boton boton--discreto" data-telefono href="#">Llamar a la parroquia</a>
-    </p>
+    <ul class="padrinos">
+      <li class="padrino">
+        <h3 class="padrino__rol">Arras</h3>
+        <p class="padrino__nombres">Carlos Zamora</p>
+      </li>
+      <li class="padrino">
+        <h3 class="padrino__rol">Anillo</h3>
+        <p class="padrino__nombres">Jose Luis Nuñez Felipe</p>
+      </li>
+      <li class="padrino">
+        <h3 class="padrino__rol">Lazo</h3>
+        <p class="padrino__nombres">Angelica Medina<br>Mauricio Barrios</p>
+      </li>
+      <li class="padrino">
+        <h3 class="padrino__rol">Velación</h3>
+        <p class="padrino__nombres">Jose Luis Nuñez Rodriguez<br>Maribel Felipe Rendon</p>
+      </li>
+    </ul>
   </section>
 
-  <!-- ================== FOTO DE LA PAREJA =================== -->
-  <!-- Para usar una foto: poné el archivo en assets/img/nuestros.jpg y ya
-       está, no hay que tocar nada.
-       `marco--pareja` le da la proporción 3:4 en el CSS, que es la de esta
-       foto (vertical). Con un marco apaisado se le cortaría arriba y abajo,
-       justo donde están las caras. -->
-  <figure class="marco marco--pareja marco--vacio" data-foto>
-    <img src="assets/img/nuestros.jpg" alt="Abril y Johann">
-    <figcaption class="marco__pie">Abril y Johann</figcaption>
-  </figure>
+  <!-- =========================== REGALOS ============================ -->
+  <!-- Regalos: el sobre en persona o una transferencia. La CLABE va a
+       nombre de Johann Vega en Nu Bank; revisar antes de publicar. -->
+  <section class="bloque" aria-labelledby="regalos-titulo">
+    <h2 class="bloque__titulo" id="regalos-titulo">Regalos</h2>
+
+    <p class="bloque__texto">
+      Su presencia es el mejor regalo que nos pueden dar. Si además quieren
+      hacernos un detalle, les dejamos dos maneras: un sobre al llegar, o una
+      transferencia.
+    </p>
+
+    <div class="detalles">
+      <div class="detalle">
+        <h3 class="detalle__rol">En sobre</h3>
+        <p class="detalle__texto">
+          Si nos quieren honrar con una aportación, pueden dejárnosla en un
+          <strong>sobre</strong> al llegar a la comida.
+        </p>
+      </div>
+
+      <div class="detalle">
+        <h3 class="detalle__rol">Por transferencia</h3>
+        <p class="detalle__texto">
+          A nombre de <strong>Johann Vega</strong> en <strong>Nu Bank</strong>:
+        </p>
+        <p class="clabe" tabindex="0">6381 8001 0118 3935 09</p>
+        <p class="detalle__nota">Tocá la CLABE para seleccionarla y copiarla.</p>
+      </div>
+    </div>
+  </section>
 
   <!-- ==================== CONFIRMAR ASISTENCIA ==================== -->
-  <section class="bloque bloque--ancho bloque--lila" id="respuesta">
+  <section class="bloque" id="respuesta">
     <h2 class="bloque__titulo">Confirmar asistencia</h2>
 
     <noscript>
@@ -177,15 +333,14 @@
 
     <div class="tarjeta" data-rsvp>
       <!-- rsvp.js arma la tarjeta de respuesta acá -->
-      <p class="tarjeta__cargando">Cargando tu invitación⬦</p>
+      <p class="tarjeta__cargando">Cargando tu invitación…</p>
     </div>
   </section>
 
 </main>
 
 <footer class="pie">
-  <p class="pie__linea">Abril Cristina y Johann Ezequiel</p>
-  <p class="pie__linea pie__linea--tenue">22 de octubre de 2026<br>Parroquia San Ignacio de Loyola</p>
+  <p class="pie__linea">Te<br>Esperamos</p>
 </footer>
 
 <script src="assets/js/config.js"></script>

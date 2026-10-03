@@ -151,18 +151,26 @@ if (!pedidoFonts) {
     pedidos.set(nombre.trim(), pares);
   }
 
-  /* Qué pesos usa el CSS, por familia. */
-  const aliasDe = { "'Cormorant Infant'": 'Cormorant Infant', "'Jost'": 'Jost' };
+  /* Qué pesos usa el CSS, por familia. El var de cada familia (--serif,
+     --didone, --viaoda, --script) dice cuál es. El último que matchee gana:
+     un bloque :root con todas las variables termina en la script, que no se
+     audita porque Google la ofrece sin eje de pesos. */
+  const aliasDe = {
+    'EB Garamond': 'serif',
+    'Playfair Display': 'didone',
+    'Viaoda Libre': 'viaoda',
+    'The Nautigal': 'script'
+  };
   const usadasPor = new Map();
   for (const bloque of css.split('}')) {
     if (!bloque.includes('{')) continue;
     const cuerpo = bloque.slice(bloque.indexOf('{'));
     let familia = null;
-    for (const [alias, real] of Object.entries(aliasDe)) {
-      if (cuerpo.includes('--' + (alias === "'Cormorant Infant'" ? 'serif' : 'sans'))) familia = real;
+    for (const [real, variable] of Object.entries(aliasDe)) {
+      if (cuerpo.includes('--' + variable)) familia = real;
     }
     /* Reglas con font-weight y sin font-family: heredan la serif del body. */
-    if (!familia && !cuerpo.includes('font-family')) familia = 'Cormorant Infant';
+    if (!familia && !cuerpo.includes('font-family')) familia = 'EB Garamond';
 
     const peso = (cuerpo.match(/font-weight:\s*(\d+)/) || [])[1] || '400';
     const estilo = (cuerpo.match(/font-style:\s*(\w+)/) || [])[1] || 'normal';

@@ -10,7 +10,7 @@ Google Apps Script vinculado a ese Sheet.
 index.html                  la invitación
 assets/css/styles.css       estilos
 assets/js/config.js         <- lo único que tenés que editar
-assets/js/app.js            el link del mapa y la cuenta regresiva
+assets/js/app.js            el link del mapa, la galería y la cuenta regresiva
 assets/js/rsvp.js           tarjeta de confirmación
 assets/img/og.png           la imagen que se ve al compartir el link
 assets/img/sello.svg        el emblema de San Ignacio, también favicon
@@ -20,10 +20,14 @@ tools/probar-backend.js     pruebas del backend
 tools/probar-conexion.js    prueba que el Web App de Apps Script está en pie
 tools/probar-cuenta.js      pruebas de la cuenta regresiva
 tools/probar-estilos.js     pruebas de CSS
+tools/probar-links.js       los links de invitación, uno por uno
+tools/probar-marco.js       pruebas de las flores y de que ninguna tapa texto
 tools/probar-movil.js       pruebas de layout en pantallas de teléfono
 tools/probar-panel.js       pruebas del panel del resumen y de su filtro
 tools/probar-rsvp.js        pruebas de comportamiento del formulario
+tools/buscar-ajenos.js      letras de otros idiomas coladas en el texto
 tools/banco-movil.html      el banco donde se mide el móvil
+tools/banco-marco.html      el banco donde se miden las flores
 tools/banco-rsvp.html       el banco donde se aprieta el formulario
 tools/reparar-encoding.js   busca caracteres rotos por PowerShell
 tools/generar-links.html    tabla de links y mensajes, sólo para uso local
@@ -64,8 +68,7 @@ arma el bloque "Cómo llegar" con esto.
 direccion: 'Av. José López Portillo Pte. 95',
 colonia: 'Nueva Tijuana',
 cp: '22435',
-ciudadCorta: 'Tijuana, B.C.',
-telefono: '5216646234040'      // sólo dígitos, con clave de país
+ciudadCorta: 'Tijuana, B.C.'
 ```
 
 El número **Pte. 95** es el que publica la Arquidiócesis de Tijuana para la
@@ -73,29 +76,44 @@ Parroquia San Ignacio de Loyola. El C.P. **22435** es el de Nueva Tijuana, que e
 donde está la parroquia (el 22500 que aparece en el directorio oficial es el
 código postal de Otay, que queda más al sur).
 
-`telefono` en `''` esconde el enlace de llamada. El botón de Google Maps usa
-`enlaceMaps`, que está un poco más arriba en el mismo archivo: es el link corto
-que sale de compartir la ubicación desde el celular, y conviene, porque apunta a
-la puerta exacta en vez de dejar que el invitado busque la iglesia por su cuenta.
+El botón de Google Maps usa `enlaceMaps`, que está un poco más arriba en el mismo
+archivo: es el link corto que sale de compartir la ubicación desde el celular, y
+conviene, porque apunta a la puerta exacta en vez de dejar que el invitado busque
+la iglesia por su cuenta.
 
 ### Las fotos
 
-Dos huecos, y ninguno hay que tocarlo en el código: se pone el archivo y
+Tres huecos, y ninguno hay que tocarlo en el código: se pone el archivo y
 aparece.
 
-Las dos fotos ya están puestas. Sus medidas reales y el marco que le toca a cada
-una:
+Las fotos fijas ya están puestas. Sus medidas reales y el marco que les toca:
 
 | Archivo | Para qué | Medida | Proporción |
 |---|---|---|---|
-| `assets/img/iglesia.jpg` | La iglesia, en el bloque "Cómo llegar" | 1261 × 751, 170 KB | 5:3 |
-| `assets/img/nuestros.jpg` | Ustedes dos, antes de confirmar asistencia | 1201 × 1600, 156 KB | 3:4 |
+| `assets/img/iglesia.jpg` | La iglesia, en la tarjeta de la ceremonia | 1261 × 751, 170 KB | 5:3 |
+| `assets/img/nuestros.jpg` | Ustedes dos, un slide del carrusel | 1201 × 1600, 156 KB | 3:4 |
 
-Cada marco usa la proporción de su foto (`.marco--iglesia` y `.marco--pareja` en
-`styles.css`), con `object-fit: cover`. Por eso **no** conviene cambiar una foto
-por otra de otra proporción sin actualizar esos dos números: la de ustedes es
-vertical y en un marco apaisado se le cortarían arriba y abajo, justo donde están
-las caras.
+Cada marco usa la proporción de su foto (`.marco--iglesia`, `.marco--pareja` y
+`.marco--galeria` en `styles.css`), con `object-fit: cover`. Por eso **no**
+conviene cambiar una foto por otra de otra proporción sin actualizar esos
+números: la de ustedes es vertical y en un marco apaisado se le cortarían
+arriba y abajo, justo donde están las caras.
+
+**La galería.** El bloque "Nuestras fotos" es un carrusel que se arma solo. La
+lista sale de `galeria`, al final de `boda` en `config.js`:
+
+```js
+galeria: [
+  'assets/img/galeria/la-iglesia.jpg',
+  { src: 'assets/img/galeria/casa-de-la-familia.jpg', pie: 'Aquí nos esperamos' }
+]
+```
+
+Cada entrada puede ser un string (la ruta del archivo) o un objeto
+`{ src, pie }` con su pie de foto. Con la lista **vacía**, el carrusel cae a
+las dos fotos de arriba (la iglesia y la de ustedes) y se ve igual de
+completo. Las flechas cambian el slide y el contador indica cuál se está
+viendo.
 
 `iglesia.png` pesaba 1.49 MB; se guardó como JPEG de 170 KB. Una foto decorativa
 no necesita tanto, y la página se abre desde celulares con datos.
@@ -122,6 +140,22 @@ De dónde sacar las fotos, en orden de preferencia:
 Lo que **no** conviene es poner una foto de otra iglesia parecida: los invitados
 llegan confiados a esa puerta y ahí no está su boda. Si al final no se consigue
 ninguna foto, la página queda igual de linda con los marcos de texto.
+
+### Las secciones nuevas: comida, padrinos y regalos
+
+Las tres se agregaron a `index.html`; los datos que faltan por completar son:
+
+- **Comida** — barbacoa en la Casa de la familia, de 1:00 pm a 5:00 pm. El
+  botón de mapa apunta al link corto `https://maps.app.goo.gl/TxfZHiPZb3d2xCcZA`
+  (el que pasó la pareja, en el HTML del bloque "La comida"). **Verificar que
+  esa dirección abra el lugar correcto antes de publicar.** La dirección en
+  texto no está: si algún día la quieren escrita, se agrega en el bloque
+  `programa__fila` de "Lugar".
+- **Padrinos** — cuatro tarjetas con rol (Arras, Anillo, Lazo, Velación) ya con
+  nombres. Para corregirlos se edita el bloque `Padrinos` de `index.html`.
+- **Regalos** — dos tarjetas: sobre y transferencia. La CLABE
+  `6381 8001 0118 3935 09` (Nu Bank, a nombre de Johann Vega) está en el bloque
+  "Regalos". **Verificar el número antes de publicar.**
 
 ---
 
@@ -292,95 +326,61 @@ confirma otra vez, se actualiza su fila en lugar de duplicarse.
 
 ---
 
-## El marco floral y los colores de la tarjeta
+## La paleta y las flores
 
-Las flores van en los **costados** de cada sección, como el marco de una
-invitación impresa. Arriba y abajo no llevan nada, salvo dos excepciones: la
-portada, que es la primera sección, y el pie, que es la última; esas dos sí
-cierran el marco por los cuatro lados. La tarjeta cambió de verde salvia a rosa,
-con azul y morado. Hay cuatro decisiones acá que conviene no deshacer sin
-pensarlo.
+El diseño es el del demo "minimalism-dark-blue" (navy, marfil, crema y oro),
+conservando la tipografía de siempre: EB Garamond para el cuerpo (400 y su
+itálica), Playfair Display para los rótulos espaciados y los títulos (400 y
+600), Viaoda Libre para los nombres de la portada y The Nautigal para el
+ampersand. `probar-estilos.js` vigila que lo que se pide en `index.html` sea
+lo que el CSS usa: cada peso de más son 26-36 KB que bajan los invitados con
+datos para no verse nunca.
 
-**El marco va como fondo, no como elemento.** `background-image` en `.bloque`, y
-nada más. Un fondo no ocupa lugar: no empuja el texto, no puede provocar una
-barra horizontal y no se acerca a las letras, así que el marco no puede tapar
-nada de lo que ya funciona. La banda lateral mide 20px y el margen de la sección
-es de 24px, o sea que quedan 4px entre la flor y la primera letra.
+Los colores viven en las variables de `styles.css`:
 
-Se comprobó en el navegador que **ninguna** de las 42 rutas de texto de la página
-cae dentro de una banda, en las cuatro secciones ni en la portada ni en el pie.
+| Variable | Color | Para qué |
+|---|---|---|
+| `--marfil` | `#F7F5EE` | el papel: el fondo de la página |
+| `--marino` | `#00224C` | la tinta: tarjetas navy y texto sobre marfil |
+| `--crema` | `#ECE4D8` | superficies de apoyo: mapas, vestimenta, marcos vacíos |
+| `--oro` | `#B58B2F` | filetes y adornos (decorativo, 2.9:1: no se lee encima) |
+| `--oro-claro` | `#C9A24A` | rótulos sobre navy (6.7:1) |
+| `--oro-tinta` | `#7C5E1E` | texto dorado sobre marfil (5.6:1) |
 
-Por eso los bloques de color usan `background-color` y no el atajo `background`:
-el atajo pone `background-image` en `none` y el marco se perdía justo en las
-secciones de color. Y en impresión los cuatro marcos se apagan con una regla
-explícita, porque con el atajo anterior sólo se apagaban dos de los cuatro.
+Las tarjetas navy (ceremonia, comida, cuenta regresiva y respuesta) alternan
+con las tarjetas crema ("Cómo llegar" y "Vestimenta") para que la página
+respire entre dos bloques oscuros. Contrastes reales medidos: marfil sobre
+navy 14.6:1, crema sobre navy 12.6:1, oro claro sobre navy 6.7:1.
 
-**Todas las secciones van a sangre, y antes sólo las de color.** No es un cambio
-de fondo sino de dónde cae el marco: hace falta para que la banda lateral quede
-en el borde de la pantalla y no en el del contenido, que en una pantalla grande
-dejaba el marco flotando en mitad de la página al lado de secciones cuyo marco sí
-está en el borde. La medida del texto no se mueve: el ancho de columna queda en
-`min(100% - 2 * --canal, --medida)` con cualquiera de las dos formas.
+Las flores son decoración que se mueve con la página —nada de `position:fixed`
+ni de capas sobre el texto— y viven en dos lugares:
 
-**El oro tiene dos tonos y no es un descuido.** `--cera` es luz de vela: contra
-los pasteles nuevos da entre 1.06:1 y 1.19:1, así que un tallo pintado con
-`--cera` desaparece. `--oro` es oro antiguo, `#926E2B`, el tono más claro que
-todavía se distingue de un pastel (3.5:1 contra el más oscuro). Tallos, hojas y
-filetes usan `--oro`; `--cera` sigue donde estaba.
+- **`.flor-banda`**: la banda del borde superior de cada tarjeta navy
+  (`flor-separador.png` a todo lo ancho, con `background-size: cover`). Se
+  pega al borde de la tarjeta (`position: absolute; top: 0`) y el texto
+  empieza mucho más abajo, con un padding generoso, así que ninguna letra se
+  acerca a una flor. Es `aria-hidden` y no atrapa el toque.
+- **`.ornamento__gema`**: las florcitas de las esquinas recortadas
+  (`flor-esquina-si.png` y `flor-esquina-sd.png`) que flanquean el rombo del
+  adorno de la portada, lejos de los nombres.
 
-El pie es la excepción: es un bloque oscuro. El marco ya no lo lleva, porque el
-marco es uno solo y vive en la ventana fija, así que la variante en oro claro
-que antes hacía falta aquí ya no se usa.
+Ambas piezas se cortan con `tools/cortar-fondo.js` desde la guirnalda
+original de `fondo.png` (la regla de densidad está documentada ahí). La banda
+es la que antes era un recorte de guirnalda horizontal; las dos esquinas que
+usaba el intento anterior de marco son las que hoy sostienen el adorno.
 
-La tarjeta se pintó midiendo, no mirando. Sobre la superficie rosa `#FBE7EE`
-quedan la tinta en 11.6:1, el violeta en 6.7:1, el rosa de texto en 6.6:1, el
-"Sí" en 5.3:1 y el "No" en 5.7:1. Ese último era el riesgo: el botón de "no" es
-cereza, y sobre una tarjeta rosada podía pasar por decoración. Aguantó, y por eso
-la tarjeta puede ser rosa.
+`probar-marco.js` es la regla del diseño: en seis tamaños (320 a 1440 px) y en
+las dos posiciones de scroll extremas, ninguna letra visible puede tener su
+centro dentro del recto de una flor, ninguna flor puede estar fija a la
+pantalla y no puede haber scroll horizontal.
 
-De paso se corrigió un problema que ya venía de antes: el texto "Cargando..." iba
-con `opacity: .55`, que lo dejaba en 3.21:1 sobre la tarjeta. No lo causó el
-cambio de color, pero se encontró al medir. Ahora va en `.7` y queda en 4.8:1.
+### La columna de teléfono en pantallas anchas
 
-### El marco es la guirnalda entera de fondo.png, estática siempre en pantalla
-
-`assets/img/fondo.png` es una guirnalda botánica de 1056×1489 con fondo
-transparente de verdad. Es una ilustración de flores reales, no una forma
-dibujada a mano. Hoy se usa **entera**, no recortada: `.ventana` la muestra
-fija encima de toda la página, `background: center / cover` y `z-index: 30`
-(ver "El marco" más abajo).
-
-La única pieza recortada que queda en uso es un trozo de guirnalda horizontal,
-para el centro del adorno de la portada. `node tools/cortar-fondo.js` la genera:
-
-| Pieza | Tamaño | Para qué |
-| --- | --- | --- |
-| `flor-separador.png` | 803×238 | el centro del adorno de la portada |
-
-El mismo `tools/cortar-fondo.js` también corta las cuatro esquinas
-(`flor-esquina-si/sd/ii/id.png`): quedaron de un intento anterior de marco de
-esquinas recortadas y el sitio ya no las usa, pero el corte se conserva por si
-vuelven a servir, y documenta el método -- cada corte se aprieta hasta la última
-fila o columna que todavía sostiene flor, con un mínimo de densidad del 3.5%
-para no arrastrar filamentos sueltos.
-
-El marco, tal y como quedó, es la guirnalda completa y estática: `.ventana` en
-`index.html` es un `<div>` vacío con `position: fixed` y
-`background: url(../img/fondo.png) center / cover no-repeat`, por encima de
-todo (`z-index: 30`) para que se vea siempre en pantalla aunque la página ruede.
-La imagen es transparente a propósito: deja pasar el toque (`pointer-events:
-none`) y no entra en el árbol de lectura (`aria-hidden="true"`). Eso es todo lo
-que hace el marco; no se corta en esquinas para el sitio.
-
-Y para que la guirnalda nunca se recorte ni se pierda, en una pantalla ancha la
-invitación se ve como en el celular: desde 30rem (~480px de ancho) el documento
-baja a una columna de ancho de teléfono (`--ancho-celular`, 26rem ≈ 416px)
-centrada en el navegador, con la guirnalda clavada a esa misma columna. En un
-celular la columna es toda la pantalla y no hay cambio. El resultado es que las
-flores de fondo.png se comportan igual en todos los tamaños: siempre a la vista,
-en los bordes de la columna, sin los recortes de un `cover` sobre una pantalla
-horizontal (que antes se comía la guirnalda de arriba y de abajo) y sin un marco
-que tape el centro.
+La invitación se ve como en el celular donde sea: desde 30rem (~480px de
+ancho) el documento baja a una columna de ancho de teléfono (26rem ≈ 416px)
+centrada en el navegador. En un celular la columna es toda la pantalla y no
+hay cambio. Así cada sección se lee igual en cualquier lado, sin barras
+horizontales ni flores cortadas por la mitad.
 
 ---
 
@@ -395,9 +395,9 @@ node tools/probar-backend.js      85 pruebas del backend, sin Google
 node tools/probar-conexion.js     ¿está desplegado el Web App? (necesita internet)
 node tools/probar-cuenta.js       13 pruebas de la cuenta regresiva
 node tools/probar-estilos.js      CSS: clases, variables, pesos de fuente
-node tools/probar-links.js        los 30 links de invitación, uno por uno
-node tools/probar-movil.js        17 pantallas de teléfono: scroll, táctil y letra chica
-node tools/probar-marco.js         el marco cubre y queda fijo; cuánto texto queda bajo un pétalo
+node tools/probar-links.js        los links de invitación, uno por uno
+node tools/probar-movil.js        pack de anchos de teléfono: scroll, táctil y letra chica
+node tools/probar-marco.js        las flores existen y no se fijan; ningún centro de texto sobre una flor
 node tools/probar-panel.js        57 pruebas del panel del resumen y su filtro
 node tools/probar-rsvp.js         20 pruebas de comportamiento del formulario
 ```
@@ -441,8 +441,9 @@ tipo de error que el navegador no avisa: si una variable de color no existe, la
 aplica como si nada y el elemento se queda sin pintar.
 
 `probar-movil.js` y `probar-rsvp.js` abren un navegador de verdad. El primero
-mide la invitación en cinco anchos (320 a 600 px) en sus tres estados —la
-tarjeta de Sí/No, el buscador y la confirmación— y avisa si algo se sale de la
+mide la invitación en cinco anchos (320 a 600 px) en sus cinco estados —la
+tarjeta de Sí/No, el buscador, la confirmación, y la rama de fotos presentes o
+faltando— y avisa si algo se sale de la
 pantalla, si aparece scroll horizontal, si un botón es más chico que 44 px, si
 algún texto visible queda debajo de 15 px o si un campo de escritura queda
 debajo de 16 px. Los dos últimos límites no son caprichos: hubo rótulos de

@@ -24,44 +24,48 @@
 <title>og:preview</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Infant:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;1,400&family=Playfair+Display:wght@400;600&family=Viaoda+Libre&family=The+Nautigal&display=swap" rel="stylesheet">
 <style>
   html, body { margin: 0; padding: 0; }
   body {
     width: 1200px; height: 630px; overflow: hidden;
-    font-family: 'Cormorant Infant', Garamond, Georgia, serif;
-    color: #382646;
+    font-family: 'EB Garamond', 'Times New Roman', Georgia, serif;
+    color: #00224C;
     text-align: center;
     background:
-      radial-gradient(ellipse 120% 80% at 50% -25%, #E4D4F7 0%, transparent 62%),
-      radial-gradient(ellipse 90% 70% at 12% 115%, #E9F1E7 0%, transparent 66%),
-      radial-gradient(ellipse 90% 70% at 88% 115%, #E8DCF6 0%, transparent 66%),
-      #FBF7FC;
+      radial-gradient(ellipse 110% 75% at 50% -30%, #ECE4D8 0%, transparent 62%),
+      radial-gradient(ellipse 80% 60% at 10% 120%, rgba(181, 139, 47, .10) 0%, transparent 66%),
+      radial-gradient(ellipse 80% 60% at 90% 120%, rgba(181, 139, 47, .10) 0%, transparent 66%),
+      #F7F5EE;
     display: flex; flex-direction: column; align-items: center;
     justify-content: center;
   }
-  .sello { width: 62px; height: auto; color: #B8974F; margin-bottom: 26px; }
+  .sello { width: 58px; height: auto; color: #B58B2F; margin-bottom: 24px; }
   .formula {
-    font-size: 21px; font-style: italic; font-weight: 300; line-height: 1.55;
-    color: #573A6B; opacity: .85; margin: 0 0 30px;
+    font-size: 20px; font-style: italic; line-height: 1.55;
+    color: #00224C; opacity: .8; margin: 0 0 28px;
   }
-  .nombres { font-size: 74px; font-weight: 300; line-height: 1.12; margin: 0 0 6px; }
+  .nombres {
+    font-family: 'Viaoda Libre', 'Times New Roman', serif;
+    font-size: 56px; font-weight: 400; line-height: 1.12; margin: 0 0 4px;
+  }
   .nombres .y {
-    display: block; font-style: italic; font-size: .44em;
-    color: #6B3E86; padding: 6px 0 8px; letter-spacing: .06em;
+    display: block; font-family: 'The Nautigal', cursive;
+    font-size: .62em; font-style: normal; line-height: 1;
+    color: #B58B2F; padding: 6px 0 10px;
   }
-  .regla { display: flex; align-items: center; gap: 14px; margin: 30px 0 22px; color: #E8D8B0; }
+  .regla { display: flex; align-items: center; gap: 14px; margin: 28px 0 22px; color: #C9A24A; }
   .regla::before, .regla::after {
     content: ""; height: 1px; width: 90px;
-    background: linear-gradient(90deg, transparent, rgba(184,151,79,.6));
+    background: linear-gradient(90deg, transparent, rgba(181, 139, 47, .6));
   }
-  .regla::after { background: linear-gradient(90deg, rgba(184,151,79,.6), transparent); }
-  .gema { width: 6px; height: 6px; background: #E8D8B0; transform: rotate(45deg); }
-  .fecha { font-size: 33px; font-style: italic; font-weight: 300; color: #573A6B; margin: 0; }
+  .regla::after { background: linear-gradient(90deg, rgba(181, 139, 47, .6), transparent); }
+  .gema { width: 6px; height: 6px; background: #B58B2F; transform: rotate(45deg); }
+  .fecha { font-size: 30px; font-style: italic; color: #00224C; margin: 0; }
   .lugar {
-    font-family: 'Jost', system-ui, sans-serif;
-    font-size: 17px; letter-spacing: .16em; text-transform: uppercase;
-    color: #6B3E86; opacity: .8; margin: 16px 0 0;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 16px; font-weight: 400; letter-spacing: .18em; text-transform: uppercase;
+    color: #7C5E1E; opacity: .85; margin: 16px 0 0;
   }
 </style>
 </head>

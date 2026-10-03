@@ -39,10 +39,6 @@ window.CONFIG = {
     cp: '22435',
     ciudadCorta: 'Tijuana, B.C.',
 
-    /* Para el enlace "Llamar": sólo números, con código de país y sin espacios.
-       Dejarlo en '' esconde el teléfono. */
-    telefono: '5216646234040',
-
     /* Fotos. Si el archivo no está en assets/img/, la página se queda igual
        con su texto y no aparece ningún cuadrito roto. Con la imagen puesta,
        aparece sola.
@@ -54,7 +50,12 @@ window.CONFIG = {
        Si cambias las fotos, revisa esas dos reglas en styles.css para que el
        marco siga la proporción de la nueva imagen. */
     fotoIglesia: 'assets/img/iglesia.jpg',
-    fotoPareja: 'assets/img/nuestros.jpg'
+    fotoPareja: 'assets/img/nuestros.jpg',
+
+    /* Galería: las fotos del carrusel, en orden. Cada una puede ser un string
+       (la ruta del archivo) o un objeto { src, pie } con su pie de foto.
+       Vacía, el carrusel cae a las dos fotos de arriba (iglesia y pareja). */
+    galeria: []
   }
 };
 
