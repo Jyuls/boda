@@ -82,7 +82,6 @@ async function main() {
       codigo: codigo,
       asistiran: [],
       no_asistiran: [],
-      acompanantes: [],
       mensaje: 'prueba de conexión, se puede borrar'
     })
   });

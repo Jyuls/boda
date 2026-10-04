@@ -2,18 +2,9 @@
 <!--
   Pruebas de comportamiento del formulario RSVP en un navegador de verdad.
 
-  Estas pruebas existen por un motivo concreto. El formulario estaba roto de
-  punta a punta: al tocar "Sí" no se marcaba nada y al tocar "Confirmar
-  asistencia" no pasaba nada. La causa era un ReferenceError (la variable se
-  declaraba "decisions" y se usaba "decisiones"), que el navegador registra
-  en consola y en ningún lado se ve en la página. Las otras 72 pruebas pasaban
-  porque ninguna tocaba el formulario: revisaban el backend y la cuenta
-  regresiva, no lo que pasa cuando alguien aprieta un botón.
-
   Lo que se comprueba aquí, en un navegador de verdad:
-     - que tocar "Sí" marca ese botón y desmarca el otro, y al revés con "No"
-     - que el botón marcado cambia de verdad de aspecto, no sólo de atributo
-     - que "Confirmar asistencia" avisa si falta alguien por decidir
+     - que cada integrante aparece con una casilla marcada por defecto
+     - que desmarcar a alguien registra que no asistirá
      - los tres casos de una familia: todos sí, unos sí y otros no, todos no
      - que cada caso arma las listas correctas de asistirán y de no asistirán,
        y que el resumen que ve el invitado las muestra bien separadas
@@ -105,7 +96,8 @@ async function cargar() {
   const listo = new Promise(resolve => marco.addEventListener('load', resolve, { once: true }));
   marco.src = '/index.html?t=' + Date.now() + '#' + CODIGO;
   await listo;
-  await esperar(() => $$('.opcion--si').length > 0, 40);
+  doc().defaultView.CONFIG.urlScript = '';
+  await esperar(() => $$('.fila__check').length > 0, 40);
   await dormir(250);
 }
 
@@ -122,8 +114,11 @@ function decidir(porFila) {
   nombres.forEach((nombre, i) => {
     const valor = porFila(nombres)[i];
     if (!valor) return;
-    const boton = $$('.fila')[i].querySelector('.opcion--' + valor);
-    if (boton) boton.click();
+    const check = $$('.fila')[i].querySelector('.fila__check');
+    if (check) {
+      check.checked = valor === 'si';
+      check.dispatchEvent(new Event('change', { bubbles: true }));
+    }
   });
   return nombres;
 }
@@ -134,16 +129,13 @@ async function oprimirEnviar() {
   await dormir(200);
 }
 
-/* Corre un caso completo de principio a fin, dos veces: una con el envío de
-   verdad, para ver qué queda guardado, y otra llenando la trampa de bots,
+/* Corre un caso completo de principio a fin, dos veces: una con el envío
+   simulado, para ver qué queda guardado, y otra llenando la trampa de bots,
    que es la única forma de llegar hoy a la rama de la pantalla de
    confirmación que trae el resumen con los nombres.
 
-   Sin urlScript configurado, el envío real cae en la pantalla de "guardada
-   pero no llegó", que no muestra el resumen. La trampa pinta esa misma
-   pantalla de confirmación, así que lo que se comprueba acá es el código que
-   se va a ver en cuanto se configure la URL de Apps Script, no un camino
-   muerto. */
+   En la prueba se desactiva urlScript para no escribir en la hoja real. La
+   trampa permite revisar el resumen de confirmación en el navegador. */
 async function correrCaso(porFila) {
   /* Primera pasada: envío normal. */
   await cargar();
@@ -167,24 +159,6 @@ async function correrCaso(porFila) {
   };
 }
 
-/* Las transiciones CSS se apagan antes de medir el aspecto de un botón. Con el
-   reloj virtual del navegador de pruebas la interpolación no avanza, así que
-   getComputedStyle devuelve el valor de partida y el botón marcado parece no
-   haberse movido. Es un artefacto del reloj, no un fallo del sitio: en un
-   navegador de verdad la transición dura 0.15s y se ve bien. */
-function apagarTransiciones() {
-  const estilo = doc().createElement('style');
-  estilo.textContent = '.opcion { transition: none !important; }';
-  doc().head.appendChild(estilo);
-}
-
-const color = el => doc().defaultView.getComputedStyle(el).backgroundColor;
-/* El color con el que está escrito el botón, que es otra cosa que el fondo:
-   el botón sin marcar no tiene relleno, y su aviso va en la letra. */
-const colorTexto = el => doc().defaultView.getComputedStyle(el).color;
-const marca = el => doc().defaultView.getComputedStyle(el, '::after').content;
-const TRANSPARENTE = 'rgba(0, 0, 0, 0)';
-
 /* --- las pruebas ---------------------------------------------------------
    Cada función devuelve null si todo salió bien, o un texto con el motivo
    si falló. El número de pruebas ya no se cuenta a mano: se arma solo con
@@ -200,6 +174,14 @@ prueba('la tarjeta se pinta', async () => {
   if (filas === 0) return 'no hay filas de personas que decidir';
   if (!$('[data-enviar]')) return 'no está el botón de confirmar';
   if ($$('.fila__nombre').length !== filas) return 'alguna fila no muestra el nombre';
+  if ($$('.fila__check').length !== filas) return 'alguna persona no tiene casilla';
+  if ($$('.fila__nombre').some((n, i) => n.textContent !== window.INVITADOS[0].miembros[i])) {
+    return 'los nombres no corresponden al grupo de la invitación';
+  }
+  if ($$('.fila__check').length !== filas) return 'alguna persona no tiene casilla';
+  if ($$('.fila__nombre').some((n, i) => n.textContent !== window.INVITADOS[0].miembros[i])) {
+    return 'los nombres no corresponden al grupo de la invitación';
+  }
   return null;
 });
 
@@ -221,157 +203,20 @@ prueba('la página ya no ofrece agregar al calendario', async () => {
   return null;
 });
 
-/* --- 2. marcar y desmarcar --- */
+/* --- 2. marcar asistentes --- */
 
-prueba('tocar "Sí" lo marca', async () => {
-  const si = $$('.opcion--si')[0];
-  si.click();
-  return si.getAttribute('aria-pressed') === 'true'
+prueba('las casillas inician marcadas para asistir', async () => {
+  const checks = $$('.fila__check');
+  return checks.length && checks.every(check => check.checked)
     ? null
-    : 'aria-pressed quedó en ' + si.getAttribute('aria-pressed');
+    : 'no todas las casillas aparecen marcadas al abrir';
 });
 
-prueba('al tocar "Sí", "No" no se marca', async () => {
-  const no = $$('.opcion--no')[0];
-  return no.getAttribute('aria-pressed') === 'false'
-    ? null
-    : 'No quedó en ' + no.getAttribute('aria-pressed');
+prueba('desmarcar a alguien lo registra como no asistente', async () => {
+  const check = $$('.fila__check')[0];
+  check.click();
+  return !check.checked ? null : 'la casilla no se desmarcó';
 });
-
-prueba('tocar "No" marca el "No"', async () => {
-  const no = $$('.opcion--no')[0];
-  no.click();
-  return no.getAttribute('aria-pressed') === 'true'
-    ? null
-    : 'aria-pressed quedó en ' + no.getAttribute('aria-pressed');
-});
-
-prueba('al tocar "No", el "Sí" se desmarca', async () => {
-  const si = $$('.opcion--si')[0];
-  return si.getAttribute('aria-pressed') === 'false'
-    ? null
-    : 'Sí quedó en ' + si.getAttribute('aria-pressed');
-});
-
-/* --- 3. el aspecto del botón marcado, no sólo el atributo ---
-   Antes estas pruebas sólo miraban aria-pressed. El atributo puede estar
-   perfecto mientras el botón no cambia de color, que es justo lo que se le
-   reportó: no se entendía que la respuesta se había quedado marcada. */
-
-prueba('el botón marcado cambia de color de verdad', async () => {
-  await cargar();
-  apagarTransiciones();
-  const si = $$('.opcion--si')[0];
-  const no = $$('.opcion--no')[0];
-  const antes = color(si);
-  si.click();
-  if (antes !== TRANSPARENTE) return 'el botón sin marcar ya tenía color: ' + antes;
-  if (color(si) === antes) return 'al marcar "Sí" el fondo no cambió (sigue en ' + color(si) + ')';
-  if (color(no) !== antes) return 'al marcar "Sí", el "No" también cambió de color';
-  return null;
-});
-
-prueba('el botón marcado lleva un visto', async () => {
-  const c = marca($$('.opcion--si')[0]);
-  const tilde = String.fromCharCode(0x2713);
-  if (!c || c === 'none' || c === '""') return 'no se dibujó ningún símbolo: ' + c;
-  if (c.indexOf(tilde) === -1) return 'el símbolo no es un visto: ' + c;
-  return null;
-});
-
-prueba('el "Sí" marcado se pone verde y el "No" en vino', async () => {
-  /* El color tiene que ir con el significado: verde es sí, rojo es no. Ya
-     estuvo al revés una vez y se veía rareado, así que la convención queda
-     escrita acá para que un cambio futuro la respete.
-
-     Se leen --si y --no, que son las variables que de verdad pintan los
-     botones marcados. Antes se leía --sagrario, pero ésa es hoy la violeta de
-     los mandos: cuando la paleta se volvió morada, el "No" tuvo que mudarse a
-     una cereza propia para no dejar de ser rojo. Que la prueba apunte a las
-     variables de significado y no a un color de moda es justamente lo que
-     evita que el próximo cambio de paleta rompa la convención en silencio. */
-  const raiz = doc().defaultView.getComputedStyle(doc().documentElement);
-  const aRgb = hex => {
-    const h = hex.trim().replace('#', '');
-    const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16);
-    return 'rgb(' + [(n >> 16) & 255, (n >> 8) & 255, n & 255].join(', ') + ')';
-  };
-  const verde = aRgb(raiz.getPropertyValue('--si'));
-  const vino = aRgb(raiz.getPropertyValue('--no'));
-
-  /* Y que además sean de verdad verde y rojo, no dos violetas parecidos: si
-     alguien los intercambia o los pinta del mismo tono, esto lo avisa. */
-  const esVerde = c => {
-    const m = /rgb\((\d+), (\d+), (\d+)\)/.exec(c);
-    if (!m) return false;
-    return +m[2] > +m[1] && +m[2] > +m[3];
-  };
-  const esRojo = c => {
-    const m = /rgb\((\d+), (\d+), (\d+)\)/.exec(c);
-    if (!m) return false;
-    return +m[1] > +m[2] && +m[1] > +m[3];
-  };
-  if (!esVerde(verde)) return 'el "Sí" no es verde: --si es ' + verde;
-  if (!esRojo(vino)) return 'el "No" no es rojo: --no es ' + vino;
-
-  const si = $$('.opcion--si')[0];
-  const no = $$('.opcion--no')[0];
-
-  /* Se marca uno y se mira, y después el otro. Los dos tienen que verse bien
-     marcados a la vez, no sólo el que quedó de la prueba anterior. */
-  no.click();
-  if (color(no) !== vino) return 'el "No" marcado quedó en ' + color(no) + ', y el vino es ' + vino;
-  if (color(si) !== TRANSPARENTE) return 'el "Sí" sin marcar tenía color: ' + color(si);
-
-  si.click();
-  if (color(si) !== verde) return 'el "Sí" marcado quedó en ' + color(si) + ', y el verde es ' + verde;
-  if (color(no) !== TRANSPARENTE) return 'el "No" sin marcar tenía color: ' + color(no);
-  return null;
-});
-
-prueba('el "Sí" y el "No" sin marcar ya se distinguen por su color', async () => {
-  /* Que el botón marcado sea verde o rojo no alcanza: el color lo tiene que
-     decir el botón también, sin apretar. Si los dos sin marcar se ven
-     iguales, el invitado tiene que tocar para enterarse de qué botón es
-     cuál, y en un teléfono eso se traduce en toques de más. */
-  const si = $$('.opcion--si')[0];
-  const no = $$('.opcion--no')[0];
-  if (!si || !no) return 'faltan los botones';
-
-  /* Se dejan los dos sin marcar. */
-  if (si.getAttribute('aria-pressed') === 'true') si.click();
-  if (no.getAttribute('aria-pressed') === 'true') no.click();
-
-  const cSi = colorTexto(si);
-  const cNo = colorTexto(no);
-  if (cSi === TRANSPARENTE) return 'el "Sí" sin marcar no tiene color propio';
-  if (cNo === TRANSPARENTE) return 'el "No" sin marcar no tiene color propio';
-  if (cSi === cNo) return 'los dos sin marcar tienen el mismo color: ' + cSi;
-  return null;
-});
-
-prueba('al desmarcar, el botón vuelve a su estado inicial', async () => {
-  const si = $$('.opcion--si')[0];
-  const no = $$('.opcion--no')[0];
-  si.click();
-  no.click();
-  if (color(si) !== TRANSPARENTE) return 'el "Sí" marcado quedó en ' + color(si);
-  if (color(no) === TRANSPARENTE) return 'el "No" marcado no cambió de color';
-  return null;
-});
-
-/* --- 4. si falta alguien por decidir --- */
-
-prueba('si falta alguien por decidir, avisa', async () => {
-  await cargar();
-  $('[data-enviar]').click();
-  await dormir(250);
-  const ayuda = $('.ayuda');
-  const texto = ayuda ? ayuda.textContent : '';
-  if (!/Falta decidir/i.test(texto)) return 'el aviso decía: "' + texto.slice(0, 60) + '"';
-  return null;
-});
-
 /* --- 5. los tres casos de una familia ---
    Se prueba contra el primer grupo de la lista real, sea el que sea. */
 
@@ -427,22 +272,21 @@ prueba('CASO todos NO: igual se puede cambiar de opinión', async () => {
   const volver = $('.reintentar');
   if (!volver) return 'no está el botón para cambiar la respuesta';
   volver.click();
-  await esperar(() => $$('.opcion--si').length > 0, 20);
-  const marcados = $$('.opcion--no[aria-pressed="true"]').length;
+  await esperar(() => $$('.fila__check').length > 0, 20);
+  const marcados = $$('.fila__check:not(:checked)').length;
   const filas = $$('.fila').length;
   return marcados === filas
     ? null
     : 'al volver quedaron marcados ' + marcados + ' de ' + filas;
 });
 
-prueba('no se manda lista de acompañantes sin que haya campo', async () => {
+prueba('el envío no incluye campos de acompañantes', async () => {
   await cargar();
   decidir(nombres => nombres.map((n, i) => (i === 0 ? 'si' : 'no')));
   await oprimirEnviar();
   const d = guardada();
   if (!d) return 'no hay nada guardado';
-  if (!Array.isArray(d.acompanantes)) return 'el backend espera una lista y recibió ' + JSON.stringify(d.acompanantes);
-  if (d.acompanantes.length !== 0) return 'se envió acompañantes sin que haya campo: ' + JSON.stringify(d.acompanantes);
+  if (Object.prototype.hasOwnProperty.call(d, 'acompanantes')) return 'se envió un campo de acompañantes que ya no se usa';
   return null;
 });
 

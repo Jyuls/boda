@@ -17,8 +17,8 @@ var HOJA_RESUMEN    = 'Resumen';
 var HOJA_CONFIG     = 'Config';
 var HOJA_GENERADO   = 'Generado';
 
-var COL_INV = ['codigo', 'grupo', 'miembros', 'esperados', 'max_acompanantes', 'notas', 'link', 'mensaje'];
-var COL_RES = ['fecha', 'codigo', 'grupo', 'asistiran', 'no_asistiran', 'total', 'acompanantes', 'mensaje'];
+var COL_INV = ['codigo', 'grupo', 'miembros', 'notas', 'link', 'mensaje', 'enviada', 'fecha_envio', 'estado_respuesta', 'asistiran', 'no_asistiran', 'total_asistentes'];
+var COL_RES = ['fecha', 'codigo', 'grupo', 'asistiran', 'no_asistiran', 'total', 'mensaje'];
 
 var ZONA = 'America/Tijuana';
 
@@ -39,6 +39,63 @@ function asegurarHoja(nombre, encabezados) {
   if (encabezados && encabezados.length) {
     h.getRange(1, 1, 1, encabezados.length).setValues([encabezados]);
   }
+  return h;
+}
+
+function claveEncabezado(valor) {
+  return texto(valor).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+}
+
+/* Reordena por encabezado y conserva los campos vigentes al actualizar el
+   esquema. Sólo se descartan las columnas antiguas que ya no se utilizan. */
+function migrarHoja(nombre, encabezados) {
+  var h = asegurarHoja(nombre);
+  var ultimaFila = h.getLastRow();
+  var ultimaColumna = Math.max(h.getLastColumn(), encabezados.length);
+  var datos = ultimaFila ? h.getRange(1, 1, ultimaFila, ultimaColumna).getValues() : [];
+  var indices = {};
+  if (datos.length) {
+    for (var c = 0; c < datos[0].length; c++) {
+      var clave = claveEncabezado(datos[0][c]);
+      if (clave) indices[clave] = c;
+    }
+  }
+
+  var obsoletos = { esperados: true, maxacompanantes: true, acompanantes: true };
+  var extras = [];
+  if (datos.length) {
+    for (var x = 0; x < datos[0].length; x++) {
+      var claveExtra = claveEncabezado(datos[0][x]);
+      var conocida = encabezados.some(function (encabezado) {
+        return claveEncabezado(encabezado) === claveExtra;
+      });
+      if (claveExtra && !conocida && !obsoletos[claveExtra] && extras.indexOf(texto(datos[0][x])) === -1) {
+        extras.push(texto(datos[0][x]));
+      }
+    }
+  }
+  var destino = encabezados.concat(extras);
+  var nuevos = [destino];
+  for (var f = 1; f < datos.length; f++) {
+    var fila = [];
+    for (var n = 0; n < destino.length; n++) {
+      var indice = indices[claveEncabezado(destino[n])];
+      fila.push(indice === undefined ? '' : datos[f][indice]);
+    }
+    if (nombre === HOJA_RESPUESTAS) {
+      fila[5] = limpiarLista(fila[3]).length;
+    }
+    nuevos.push(fila);
+  }
+
+  h.getRange(1, 1, nuevos.length, destino.length).setValues(nuevos);
+  for (var restante = destino.length; restante < ultimaColumna; restante++) {
+    var anterior = claveEncabezado(datos.length ? datos[0][restante] : '');
+    if (obsoletos[anterior] || indices[anterior] !== undefined) {
+      h.getRange(1, restante + 1, Math.max(ultimaFila, 1), 1).clearContent();
+    }
+  }
+  h.setFrozenRows(1);
   return h;
 }
 
@@ -80,6 +137,7 @@ function onOpen() {
     .addItem('Generar lista para la web', 'generarInvitados')
     .addItem('Ver resumen', 'mostrarResumen')
     .addItem('Resumen en la hoja', 'verResumen')
+    .addItem('Actualizar dashboard', 'verResumen')
     .addSeparator()
     .addItem('Ayuda', 'ayuda')
     .addToUi();
@@ -91,13 +149,14 @@ function ayuda() {
     '1. En la pestaña Config, pon tu dirección de GitHub en url_base.\n\n' +
     '2. En la pestaña Invitados escribe, grupo por grupo:\n' +
     '   - grupo: el nombre de la invitación (Familia Carrillo)\n' +
-    '   - miembros: los nombres separados por coma\n\n' +
+    '   - miembros: los nombres separados por coma\n' +
+    '   - enviada: marca la casilla al enviar el link al grupo\n\n' +
     '3. Boda > Generar lista para la web. Rellena los códigos que falten,\n' +
     '   arma los links y deja el archivo listo en la pestaña Generado.\n\n' +
     '4. Copia la pestaña Generado dentro de data/invitados.js del proyecto\n' +
     '   y súbelo a GitHub.\n\n' +
-    '5. Las confirmaciones llegan solas a la pestaña Respuestas.\n' +
-    '   Para los totales: Boda > Ver resumen.'
+    '5. Las confirmaciones llegan solas a la pestaña Respuestas y actualizan\n' +
+    '   el dashboard. Usa Boda > Actualizar dashboard para refrescarlo.'
   );
 }
 
@@ -108,8 +167,8 @@ function ayuda() {
 function instalar() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
 
-  asegurarHoja(HOJA_INVITADOS, COL_INV);
-  asegurarHoja(HOJA_RESPUESTAS, COL_RES);
+  var inv = migrarHoja(HOJA_INVITADOS, COL_INV);
+  migrarHoja(HOJA_RESPUESTAS, COL_RES);
   asegurarHoja(HOJA_RESUMEN);
   asegurarHoja(HOJA_GENERADO);
 
@@ -124,57 +183,23 @@ function instalar() {
     ]);
   }
 
-  /* Semilla: 30 invitaciones de ejemplo, para que tengas el formato a la
-     vista. Al reemplazarlas por los nombres reales, los códigos se conservan,
-     así que cualquier link que ya hayas mandado sigue funcionando. */
-  var ejemplos = [
-    ['Familia Carrillo',      'Victoria Padilla, Alejandra Sanchez'],
-    ['Familia Vega González', 'María Elena Vega, Diego Alejandro Vega'],
-    ['Hermanos Carrillo',     'Luis Enrique Carrillo, Ana Lucía Carrillo'],
-    ['Hermanos Vega',         'Ricardo Vega, Mariana Vega'],
-    ['Padres de Abril',       'Ramón Carrillo, Marta Sánchez'],
-    ['Padres de Johann',      'Elda González, Rogelio Vega'],
-    ['Tíos Carrillo',         'José María Mendoza, Teresa Carrillo'],
-    ['Tíos Vega',             'Fernando Ruiz, Silvia González'],
-    ['Sobrinos Carrillo',     'Camila Carrillo, Diego Padilla'],
-    ['Sobrinos Vega',         'Emiliano Vega, Fernanda Carrillo'],
-    ['Primos de Abril',       'Daniela Carrillo, Paulina Carrillo'],
-    ['Primos de Johann',      'Sebastián Vega, Isabel Vega'],
-    ['Abuela Carrillo',       'Rosa María Sánchez'],
-    ['Abuelo Vega',           'Manuel Vega'],
-    ['Tía Naranjo',           'Guillermina Naranjo'],
-    ['Tío Escobar',           'Rafael Escobar'],
-    ['Ana Laura y Marco',     'Ana Laura Ruiz, Marco Antonio Ruiz'],
-    ['Sofía e Iván',          'Sofía Mendoza, Iván Cervantes'],
-    ['Regina y Óscar',        'Regina Delgado, Óscar Paredes'],
-    ['Nancy y David',         'Nancy Escobar, David Escobar'],
-    ['Carlos Mendoza',        'Carlos Mendoza'],
-    ['Patricia Cervantes',    'Patricia Cervantes'],
-    ['Fernando Ruiz',         'Fernando Ruiz'],
-    ['Adriana Ríos',          'Adriana Ríos'],
-    ['Bruno Salcedo',         'Bruno Salcedo'],
-    ['Amigos de la facultad', 'Camila Ferriz, Héctor Villalobos, Natalia Ortega, Rodrigo Peña'],
-    ['Amigos del trabajo',    'Esmeralda Lira, Joaquín Braun'],
-    ['Familia Padilla',       'Rosalía Padilla, Emiliano Padilla'],
-    ['Familia Sánchez',       'Graciela Sánchez, Rodrigo Sánchez'],
-    ['Familia Paredes',       'Carmen Paredes, Ana Sofía Paredes']
-  ];
-
-  var inv = hoja(HOJA_INVITADOS);
-  if (inv.getLastRow() < 2) {
-    inv.getRange(2, 1, ejemplos.length, COL_INV.length)
-       .setValues(ejemplos.map(function (e) { return ['', e[0], e[1], '', '', '', '', '']; }));
+  if (inv.getLastRow() > 1) {
+    var filasEnviadas = inv.getRange(2, 7, inv.getLastRow() - 1, 1).getValues();
+    var checks = inv.getRange(2, 7, filasEnviadas.length, 1);
+    checks.insertCheckboxes();
+    checks.setValues(filasEnviadas);
   }
 
+  inicializarEstadosInvitados();
   generarInvitados();
-  verResumen();
+  actualizarDashboard();
 
   SpreadsheetApp.getUi().alert(
     'Listo.\n\n' +
-    'Se crearon las pestañas Invitados, Respuestas, Resumen, Generado y Config.\n\n' +
+    'Se instalaron las pestañas y se conservaron los grupos y respuestas existentes.\n\n' +
     'Falta lo más importante: en Config cambia TU_USUARIO por tu usuario de\n' +
-    'GitHub. Después llena los nombres reales en Invitados y vuelve a correr\n' +
-    'Boda > Generar lista para la web.'
+    'GitHub. Completa los grupos en Invitados, genera la lista y marca la\n' +
+    'casilla enviada cuando compartas cada enlace.'
   );
 }
 
@@ -264,31 +289,18 @@ function generarInvitados() {
     }
 
     var miembros = limpiarLista(filas[i][2]);
-    inv.getRange(numeroFila, 4).setValue(miembros.length);
-
-    /* Ojo: Number('') vale 0, no NaN. Si la celda está vacía el valor por
-       defecto tiene que asignarse explícitamente, o los invitados se quedan
-       sin posibilidad de llevar acompañante. */
-    var bruto = filas[i][4];
-    var maxAcompanantes = 2;
-    if (bruto !== '' && bruto !== null && bruto !== undefined && bruto !== false) {
-      var convertido = Number(bruto);
-      if (!isNaN(convertido) && convertido >= 0) maxAcompanantes = convertido;
-    }
-    if (filas[i][4] !== maxAcompanantes) inv.getRange(numeroFila, 5).setValue(maxAcompanantes);
 
     var link = urlSinConfigurar
       ? 'PENDIENTE: falta tu usuario de GitHub en la pestaña Config'
       : base + '/#' + codigo;
-    inv.getRange(numeroFila, 7).setValue(link);
-    inv.getRange(numeroFila, 8).setValue(armarMensaje(fecha, hora, lugar, link));
+    inv.getRange(numeroFila, 5).setValue(link);
+    inv.getRange(numeroFila, 6).setValue(armarMensaje(fecha, hora, lugar, link));
 
     invitaciones.push({
       codigo: codigo,
       grupo: grupo,
       miembros: miembros,
-      maxAcompanantes: maxAcompanantes,
-      notas: texto(filas[i][5])
+      notas: texto(filas[i][3])
     });
   }
 
@@ -297,9 +309,9 @@ function generarInvitados() {
   inv.setColumnWidth(1, 80);
   inv.setColumnWidth(2, 230);
   inv.setColumnWidth(3, 330);
-  inv.setColumnWidth(6, 190);
-  inv.setColumnWidth(7, 350);
-  inv.setColumnWidth(8, 430);
+  inv.setColumnWidth(4, 220);
+  inv.setColumnWidth(5, 350);
+  inv.setColumnWidth(6, 430);
 
   SpreadsheetApp.getUi().alert(
     'Se actualizaron ' + invitaciones.length + ' invitaciones.\n\n' +
@@ -348,7 +360,6 @@ function armarArchivoJS(invitaciones) {
       '  { codigo: \'' + inv.codigo + '\',' +
       ' grupo: \'' + escaparJS(inv.grupo) + '\',' +
       ' miembros: [' + miembros + '],' +
-      ' maxAcompanantes: ' + inv.maxAcompanantes + ',' +
       ' notas: \'' + escaparJS(inv.notas) + '\' },'
     );
   }
@@ -373,8 +384,6 @@ function escribirGenerado(contenido) {
 /*     imprimir o compartir un pantallazo, y un panel con la misma información */
 /*     pero hecha para mirarla.                                               */
 /* -------------------------------------------------------------------------- */
-
-var COLUMNAS_RESUMEN = 7;
 
 /* Google Sheets es estricto: si el rango tiene 7 columnas, cada fila que se
    le pasa a setValues tiene que traer 7 valores. El resumen arma filas de 1, 2
@@ -406,16 +415,19 @@ function calcularResumen(invitaciones, respuestas, cfg, ahora) {
     recibidas[codigo] = {
       fecha: respuestas[i][0],
       asistiran: limpiarLista(respuestas[i][3]),
-      noAsistiran: limpiarLista(respuestas[i][4]),
-      acompanantes: limpiarLista(respuestas[i][6])
+      noAsistiran: limpiarLista(respuestas[i][4])
     };
   }
 
   var sinResponder = [];
   var confirmaron = [];
+  var porEnviar = [];
+  var asistentes = [];
+  var noAsistentes = [];
   var t = {
-    invitaciones: 0, confirmados: 0, pendientes: 0,
-    personas: 0, asistiran: 0, noAsistiran: 0, acompanantes: 0, sinDecidir: 0
+    invitaciones: 0, enviadas: 0, pendientesEnvio: 0,
+    confirmados: 0, pendientes: 0, personas: 0,
+    asistiran: 0, noAsistiran: 0, sinDecidir: 0
   };
 
   for (var f = 0; f < invitaciones.length; f++) {
@@ -426,27 +438,38 @@ function calcularResumen(invitaciones, respuestas, cfg, ahora) {
     var miembros = limpiarLista(invitaciones[f][2]);
     var cantidad = miembros.length;
     var r = recibidas[cod];
+    var enviada = invitaciones[f][6] === true ||
+      texto(invitaciones[f][6]).toLowerCase() === 'true';
 
     t.invitaciones++;
     t.personas += cantidad;
+    if (enviada) {
+      t.enviadas++;
+    } else {
+      t.pendientesEnvio++;
+      porEnviar.push({
+        codigo: cod,
+        grupo: grupo,
+        link: texto(invitaciones[f][4])
+      });
+    }
 
     if (r) {
       t.confirmados++;
-      /* "Asistirán" son los que dijeron sí más los acompañantes que suman:
-         es el número que sirve para la mesa y el catering. */
-      t.asistiran += r.asistiran.length + r.acompanantes.length;
-      t.acompanantes += r.acompanantes.length;
+      t.asistiran += r.asistiran.length;
       t.noAsistiran += r.noAsistiran.length;
       t.sinDecidir += Math.max(cantidad - r.asistiran.length - r.noAsistiran.length, 0);
+      r.asistiran.forEach(function (nombre) { asistentes.push({ grupo: grupo, nombre: nombre }); });
+      r.noAsistiran.forEach(function (nombre) { noAsistentes.push({ grupo: grupo, nombre: nombre }); });
       confirmaron.push({
         codigo: cod,
         grupo: grupo,
         nombres: miembros,
+        asistiran: r.asistiran,
+        noAsistiran: r.noAsistiran,
         si: r.asistiran.length,
         no: r.noAsistiran.length,
-        acomp: r.acompanantes.length,
-        extra: r.acompanantes,
-        total: r.asistiran.length + r.acompanantes.length,
+        total: r.asistiran.length,
         cuando: r.fecha ? Utilities.formatDate(new Date(r.fecha), ZONA, 'dd/MM HH:mm') : ''
       });
     } else {
@@ -461,15 +484,18 @@ function calcularResumen(invitaciones, respuestas, cfg, ahora) {
     fechaTexto: texto(cfg.fecha_texto),
     actualizado: Utilities.formatDate(ahora, ZONA, "dd/MM/yyyy 'a las' HH:mm"),
     totales: t,
+    porEnviar: porEnviar,
     sinResponder: sinResponder,
-    confirmaron: confirmaron
+    confirmaron: confirmaron,
+    asistentes: asistentes,
+    noAsistentes: noAsistentes
   };
 }
 
 /* Lee las hojas y calcula. Lo usan tanto la pestaña como el panel. */
 function resumenActual() {
   return calcularResumen(
-    leerFilas(HOJA_INVITADOS, 6),
+    leerFilas(HOJA_INVITADOS, COL_INV.length),
     leerFilas(HOJA_RESPUESTAS, COL_RES.length),
     config(),
     new Date()
@@ -479,40 +505,66 @@ function resumenActual() {
 /* --- la pestaña ------------------------------------------------------------ */
 
 function verResumen() {
+  escribirResumen(true);
+}
+
+function actualizarDashboard() {
+  escribirResumen(false);
+}
+
+function escribirResumen(activar) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var d = resumenActual();
   var t = d.totales;
-  var C = COLUMNAS_RESUMEN;
+  var C = 7;
 
   var out = [];
   out.push([d.titulo + (d.fechaTexto ? ' · ' + d.fechaTexto : '')]);
   out.push(['Actualizado ' + d.actualizado]);
   out.push([]);
 
-  out.push(['Invitaciones', '', 'Personas', '']);
-  out.push(['Enviadas', t.invitaciones, 'Asistirán', t.asistiran]);
-  out.push(['Confirmadas', t.confirmados, 'No asistirán', t.noAsistiran]);
-  out.push(['Pendientes', t.pendientes, 'Sin decidir', t.sinDecidir]);
+  out.push(['INVITACIONES', '', '', 'ASISTENCIA']);
+  out.push(['Total', t.invitaciones, '', 'Asistirán', t.asistiran]);
+  out.push(['Links enviados', t.enviadas, '', 'No asistirán', t.noAsistiran]);
+  out.push(['Por enviar', t.pendientesEnvio, '', 'Sin decidir', t.sinDecidir]);
+  out.push(['Con respuesta', t.confirmados, '', 'Personas invitadas', t.personas]);
   out.push([]);
-  out.push(['Personas en la lista', t.personas]);
-  out.push(['Acompañantes que se suman', t.acompanantes]);
+
+  out.push(['POR ENVIAR (' + d.porEnviar.length + ')']);
+  out.push(['código', 'grupo', 'link']);
+  for (var p = 0; p < d.porEnviar.length; p++) {
+    out.push([d.porEnviar[p].codigo, d.porEnviar[p].grupo, d.porEnviar[p].link]);
+  }
   out.push([]);
 
   out.push(['SIN RESPONDER (' + d.sinResponder.length + ')']);
-  out.push(['código', 'invitación', 'personas']);
+  out.push(['código', 'grupo', 'personas', 'integrantes']);
   for (var s = 0; s < d.sinResponder.length; s++) {
-    out.push([d.sinResponder[s].codigo, d.sinResponder[s].grupo, d.sinResponder[s].personas]);
+    out.push([d.sinResponder[s].codigo, d.sinResponder[s].grupo, d.sinResponder[s].personas, d.sinResponder[s].nombres.join(', ')]);
   }
   out.push([]);
 
-  out.push(['CONFIRMARON (' + d.confirmaron.length + ')']);
-  out.push(['código', 'invitación', 'sí', 'no', 'acomp.', 'total', 'respondió']);
+  out.push(['ASISTIRÁN (' + d.asistentes.length + ')']);
+  out.push(['grupo', 'nombre']);
+  for (var a = 0; a < d.asistentes.length; a++) {
+    out.push([d.asistentes[a].grupo, d.asistentes[a].nombre]);
+  }
+  out.push([]);
+
+  out.push(['NO ASISTIRÁN (' + d.noAsistentes.length + ')']);
+  out.push(['grupo', 'nombre']);
+  for (var n = 0; n < d.noAsistentes.length; n++) {
+    out.push([d.noAsistentes[n].grupo, d.noAsistentes[n].nombre]);
+  }
+  out.push([]);
+
+  out.push(['RESPUESTAS POR GRUPO (' + d.confirmaron.length + ')']);
+  out.push(['código', 'grupo', 'sí asistirán', 'no asistirán', '', '', 'respondió']);
   for (var c = 0; c < d.confirmaron.length; c++) {
     var f = d.confirmaron[c];
-    out.push([f.codigo, f.grupo, f.si, f.no, f.acomp, f.total, f.cuando]);
+    out.push([f.codigo, f.grupo, f.asistiran.join(', '), f.noAsistiran.join(', '), '', '', f.cuando]);
   }
 
-  /* Acá estaba el error: filas de 1, 2, 3 y 4 columnas en un rango de 7. */
   var filas = [];
   for (var k = 0; k < out.length; k++) filas.push(aColumnas(out[k], C));
 
@@ -524,32 +576,33 @@ function verResumen() {
   /* Formato: nada de colores chillones, sólo jerarquía. */
   h.getRange(1, 1).setFontSize(15);
   h.getRange(2, 1).setFontSize(9).setFontColor('#888888');
-  h.getRange(4, 1, 1, 4).setFontWeight('bold');
-  h.getRange(5, 1, 3, 1).setFontSize(11);
-  h.getRange(5, 3, 3, 1).setFontSize(11);
-  h.getRange(5, 2, 3, 1).setFontSize(14).setFontWeight('bold');
-  h.getRange(5, 4, 3, 1).setFontSize(14).setFontWeight('bold');
-  h.getRange(7, 1, 2, 1).setFontSize(11);
+  h.getRange(4, 1, 1, C).setFontWeight('bold');
+  h.getRange(5, 1, 4, 1).setFontSize(11);
+  h.getRange(5, 4, 4, 1).setFontSize(11);
+  h.getRange(5, 2, 4, 1).setFontSize(14).setFontWeight('bold');
+  h.getRange(5, 5, 4, 1).setFontSize(14).setFontWeight('bold');
 
   for (var j = 0; j < filas.length; j++) {
     var linea = texto(filas[j][0]);
-    if (linea.indexOf('SIN RESPONDER (') === 0 || linea.indexOf('CONFIRMARON (') === 0) {
+    if (linea.indexOf('POR ENVIAR (') === 0 || linea.indexOf('SIN RESPONDER (') === 0 ||
+        linea.indexOf('ASISTIRÁN (') === 0 || linea.indexOf('NO ASISTIRÁN (') === 0 ||
+        linea.indexOf('RESPUESTAS POR GRUPO (') === 0) {
       h.getRange(j + 1, 1, 1, C).setFontWeight('bold').setFontSize(12);
       h.getRange(j + 1, 1, 1, C).setBorder(true, false, false, false);
       h.getRange(j + 2, 1, 1, C).setFontSize(9).setFontColor('#888888');
     }
   }
 
-  h.setColumnWidth(1, 90);
-  h.setColumnWidth(2, 300);
-  h.setColumnWidth(3, 80);
-  h.setColumnWidth(4, 80);
-  h.setColumnWidth(5, 80);
-  h.setColumnWidth(6, 80);
-  h.setColumnWidth(7, 110);
+  h.setColumnWidth(1, 170);
+  h.setColumnWidth(2, 250);
+  h.setColumnWidth(3, 320);
+  h.setColumnWidth(4, 250);
+  h.setColumnWidth(5, 150);
+  h.setColumnWidth(6, 100);
+  h.setColumnWidth(7, 120);
   h.getRange(1, 1, filas.length, C).setVerticalAlignment('top');
 
-  ss.setActiveSheet(h);
+  if (activar) ss.setActiveSheet(h);
 }
 
 /* --- el panel ------------------------------------------------------------- */
@@ -623,15 +676,34 @@ function htmlResumen() {
   L.push('<button id="p" onclick="window.print()">Imprimir</button></div>');
 
   L.push('<div class="numeros">');
-  L.push('<div class="num"><b>' + t.invitaciones + '</b><span>Invitaciones</span></div>');
-  L.push('<div class="num ok"><b>' + t.confirmados + '</b><span>Confirmadas</span></div>');
-  L.push('<div class="num pend"><b>' + t.pendientes + '</b><span>Pendientes</span></div>');
-  L.push('<div class="num"><b>' + t.personas + '</b><span>Personas</span></div>');
+  L.push('<div class="num"><b>' + t.invitaciones + '</b><span>Grupos</span></div>');
+  L.push('<div class="num ok"><b>' + t.enviadas + '</b><span>Links enviados</span></div>');
+  L.push('<div class="num pend"><b>' + t.pendientesEnvio + '</b><span>Por enviar</span></div>');
+  L.push('<div class="num ok"><b>' + t.confirmados + '</b><span>Respondieron</span></div>');
+  L.push('<div class="num pend"><b>' + t.pendientes + '</b><span>Sin responder</span></div>');
   L.push('<div class="num ok"><b>' + t.asistiran + '</b><span>Asistirán</span></div>');
   L.push('<div class="num no"><b>' + t.noAsistiran + '</b><span>No asistirán</span></div>');
-  L.push('<div class="num"><b>' + t.acompanantes + '</b><span>Acompañantes</span></div>');
   L.push('<div class="num pend"><b>' + t.sinDecidir + '</b><span>Sin decidir</span></div>');
   L.push('</div>');
+
+  /* --- links pendientes de enviar --- */
+  L.push('<section class="bloque" data-nombre="por enviar"><h2>Links por enviar <em>(' + d.porEnviar.length + ')</em></h2>');
+  if (!d.porEnviar.length) {
+    L.push('<div class="vacio">Ya se enviaron todos los links.</div>');
+  } else {
+    L.push('<table><thead><tr><th>Código</th><th>Grupo</th><th>Link personal</th></tr></thead><tbody>');
+    for (var p = 0; p < d.porEnviar.length; p++) {
+      var pendiente = d.porEnviar[p];
+      var linkPendiente = /^https?:\/\//i.test(pendiente.link)
+        ? '<a href="' + escaparHtml(pendiente.link) + '" target="_blank" rel="noopener noreferrer">Abrir invitación</a>'
+        : escaparHtml(pendiente.link || '—');
+      L.push('<tr><td class="cod">' + escaparHtml(pendiente.codigo) + '</td><td>' +
+        escaparHtml(pendiente.grupo) + '</td><td>' +
+        linkPendiente + '</td></tr>');
+    }
+    L.push('</tbody></table>');
+  }
+  L.push('</section>');
 
   /* --- sin responder --- */
   L.push('<section class="bloque" data-nombre="sin responder"><h2>Sin responder <em>(' + d.sinResponder.length + ')</em></h2>');
@@ -649,22 +721,46 @@ function htmlResumen() {
   }
   L.push('</section>');
 
-  /* --- confirmaron --- */
-  L.push('<section class="bloque" data-nombre="confirmaron"><h2>Confirmaron <em>(' + d.confirmaron.length + ')</em></h2>');
+  /* --- asistentes --- */
+  L.push('<section class="bloque" data-nombre="asistiran"><h2>Asistirán <em>(' + d.asistentes.length + ')</em></h2>');
+  if (!d.asistentes.length) {
+    L.push('<div class="vacio">Todavía no hay asistentes confirmados.</div>');
+  } else {
+    L.push('<table><thead><tr><th>Grupo</th><th>Nombre</th></tr></thead><tbody>');
+    for (var a = 0; a < d.asistentes.length; a++) {
+      L.push('<tr><td>' + escaparHtml(d.asistentes[a].grupo) + '</td><td class="si">' +
+        escaparHtml(d.asistentes[a].nombre) + '</td></tr>');
+    }
+    L.push('</tbody></table>');
+  }
+  L.push('</section>');
+
+  /* --- no asistentes --- */
+  L.push('<section class="bloque" data-nombre="no asistiran"><h2>No asistirán <em>(' + d.noAsistentes.length + ')</em></h2>');
+  if (!d.noAsistentes.length) {
+    L.push('<div class="vacio">Nadie ha indicado que no podrá asistir.</div>');
+  } else {
+    L.push('<table><thead><tr><th>Grupo</th><th>Nombre</th></tr></thead><tbody>');
+    for (var na = 0; na < d.noAsistentes.length; na++) {
+      L.push('<tr><td>' + escaparHtml(d.noAsistentes[na].grupo) + '</td><td class="no">' +
+        escaparHtml(d.noAsistentes[na].nombre) + '</td></tr>');
+    }
+    L.push('</tbody></table>');
+  }
+  L.push('</section>');
+
+  /* --- respuestas por grupo --- */
+  L.push('<section class="bloque" data-nombre="respuestas por grupo"><h2>Respuestas por grupo <em>(' + d.confirmaron.length + ')</em></h2>');
   if (!d.confirmaron.length) {
     L.push('<div class="vacio">Todavía nadie confirmó.</div>');
   } else {
     L.push('<table><thead><tr><th>Código</th><th>Invitación</th>' +
-      '<th style="text-align:right">Sí</th><th style="text-align:right">No</th>' +
-      '<th style="text-align:right">Acomp.</th><th style="text-align:right">Total</th>' +
-      '<th>Respondió</th></tr></thead><tbody>');
+      '<th>Asistirán</th><th>No asistirán</th><th>Respondió</th></tr></thead><tbody>');
     for (var c = 0; c < d.confirmaron.length; c++) {
       var f = d.confirmaron[c];
       L.push('<tr><td class="cod">' + escaparHtml(f.codigo) + '</td><td>' + escaparHtml(f.grupo) +
-        '<div class="nombres">' + escaparHtml(f.nombres.join(', ')) +
-        (f.extra.length ? ' · +' + escaparHtml(f.extra.join(', ')) : '') + '</div></td>' +
-        '<td class="n si">' + f.si + '</td><td class="n no">' + f.no + '</td>' +
-        '<td class="n">' + f.acomp + '</td><td class="n"><b>' + f.total + '</b></td>' +
+        '</td><td class="si">' + escaparHtml(f.asistiran.join(', ') || '—') +
+        '</td><td class="no">' + escaparHtml(f.noAsistiran.join(', ') || '—') + '</td>' +
         '<td class="cuando">' + escaparHtml(f.cuando) + '</td></tr>');
     }
     L.push('</tbody></table>');
@@ -738,7 +834,6 @@ function doPost(e) {
 
     var asistiran = soloConocidos(datos.asistiran, conocidos);
     var noAsistiran = soloConocidos(datos.no_asistiran, conocidos);
-    var acompanantes = limpiarLista(datos.acompanantes).slice(0, invitado.maxAcompanantes);
 
     escribirRespuesta([
       new Date(),
@@ -746,8 +841,7 @@ function doPost(e) {
       invitado.grupo,
       asistiran.join(', '),
       noAsistiran.join(', '),
-      asistiran.length + acompanantes.length,
-      acompanantes.join(', '),
+      asistiran.length,
       texto(datos.mensaje).slice(0, 500)
     ], invitado.codigo);
 
@@ -777,31 +871,86 @@ function escribirRespuesta(fila, codigo) {
     if (texto(existentes[i][1]).toUpperCase() === codigo) {
       /* Ya había respondido: se actualiza en vez de duplicar. */
       h.getRange(i + 2, 1, 1, COL_RES.length).setValues([fila]);
+      actualizarEstadoInvitado(codigo, fila[3], fila[4]);
+      actualizarDashboard();
       return;
     }
   }
 
   h.getRange(h.getLastRow() + 1, 1, 1, COL_RES.length).setValues([fila]);
+  actualizarEstadoInvitado(codigo, fila[3], fila[4]);
+  actualizarDashboard();
 }
 
 function buscarInvitado(codigo) {
-  var filas = leerFilas(HOJA_INVITADOS, 5);
+  var filas = leerFilas(HOJA_INVITADOS, 3);
   for (var i = 0; i < filas.length; i++) {
     if (texto(filas[i][0]).toUpperCase() === codigo) {
       return {
         codigo: codigo,
         grupo: texto(filas[i][1]),
-        miembros: limpiarLista(filas[i][2]),
-        maxAcompanantes: maxAcompanantesDe(filas[i][4])
+        miembros: limpiarLista(filas[i][2])
       };
     }
   }
   return null;
 }
 
-/* La celda puede venir vacía, como texto o como número. */
-function maxAcompanantesDe(bruto) {
-  if (bruto === '' || bruto === null || bruto === undefined || bruto === false) return 2;
-  var n = Number(bruto);
-  return (isNaN(n) || n < 0) ? 2 : n;
+function actualizarEstadoInvitado(codigo, asistiran, noAsistiran) {
+  var h = hoja(HOJA_INVITADOS);
+  if (!h) return;
+  var filas = leerFilas(HOJA_INVITADOS, 1);
+  for (var i = 0; i < filas.length; i++) {
+    if (texto(filas[i][0]).toUpperCase() !== codigo) continue;
+    var asistentes = limpiarLista(asistiran);
+    var ausentes = limpiarLista(noAsistiran);
+    h.getRange(i + 2, 9, 1, 4).setValues([[
+      'Respondida', asistentes.join(', '), ausentes.join(', '), asistentes.length
+    ]]);
+    return;
+  }
+}
+
+function inicializarEstadosInvitados() {
+  var filas = leerFilas(HOJA_INVITADOS, COL_INV.length);
+  for (var i = 0; i < filas.length; i++) {
+    if (texto(filas[i][1]) && !texto(filas[i][8])) {
+      hoja(HOJA_INVITADOS).getRange(i + 2, 9).setValue('Pendiente');
+    }
+  }
+  var respuestas = leerFilas(HOJA_RESPUESTAS, COL_RES.length);
+  for (var r = 0; r < respuestas.length; r++) {
+    actualizarEstadoInvitado(
+      texto(respuestas[r][1]).toUpperCase(),
+      respuestas[r][3],
+      respuestas[r][4]
+    );
+  }
+}
+
+function onEdit(e) {
+  if (!e || !e.range || e.range.getSheet().getName() !== HOJA_INVITADOS ||
+      e.range.getRow() < 2) return;
+  var h = e.range.getSheet();
+  var columna = e.range.getColumn();
+  var filas = e.range.getNumRows();
+  var columnas = e.range.getNumColumns();
+  if (columna >= 1 && columna + columnas - 1 <= 6) {
+    for (var r = 0; r < filas; r++) {
+      var check = h.getRange(e.range.getRow() + r, 7);
+      if (!check.getDataValidation()) check.insertCheckboxes();
+    }
+    actualizarDashboard();
+    return;
+  }
+  if (columna !== 7 || columnas !== 1) return;
+
+  var valores = e.range.getValues();
+  for (var i = 0; i < valores.length; i++) {
+    var marcada = valores[i][0] === true || texto(valores[i][0]).toLowerCase() === 'true';
+    var fecha = h.getRange(e.range.getRow() + i, 8);
+    if (marcada && !fecha.getValue()) fecha.setValue(new Date());
+    if (!marcada) fecha.clearContent();
+  }
+  actualizarDashboard();
 }

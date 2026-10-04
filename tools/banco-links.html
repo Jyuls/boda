@@ -47,7 +47,7 @@ function limpiarGuardado() {
 function revisar(doc, esperado) {
   const texto = doc.querySelector('[data-rsvp]');
   const cuerpo = texto ? texto.textContent : '';
-  const tarjeta = !!doc.querySelector('.opcion--si');
+  const tarjeta = !!doc.querySelector('.fila__check');
   const buscador = /puedes buscar tu nombre/i.test(cuerpo);
 
   /* Cada miembro tiene que aparecer escrito tal cual está en la lista. */
@@ -126,7 +126,7 @@ function siguiente() {
       const cuerpo = (doc.querySelector('[data-rsvp]') || {}).textContent || '';
       resultados.push({
         codigo: paso.esperado.codigo || '(sin código)',
-        tarjeta: !!doc.querySelector('.opcion--si'),
+        tarjeta: !!doc.querySelector('.fila__check'),
         buscador: /puedes buscar tu nombre/i.test(cuerpo),
         grupo: null,
         faltan: []

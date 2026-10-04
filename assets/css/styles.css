@@ -100,7 +100,7 @@ a { color: inherit; }
   width: 84px;
   pointer-events: none;
   opacity: .9;
-  filter: hue-rotate(130deg) saturate(.42) brightness(1.35) contrast(.9);
+  filter: hue-rotate(50deg) saturate(1.3) brightness(1.08);
 }
 .sobre-flor.f1 { top: -5%; left: -10px;  transform: rotate(25deg); }
 .sobre-flor.f2 { top: -5%; right: -10px; transform: rotate(-25deg) scaleX(-1); }
@@ -290,7 +290,7 @@ a { color: inherit; }
   max-width: none;
   object-fit: contain;
   margin-bottom: 12px;
-  filter: hue-rotate(290deg) saturate(1.25);
+  filter: hue-rotate(290deg) saturate(1.25) brightness(0.98);
 }
 @media (min-width: 768px) { .linea-oro { width: 104px; } }
 .save {
@@ -323,7 +323,7 @@ a { color: inherit; }
   width: 57.6%;
   max-width: none;
   object-fit: contain;
-  filter: drop-shadow(3px 4px 3px rgba(0,0,0,0.1)) hue-rotate(130deg) saturate(.42) brightness(1.35) contrast(.9);
+  filter: drop-shadow(3px 4px 3px rgba(0,0,0,0.1)) hue-rotate(50deg) saturate(1.3) brightness(1.08);
   pointer-events: none;
   z-index: 15;
 }
@@ -384,7 +384,7 @@ a { color: inherit; }
   width: 100%;
   max-width: none;
   object-fit: contain;
-  filter: drop-shadow(3px 4px 3px rgba(0,0,0,0.1)) hue-rotate(130deg) saturate(.42) brightness(1.35) contrast(.9);
+  filter: drop-shadow(3px 4px 3px rgba(0,0,0,0.1)) hue-rotate(50deg) saturate(1.3) brightness(1.08);
 }
 .db { animation: dbFloat 6s ease-in-out infinite; will-change: transform; display: block; }
 @keyframes dbFloat {
@@ -441,7 +441,7 @@ a { color: inherit; }
   width: 100%;
   max-width: none;
   object-fit: contain;
-  filter: drop-shadow(3px 4px 3px rgba(0,0,0,0.1)) hue-rotate(130deg) saturate(.42) brightness(1.35) contrast(.9);
+  filter: drop-shadow(3px 4px 3px rgba(0,0,0,0.1)) hue-rotate(50deg) saturate(1.3) brightness(1.08);
 }
 .flor-wrap .invertido { transform: rotate(180deg) scaleY(-1); }
 .flor-wrap.pos1 { left: -30%;   top: 41.7%;  width: 41.7%; }
@@ -761,16 +761,107 @@ a { color: inherit; }
   font-size: 14px;
   color: var(--morado-translucido);
 }
-.mapa-foto {
-  margin-top: 16px;
+.comida {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 2px;
   width: 100%;
-  max-width: 340px;
-  height: auto;
-  aspect-ratio: 5 / 3;
-  object-fit: cover;
-  border-radius: 15px;
+  aspect-ratio: 1;
+  min-height: 0;
+  padding: 12px;
+  border: 1px solid rgba(87, 53, 110, .18);
+  border-radius: 18px;
+  background: linear-gradient(145deg, #fbf8fc, #f1e9f5);
+  color: #57356e;
 }
-@media (min-width: 768px) { .mapa-foto { max-width: 560px; } }
+.celebracion-visual {
+  display: grid;
+  grid-template-columns: minmax(0, 3.3fr) minmax(0, 1fr);
+  align-items: stretch;
+  gap: 14px;
+  width: min(100%, 920px);
+  margin-top: 22px;
+}
+.celebracion-detalles {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 14px;
+  min-width: 0;
+}
+.comida__ilustracion { width: min(72%, 116px); height: auto; }
+.comida__rotulo {
+  margin-top: 2px;
+  color: #786984;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.comida__nombre {
+  color: #45265a;
+  font-family: "Playfair Display", Baskerville, serif;
+  font-size: 25px;
+  line-height: 1.15;
+}
+.bebidas {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 5px;
+  aspect-ratio: 1;
+  min-height: 0;
+  padding: 12px;
+  border: 1px solid rgba(87, 53, 110, .18);
+  border-radius: 18px;
+  background: #fffefe;
+  color: #57356e;
+  text-align: center;
+}
+.bebidas__ilustracion { width: min(44%, 56px); height: auto; }
+.bebidas__rotulo {
+  color: #786984;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.bebidas__texto {
+  max-width: 150px;
+  color: #45265a;
+  font-family: "Playfair Display", Baskerville, serif;
+  font-size: clamp(13px, 1.35vw, 17px);
+  line-height: 1.25;
+}
+.mapa-foto {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: 5 / 3;
+  background: #f1e9f5;
+  object-fit: contain;
+  border-radius: 18px;
+}
+@media (max-width: 767px) {
+  .celebracion-visual {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .mapa-foto {
+    height: auto;
+    aspect-ratio: 5 / 3;
+  }
+  .celebracion-detalles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto;
+    gap: 12px;
+  }
+}
+@media (max-width: 360px) {
+  .celebracion-detalles { grid-template-columns: minmax(0, 1fr); }
+  .comida, .bebidas { aspect-ratio: 1.35; }
+}
 .btn-ruta {
   margin-top: 16px;
   display: inline-flex;
@@ -786,31 +877,6 @@ a { color: inherit; }
 }
 .btn-ruta:hover { transform: scale(1.03); }
 .btn-ruta svg { width: 16px; height: 16px; }
-
-/* Dress code */
-.dress-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40px 24px 40px;
-  gap: 16px;
-}
-.dress-wrap h2 {
-  text-transform: uppercase;
-  font-weight: 700;
-  font-size: 20px;
-  letter-spacing: .03em;
-  color: var(--morado-oscuro);
-}
-.dress-wrap p { color: var(--morado-translucido); }
-.chip-colores { display: flex; gap: 16px; }
-.chip-colores i {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  box-shadow: 0 4px 8px -2px rgba(74, 20, 140, 0.25);
-}
-@media (min-width: 768px) { .chip-colores i { width: 48px; height: 48px; } }
 
 /* Timeline */
 .timeline {
@@ -869,6 +935,136 @@ a { color: inherit; }
   color: rgba(247, 245, 255, 0.85);
 }
 @media (min-width: 768px) { .timeline .texto { font-size: 15px; } }
+
+/* Tarjetas de ceremonia, celebración e itinerario */
+.card-ceremonia,
+.card-itinerario {
+  border: 1px solid #ddcce7;
+  box-shadow: 0 10px 30px rgba(69, 38, 90, 0.12);
+}
+.card-ceremonia .fondo-navy {
+  background: #f8f2fa;
+}
+.card-ceremonia .textura,
+.card-itinerario .textura {
+  opacity: .12;
+  mix-blend-mode: multiply;
+}
+.card-ceremonia .contenido {
+  gap: 19px;
+}
+.card-ceremonia .titulo,
+.card-itinerario .titulo {
+  color: #57356e;
+  font-family: "Playfair Display", Baskerville, serif;
+  font-size: 25px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.card-ceremonia .invita-linea {
+  color: #705b7c;
+}
+.card-ceremonia .pareja h3 {
+  color: #45265a;
+}
+.card-ceremonia .amp-madi {
+  color: #9777a8;
+}
+.card-ceremonia .ceremonia__datos {
+  border-top-color: rgba(87, 53, 110, 0.24);
+  color: #57356e;
+}
+.card-ceremonia .ceremonia__iglesia {
+  color: #705b7c;
+}
+
+.card-celebracion {
+  border: 1px solid #715487;
+  box-shadow: 0 12px 32px rgba(53, 32, 68, 0.22);
+}
+.card-celebracion .fondo-navy {
+  background: #57356e;
+}
+.card-celebracion .textura {
+  opacity: .16;
+}
+.card-celebracion .contenido {
+  gap: 20px;
+}
+.card-celebracion .titulo {
+  font-family: "Playfair Display", Baskerville, serif;
+  font-size: 25px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.card-celebracion .rec-titulo {
+  color: #f1e8f4;
+  font-family: "Lora", Baskerville, serif;
+}
+.card-celebracion .at-fila {
+  color: #e8d9ef;
+}
+.card-celebracion .fecha-bloque {
+  color: #fffaff;
+}
+.card-celebracion .fecha-bloque .sep {
+  background: rgba(255, 250, 255, 0.45);
+}
+.card-celebracion .count-titulo {
+  color: #f1e8f4;
+}
+.card-celebracion .count {
+  color: #e8d9ef;
+}
+.card-celebracion .cal-holder {
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  background: #fbf8fc;
+}
+.card-celebracion .cal {
+  color: #45265a;
+}
+.card-celebracion .cal-mes {
+  border-bottom-color: #e5d8eb;
+  color: #57356e;
+  font-family: "Playfair Display", Baskerville, serif;
+  font-size: 20px;
+}
+.card-celebracion .cal-dias {
+  border-bottom-color: #bca4ca;
+}
+.card-celebracion .cal-grid .dia-boda svg {
+  fill: #805a96;
+}
+.card-celebracion .cal-grid .dia-boda span {
+  color: #fff;
+}
+.card-celebracion .cal-link {
+  color: #57356e;
+}
+
+.card-itinerario {
+  background: #f1e9f5;
+}
+.card-itinerario .fondo-navy {
+  background: #f1e9f5;
+}
+.card-itinerario .titulo {
+  margin-bottom: 3px;
+}
+.card-itinerario .timeline .hora,
+.card-itinerario .timeline .texto {
+  color: #57356e;
+}
+.card-itinerario .punto-fila .linea {
+  background: rgba(87, 53, 110, 0.35);
+}
+.card-itinerario .punto-fila .punto {
+  background: #805a96;
+  box-shadow: 0 0 0 3px rgba(128, 90, 150, 0.18);
+}
 
 /* Guestbook */
 .card-blanca {
@@ -974,7 +1170,7 @@ a { color: inherit; }
   max-width: none;
   opacity: .2;
   pointer-events: none;
-  filter: hue-rotate(290deg) saturate(1.15);
+  filter: hue-rotate(290deg) saturate(1.25) brightness(0.98);
 }
 .bg-castle2 { left: 52%; top: -14%; width: 62%; }
 .bg-castle3 { left: 22%; top: -18%; width: 64%; }
@@ -1076,6 +1272,179 @@ a { color: inherit; }
   text-align: center;
 }
 
+/* Confirmación por grupo */
+.rsvp-card {
+  width: min(100%, 440px);
+  margin-top: 24px;
+  padding: 24px 22px;
+  border: 1px solid rgba(94, 53, 177, 0.16);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 10px 28px rgba(74, 20, 140, 0.1);
+  color: var(--morado-oscuro);
+}
+.rsvp-card .tarjeta__dedicatoria {
+  color: var(--morado-translucido);
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: center;
+}
+.rsvp-card .tarjeta__grupo,
+.rsvp-card .tarjeta__hecho-titulo {
+  margin-top: 5px;
+  color: var(--morado-oscuro);
+  font-family: "Playfair Display", Baskerville, serif;
+  font-size: 24px;
+  font-weight: 600;
+  text-align: center;
+}
+.rsvp-card .tarjeta__indicacion {
+  margin: 18px 0 10px;
+  color: #705b7c;
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: center;
+}
+.rsvp-card .fila {
+  border-bottom: 1px solid rgba(94, 53, 177, 0.12);
+}
+.rsvp-card .fila__etiqueta {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 9px 2px;
+  cursor: pointer;
+}
+.rsvp-card .fila__nombre {
+  min-width: 0;
+  color: #45265a;
+  font-size: 15px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.rsvp-card .fila__check {
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--morado-profundo);
+  cursor: pointer;
+}
+.rsvp-card .fila__check:focus-visible,
+.rsvp-card button:focus-visible,
+.rsvp-card input:focus-visible,
+.rsvp-card textarea:focus-visible {
+  outline: 3px solid #9b7bb0;
+  outline-offset: 3px;
+}
+.rsvp-card .tarjeta__pie {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+.rsvp-card .boton {
+  min-height: 46px;
+  padding: 11px 24px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--morado-profundo);
+  color: #fff;
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background-color .2s ease, transform .2s ease;
+}
+.rsvp-card .boton:hover:not(:disabled) {
+  background: var(--morado-oscuro);
+  transform: translateY(-1px);
+}
+.rsvp-card .boton:disabled {
+  cursor: wait;
+  opacity: .7;
+}
+.rsvp-card .ayuda {
+  margin-top: 12px;
+  color: #8a2635;
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: center;
+}
+.rsvp-card .ayuda:empty {
+  display: none;
+}
+.rsvp-card .tarjeta__hecho-texto {
+  margin-top: 10px;
+  color: #705b7c;
+  font-size: 15px;
+  line-height: 1.6;
+  text-align: center;
+}
+.rsvp-card .tarjeta__hecho-cuadro {
+  margin-top: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.rsvp-card .tarjeta__hecho-cuadro dt {
+  margin-top: 10px;
+  color: var(--morado-profundo);
+  font-weight: 600;
+}
+.rsvp-card .tarjeta__hecho-cuadro dd {
+  color: #45265a;
+}
+.rsvp-card .reintentar,
+.rsvp-card .boton--discreto,
+.rsvp-card .buscador .opcion {
+  display: block;
+  margin: 18px auto 0;
+  border: 0;
+  background: transparent;
+  color: var(--morado-profundo);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.rsvp-card .mensaje {
+  margin-top: 18px;
+}
+.rsvp-card .mensaje__campo {
+  width: 100%;
+  min-height: 72px;
+  padding: 10px 12px;
+  border: 1px solid rgba(94, 53, 177, 0.24);
+  border-radius: 8px;
+  background: #fff;
+  color: #45265a;
+  font: inherit;
+  resize: vertical;
+}
+.rsvp-card .trampa {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.rsvp-card .campo__titulo {
+  margin: 15px 0 6px;
+  color: #57356e;
+}
+.rsvp-card .campo {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid rgba(94, 53, 177, 0.24);
+  border-radius: 7px;
+  font: inherit;
+}
+.rsvp-card .buscador {
+  list-style: none;
+}
+
 /* Footer */
 .pie {
   display: flex;
@@ -1088,7 +1457,7 @@ a { color: inherit; }
 .pie p { font-size: 13px; color: var(--morado-oscuro); }
 .linea-oro3 {
   width: 45px;
-  filter: hue-rotate(290deg) saturate(1.25);
+  filter: hue-rotate(290deg) saturate(1.25) brightness(0.98);
 }
 
 /* Visor */

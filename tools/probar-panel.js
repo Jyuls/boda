@@ -14,19 +14,19 @@ const vm = require('vm');
 
 const HOJAS = {
   Invitados: [
-    ['codigo', 'grupo', 'miembros', 'esperados', 'max_acompanantes', 'notas'],
-    ['YZ32', 'Familia Carrillo', 'Victoria Padilla, Alejandra Sanchez', 2, 2, ''],
-    ['AB01', 'Sanchez Irina', 'Irina Sanchez, Luis Rojas', 2, 2, ''],
-    ['CD09', 'Peña Oscar', 'Oscar Peña', 1, 2, ''],
-    ['EF22', 'Familia Vega', 'Lucia Vega, Pablo Vega', 2, 2, ''],
-    ['GH33', 'Ruiz Joaquin', 'Joaquin Ruiz, Ana Ruiz, Luis Ruiz', 3, 2, '']
+    ['codigo', 'grupo', 'miembros', 'notas', 'link', 'mensaje', 'enviada', 'fecha_envio', 'estado_respuesta', 'asistiran', 'no_asistiran', 'total_asistentes'],
+    ['YZ32', 'Familia Carrillo', 'Victoria Padilla, Alejandra Sanchez', '', 'https://boda/#YZ32', '', true, '', 'Respondida', 'Victoria Padilla, Alejandra Sanchez', '', 2],
+    ['AB01', 'Sanchez Irina', 'Irina Sanchez, Luis Rojas', '', 'https://boda/#AB01', '', false, '', '', '', '', ''],
+    ['CD09', 'Peña Oscar', 'Oscar Peña', '', 'https://boda/#CD09', '', false, '', '', '', '', ''],
+    ['EF22', 'Familia Vega', 'Lucia Vega, Pablo Vega', '', 'https://boda/#EF22', '', true, '', '', '', '', ''],
+    ['GH33', 'Ruiz Joaquin', 'Joaquin Ruiz, Ana Ruiz, Luis Ruiz', '', 'https://boda/#GH33', '', true, '', 'Respondida', 'Joaquin Ruiz, Ana Ruiz', 'Luis Ruiz', 2]
   ],
   Respuestas: [
-    ['fecha', 'codigo', 'nombres', 'asistiran', 'no_asistiran', 'total', 'acompanantes', 'mensaje'],
-    [new Date(2026, 9, 2, 10, 0), 'YZ32', 'Victoria Padilla, Alejandra Sanchez',
-      'Victoria Padilla, Alejandra Sanchez', '', 3, 'Roberto Alonso', ''],
-    [new Date(2026, 9, 3, 18, 30), 'GH33', 'Joaquin Ruiz, Ana Ruiz, Luis Ruiz',
-      'Joaquin Ruiz, Ana Ruiz, Luis Ruiz', '', 3, '', '']
+    ['fecha', 'codigo', 'grupo', 'asistiran', 'no_asistiran', 'total', 'mensaje'],
+    [new Date(2026, 9, 2, 10, 0), 'YZ32', 'Familia Carrillo',
+      'Victoria Padilla, Alejandra Sanchez', '', 2, ''],
+    [new Date(2026, 9, 3, 18, 30), 'GH33', 'Ruiz Joaquin',
+      'Joaquin Ruiz, Ana Ruiz', 'Luis Ruiz', 2, '']
   ],
   Config: [
     ['clave', 'valor'],
@@ -96,17 +96,20 @@ seccion('1. el cálculo del panel');
 igual('5 invitaciones', d.totales.invitaciones, 5);
 igual('2 confirmadas', d.totales.confirmados, 2);
 igual('3 pendientes', d.totales.pendientes, 3);
+igual('3 links enviados', d.totales.enviadas, 3);
+igual('2 links pendientes de enviar', d.totales.pendientesEnvio, 2);
 igual('10 personas en la lista (2+2+1+2+3)', d.totales.personas, 10);
-igual('asistirán = los que dijeron sí más los acompañantes (2+1 y 3)', d.totales.asistiran, 6);
-igual('1 acompañante', d.totales.acompanantes, 1);
-igual('nadie dijo que no', d.totales.noAsistiran, 0);
+igual('asistirán = sólo quienes marcaron sí', d.totales.asistiran, 4);
+igual('una persona dijo que no', d.totales.noAsistiran, 1);
 igual('sin decidir son los 5 de los tres que no han respondido', d.totales.sinDecidir, 5);
 igual('trae la fecha de la Config', d.fechaTexto, 'Jueves 22 de octubre de 2026');
 igual('los confirmados traen su momento', d.confirmaron.every(c => c.cuando !== ''), true);
 igual('los pendientes dicen a quiénes esperar',
   d.sinResponder.every(s => s.nombres.length === s.personas), true);
 igual('sin responder y confirmadas suman todas', d.sinResponder.length + d.confirmaron.length, 5);
-igual('el acompañante va aparte de los asistentes', d.confirmaron[0].extra, ['Roberto Alonso']);
+igual('la lista individual de asistentes', d.asistentes.map(p => p.nombre),
+  ['Victoria Padilla', 'Alejandra Sanchez', 'Joaquin Ruiz', 'Ana Ruiz']);
+igual('la lista individual de ausentes', d.noAsistentes.map(p => p.nombre), ['Luis Ruiz']);
 
 seccion('2. aColumnas rellena los huecos');
 igual('de 1 a 7', aColumnas(['a'], 7), ['a', '', '', '', '', '', '']);
@@ -131,14 +134,14 @@ cierto('declara el charset', /<meta charset="utf-8">/.test(panel));
   cierto(et + ' abre y cierra lo mismo (' + abren + ')', abren === cierran && abren > 0);
 });
 cierto('trae las 8 tarjetas de números', (panel.match(/class="num[ "]/g) || []).length === 8);
-cierto('trae los dos bloques con section', (panel.match(/<section class="bloque"/g) || []).length === 2);
+cierto('trae los cinco bloques con section', (panel.match(/<section class="bloque"/g) || []).length === 5);
 cierto('trae el buscador', /id="q"/.test(panel));
 cierto('trae el aviso de sin resultados', /id="nada"/.test(panel));
 cierto('el buscador quita acentos como el de la invitación',
   /normalize\("NFD"\)/.test(panel) && /\[\\u0300-\\u036f\]/.test(panel));
 cierto('y quita los espacios sobrantes', /\.trim\(\)/.test(panel));
 cierto('los dos encabezados con su cuenta',
-  /Sin responder <em>\(3\)<\/em>/.test(panel) && /Confirmaron <em>\(2\)<\/em>/.test(panel));
+  /Sin responder <em>\(3\)<\/em>/.test(panel) && /Respuestas por grupo <em>\(2\)<\/em>/.test(panel));
 
 seccion('5. el buscador filtra bien');
 /* DOM mínimo: sólo lo que el filtro toca. */

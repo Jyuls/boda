@@ -61,7 +61,7 @@
       <i></i>
     </div>
     <div class="sobre-fecha">22 de octubre de 2026</div>
-    <p class="sobre-invita">Te invitamos</p>
+    <p class="sobre-invita">Invitamos a</p>
     <div class="sobre-chip" aria-live="polite"></div>
     <p class="sobre-celebra">a que asistas a nuestra boda</p>
     <a id="btn-open" class="btn-open" href="?open=1">
@@ -113,11 +113,11 @@
       <section class="seccion">
         <span class="flor-wrap pos1" aria-hidden="true"><span class="db"><img src="assets/img/minimalism/flower3-decoration.webp" alt=""></span></span>
         <span class="flor-wrap pos2" aria-hidden="true"><span class="db"><img src="assets/img/minimalism/flower2-decoration.webp" alt=""></span></span>
-        <div class="card-navy r13">
+        <div class="card-navy r13 card-ceremonia">
           <div class="fondo-navy" aria-hidden="true"></div>
           <img class="textura" src="assets/img/minimalism/paper.webp" alt="" aria-hidden="true">
           <div class="contenido">
-            <h2 class="titulo">CEREMONIA</h2>
+            <h2 class="titulo">Ceremonia</h2>
             <p class="invita-linea">Con nuestras familias, te invitamos a celebrar nuestra unión.</p>
 
             <div class="pareja">
@@ -172,11 +172,11 @@
       <section class="seccion">
         <span class="flor-wrap pos3" aria-hidden="true"><span class="db"><img src="assets/img/minimalism/flower4-decoration.webp" alt=""></span></span>
         <span class="flor-wrap pos4" aria-hidden="true"><span class="db"><img src="assets/img/minimalism/flower5-decoration.webp" alt=""></span></span>
-        <div class="card-navy r10">
+        <div class="card-navy r10 card-celebracion">
           <div class="fondo-navy" aria-hidden="true"></div>
           <img class="textura" src="assets/img/minimalism/paper.webp" alt="" aria-hidden="true">
           <div class="contenido">
-            <h2 class="titulo">CELEBRACIÓN</h2>
+            <h2 class="titulo">Celebración</h2>
             <p class="rec-titulo">Acompáñanos a celebrar</p>
             <div class="at-fila"><span>1:00 p.m.</span><span>JUEVES</span></div>
             <div class="fecha-bloque">
@@ -211,9 +211,6 @@
             </div>
           </div>
         </div>
-        <div class="rsvp-wrap">
-          <button type="button" class="btn-rsvp">CONFIRMAR ASISTENCIA</button>
-        </div>
       </section>
 
       <!-- MAPA -->
@@ -221,7 +218,31 @@
         <section class="mapa">
           <h3>Lugar de Celebración</h3>
           <div class="direccion">Casa de la Familia González</div>
-          <img class="mapa-foto" src="assets/img/iglesia.jpg" alt="Foto provisional del lugar de celebración">
+          <div class="celebracion-visual">
+            <img class="mapa-foto" src="assets/img/iglesia.jpg" alt="Foto provisional del lugar de celebración">
+            <div class="celebracion-detalles">
+              <div class="comida" aria-label="La comida será pozole">
+                <svg class="comida__ilustracion" viewBox="0 0 180 112" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M37 24v28m-7-28v17m7-17v17m7-17v17m-7 11v39m0 0c-8 0-12-7-12-16V52m12 39c8 0 12-7 12-16V52"/>
+                  <path d="M143 24c-8 0-13 10-13 24v9h13v34m0-67v67"/>
+                  <path d="M58 57c0 23 14 39 32 39s32-16 32-39H58Z"/>
+                  <path d="M53 57h74m-66 8c3 14 13 23 29 23s26-9 29-23"/>
+                  <path d="M75 43c-5-5 5-7 0-12m15 12c-5-5 5-7 0-12m15 12c-5-5 5-7 0-12"/>
+                  <path d="M67 101h47"/>
+                </svg>
+                <span class="comida__rotulo">La comida</span>
+                <span class="comida__nombre">Pozole</span>
+              </div>
+              <div class="bebidas" aria-label="No habrá bebidas alcohólicas">
+                <svg class="bebidas__ilustracion" viewBox="0 0 72 72" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M22 12h28l-5 25c-.6 3.4-3.4 5.8-6.8 5.8h-2.4c-3.4 0-6.2-2.4-6.8-5.8L22 12Z"/>
+                  <path d="M36 43v14m-11 4h22M14 12l44 48"/>
+                </svg>
+                <span class="bebidas__rotulo">Bebidas</span>
+                <span class="bebidas__texto">No habrá bebidas alcohólicas</span>
+              </div>
+            </div>
+          </div>
           <a class="btn-ruta" href="https://maps.app.goo.gl/Wcf1Rp1yFucQYaVm8" target="_blank" rel="noopener noreferrer">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
             <span>Ver ubicación</span>
@@ -229,25 +250,14 @@
         </section>
       </div>
 
-      <!-- CÓDIGO DE VESTIMENTA -->
-      <div class="dress-wrap">
-        <h2>DRESS CODE</h2>
-        <p>Formal</p>
-        <div class="chip-colores">
-          <i style="background-color:#432b14"></i>
-          <i style="background-color:#6b533c"></i>
-          <i style="background-color:#e3cbb4; border:1.5px solid rgba(0,34,76,0.19)"></i>
-        </div>
-      </div>
-
       <!-- SCHEDULE -->
       <section class="seccion">
         <span class="flor-wrap pos5" aria-hidden="true"><span class="db"><img src="assets/img/minimalism/flower6-decoration.webp" alt=""></span></span>
-        <div class="card-navy r10">
+        <div class="card-navy r10 card-itinerario">
           <div class="fondo-navy" aria-hidden="true"></div>
           <img class="textura" src="assets/img/minimalism/paper.webp" alt="" aria-hidden="true">
           <div class="contenido">
-            <h2 class="titulo">ITINERARIO</h2>
+            <h2 class="titulo">Itinerario</h2>
             <ol class="timeline">
               <li>
                 <span class="hora">11:00 a.m.</span>
@@ -309,6 +319,7 @@
           </span>
         </div>
         <p class="gift-descripcion">Habrá sobres para poner dinero, con lo que gusten cooperar para los recién casados.</p>
+        <section class="rsvp-card" data-rsvp aria-live="polite" aria-label="Confirmación de asistencia"></section>
       </div>
 
       <!-- FOOTER -->
@@ -332,7 +343,9 @@
   <div class="visor-thumbs" id="visor-thumbs"></div>
 </dialog>
 
+<script src="assets/js/config.js"></script>
 <script src="data/invitados.js"></script>
 <script src="assets/js/app.js"></script>
+<script src="assets/js/rsvp.js"></script>
 </body>
 </html>

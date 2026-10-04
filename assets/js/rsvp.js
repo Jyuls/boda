@@ -177,37 +177,30 @@
     RAIZ.appendChild(el('p', 'tarjeta__dedicatoria', 'Invitación para'));
     RAIZ.appendChild(el('h3', 'tarjeta__grupo', grupo.grupo));
 
-    /* --- una fila por persona: Sí / No, sin casillas de cuadradito --- */
+    RAIZ.appendChild(el(
+      'p',
+      'tarjeta__indicacion',
+      'Las personas aparecen marcadas para asistir. Desmarca a quien no pueda acompañarnos.'
+    ));
+
     (grupo.miembros || []).forEach(function (nombre) {
       var fila = el('div', 'fila');
-      fila.appendChild(el('span', 'fila__nombre', nombre));
+      var etiqueta = el('label', 'fila__etiqueta');
+      etiqueta.appendChild(el('span', 'fila__nombre', nombre));
 
-      var opciones = el('div', 'fila__opciones');
-
-      ['si', 'no'].forEach(function (valor) {
-        var boton = el('button', 'opcion opcion--' + valor, valor === 'si' ? 'Sí' : 'No');
-        boton.type = 'button';
-        boton.setAttribute('aria-pressed', decisiones[nombre] === valor ? 'true' : 'false');
-
-        boton.addEventListener('click', function () {
-          decisiones[nombre] = valor;
-          opciones.querySelectorAll('.opcion').forEach(function (b) {
-            b.setAttribute('aria-pressed', 'false');
-          });
-          boton.setAttribute('aria-pressed', 'true');
-        });
-
-        opciones.appendChild(boton);
+      var check = el('input', 'fila__check');
+      check.type = 'checkbox';
+      check.checked = guardada ? decisiones[nombre] === 'si' : true;
+      decisiones[nombre] = check.checked ? 'si' : 'no';
+      check.setAttribute('aria-label', nombre + ' asistirá');
+      check.addEventListener('change', function () {
+        decisiones[nombre] = check.checked ? 'si' : 'no';
       });
 
-      fila.appendChild(opciones);
+      etiqueta.appendChild(check);
+      fila.appendChild(etiqueta);
       RAIZ.appendChild(fila);
     });
-
-    /* Ya no se pregunta por acompañantes. La columna sigue existiendo en la
-       hoja de respuestas y el backend la sigue leyendo: lo que se quitó es
-       sólo el formulario, para no obligar a la gente a tabular un nombre
-       suelto que después nadie controlaba. */
 
     /* --- mensaje --- */
     var mensaje = el('div', 'mensaje');
@@ -230,7 +223,7 @@
 
     /* --- pie --- */
     var pie = el('div', 'tarjeta__pie');
-    var enviar = el('button', 'boton', guardada ? 'Guardar el cambio' : 'Confirmar asistencia');
+    var enviar = el('button', 'boton', guardada ? 'Guardar cambios' : 'Enviar confirmación');
     enviar.type = 'button';
     enviar.setAttribute('data-enviar', '');
     pie.appendChild(enviar);
@@ -256,9 +249,6 @@
         grupo: grupo.grupo,
         asistiran: (grupo.miembros || []).filter(function (n) { return decisiones[n] === 'si'; }),
         no_asistiran: (grupo.miembros || []).filter(function (n) { return decisiones[n] === 'no'; }),
-        /* Siempre vacío: ya no hay campo que lo llene, pero la hoja sigue
-           teniendo la columna y el backend la sigue esperando. */
-        acompanantes: [],
         mensaje: area.value.trim().slice(0, 500)
       };
 

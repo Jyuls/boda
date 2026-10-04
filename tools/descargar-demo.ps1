@@ -1,10 +1,10 @@
-# Descarga los recursos del demo de ChungDoi a assets/img (fase 1: clon)
+# Descarga los recursos visuales usados por la invitacion a assets/img.
 $ErrorActionPreference = 'Continue'
 $base = 'https://chungdoi.com'
 $assets = 'https://assets.chungdoi.com'
 
 # Directorios
-$dirs = @('assets/img/minimalism', 'assets/img/minimalism/gift', 'assets/img/minimalism/iconos', 'assets/img/fotos')
+$dirs = @('assets/img/minimalism', 'assets/img/fotos')
 foreach ($d in $dirs) { if (-not (Test-Path $d)) { New-Item -ItemType Directory -Path $d -Force | Out-Null } }
 
 function Bajar($url, $dest) {
@@ -17,19 +17,8 @@ function Bajar($url, $dest) {
 }
 
 # Tema
-$tema = @('paper','castle-background','castle-background-1','castle2-background','goldenline2-decoration','goldenline3-decoration','flower-background','flower2-decoration','flower3-decoration','flower4-decoration','flower5-decoration','flower6-decoration','envelope-background','envelope-cover','church','cake','cook')
+$tema = @('paper','castle-background','castle-background-1','castle2-background','goldenline2-decoration','goldenline3-decoration','flower-background','flower2-decoration','flower3-decoration','flower4-decoration','flower5-decoration','flower6-decoration','envelope-background','envelope-cover')
 foreach ($t in $tema) { Bajar "$base/images/themes/minimalism-dark-blue/$t.webp" "assets/img/minimalism/$t.webp" }
-
-# Regalo
-$gift = @('minimalism_darkblue','mini/nhat_binh_red','mini/baroque_v2_darkred','mini/silk_ribbon_pink','mini/chateau_green','mini/qasr_gold','mini/cherry_blossom_pink','mini/minimalism_darkred')
-foreach ($g in $gift) {
-  $n = Split-Path $g -Leaf
-  Bajar "$base/images/giftbox/$g.webp" "assets/img/minimalism/gift/$n.webp"
-}
-
-# Iconos de pago
-Bajar "$base/icons/payments/bank-generic.svg" "assets/img/minimalism/iconos/bank-generic.svg"
-Bajar "$base/icons/payments/wise.svg" "assets/img/minimalism/iconos/wise.svg"
 
 # Fotos del demo
 $fotos = @(

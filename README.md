@@ -6,33 +6,40 @@ archivos HTML, CSS y JavaScript que GitHub Pages sirve tal cual.
 La confirmación de asistencia se guarda en un Google Sheet a través de un
 Google Apps Script vinculado a ese Sheet.
 
+```text
+index.html                  invitación y estructura de las secciones
+assets/
+  css/styles.css            estilos y diseño adaptable
+  js/
+    config.js               configuración del sitio y Apps Script
+    app.js                  portada, galería y cuenta regresiva
+    rsvp.js                 confirmaciones por grupo
+  img/
+    og.png                  vista previa al compartir el enlace
+    sello.svg               emblema de la parroquia y favicon
+    nuestros.jpg            foto de Abril y Johann
+    iglesia.jpg             foto provisional de la parroquia y celebración
+    fotos/                  fotos de la galería
+    minimalism/             fondos, flores, papel y adornos usados por la web
+data/invitados.js           grupos y códigos de invitación; se conserva aquí
+gas/Code.gs                 backend de Google Apps Script
+tools/                      pruebas, bancos de navegador y utilidades locales
+start.bat                   inicio del servidor local en Windows
+start-server.ps1            inicio del servidor local con PowerShell
+open-browser.ps1            apertura de la invitación en Edge
+README.md                   configuración, mantenimiento y pruebas
 ```
-index.html                  la invitación
-assets/css/styles.css       estilos
-assets/js/config.js         <- lo único que tenés que editar
-assets/js/app.js            el link del mapa, la galería y la cuenta regresiva
-assets/js/rsvp.js           tarjeta de confirmación
-assets/img/og.png           la imagen que se ve al compartir el link
-assets/img/sello.svg        el emblema de San Ignacio, también favicon
-data/invitados.js           los grupos y sus links (lo regenera el Sheet)
-gas/Code.gs                 el backend, va dentro del Google Sheet
-tools/probar-backend.js     pruebas del backend
-tools/probar-conexion.js    prueba que el Web App de Apps Script está en pie
-tools/probar-cuenta.js      pruebas de la cuenta regresiva
-tools/probar-estilos.js     pruebas de CSS
-tools/probar-links.js       los links de invitación, uno por uno
-tools/probar-marco.js       pruebas de las flores y de que ninguna tapa texto
-tools/probar-movil.js       pruebas de layout en pantallas de teléfono
-tools/probar-panel.js       pruebas del panel del resumen y de su filtro
-tools/probar-rsvp.js        pruebas de comportamiento del formulario
-tools/buscar-ajenos.js      letras de otros idiomas coladas en el texto
-tools/banco-movil.html      el banco donde se mide el móvil
-tools/banco-marco.html      el banco donde se miden las flores
-tools/banco-rsvp.html       el banco donde se aprieta el formulario
-tools/reparar-encoding.js   busca caracteres rotos por PowerShell
-tools/generar-links.html    tabla de links y mensajes, sólo para uso local
-tools/og-preview.html       plantilla de la imagen para compartir
-```
+
+### Herramientas locales
+
+- **Pruebas automatizadas:** `probar-backend.js`, `probar-conexion.js`,
+  `probar-cuenta.js`, `probar-estilos.js`, `probar-links.js`, `probar-marco.js`,
+  `probar-movil.js`, `probar-panel.js` y `probar-rsvp.js`.
+- **Bancos de navegador:** `banco-links.html`, `banco-marco.html`,
+  `banco-movil.html` y `banco-rsvp.html`.
+- **Utilidades y vistas previas:** `buscar-ajenos.js`, `cortar-fondo.js`,
+  `descargar-demo.ps1`, `generar-links.html`, `medir-ventana.js`,
+  `og-preview.html` y `reparar-encoding.js`.
 
 ---
 
@@ -148,7 +155,9 @@ Las tres se agregaron a `index.html`; los datos que faltan por completar son:
 - **Celebración** — el jueves 22 de octubre de 2026 a la 1:00 p. m. en la Casa
   de la Familia González. El calendario termina a las 5:00 p. m. y el botón
   "Ver ubicación" abre `https://maps.app.goo.gl/Wcf1Rp1yFucQYaVm8`. La foto
-  `assets/img/iglesia.jpg` es provisional; no representa la casa.
+  `assets/img/iglesia.jpg` es provisional; no representa la casa. A su lado se
+  muestran dos notas ilustradas: la comida será pozole y no habrá bebidas
+  alcohólicas.
 - **Ceremonia** — la misa en la Iglesia San Ignacio de Loyola es a las 11:00
   a. m. del jueves 22 de octubre de 2026. La sección "Lugar de la ceremonia"
   aparece inmediatamente después de la tarjeta y usa el mapa
@@ -158,7 +167,10 @@ Las tres se agregaron a `index.html`; los datos que faltan por completar son:
   `index.html`.
 - **Sobres de Regalo** — una ilustración de un sobre acompaña el aviso de que
   habrá sobres para cooperar con lo que cada invitado guste para los recién
-  casados. No se muestran datos bancarios.
+  casados. No se muestran datos bancarios. Debajo aparece la confirmación de
+  asistencia del grupo asociado al código del enlace: sus integrantes aparecen
+  marcados por defecto; se desmarca a quien no vaya y se envía la respuesta.
+  El resultado actualiza la pestaña `Respuestas` del Google Sheet.
 
 ---
 
@@ -167,10 +179,8 @@ Las tres se agregaron a `index.html`; los datos que faltan por completar son:
 Estas cosas ya no están en la invitación, pero conviene saber qué quedó atrás
 para que nadie las busque y no las encuentre:
 
-- **El campo de acompañantes.** El backend y la columna del Sheet siguen ahí, y
-  `gas/Code.gs` los sigue leyendo y sumando en el resumen: lo que se quitó fue
-  el formulario. El sitio manda la lista siempre vacía. Si algún día vuelve a
-  hacer falta, hay que rearmar el `input` en `rsvp.js`.
+- **El campo y el límite de acompañantes.** Ya no se piden ni se guardan;
+  las respuestas sólo cuentan a los integrantes registrados en cada grupo.
 - **El archivo `.ics` que se armaba en `app.js`.** Sigue disponible el enlace
   para agregar la celebración al calendario de Google.
 - **El aviso de recepción** y los textos de "escríbenos y lo arreglamos". El
@@ -204,28 +214,41 @@ La hoja es esta: <https://docs.google.com/spreadsheets/d/1eGdVLKygzBWYvugZ5dMqYb
 5. Recargá la pestaña del Sheet. Aparece un menú nuevo llamado **Boda**.
 6. Elegí **Boda → Instalar invitaciones**.
 
-Eso crea cinco pestañas: `Invitados`, `Respuestas`, `Resumen`, `Config`,
-`Generado`, y llena `Invitados` con 30 invitaciones de ejemplo.
+Si ya existe una implementación web, publicá una versión nueva desde
+**Implementar → Administrar implementaciones → Editar → Nueva versión**. Así
+se conserva la URL `/exec` que ya está configurada en el sitio.
+
+Eso crea cinco pestañas: `Invitados`, `Respuestas`, `Resumen`, `Config` y
+`Generado`. Si el Sheet ya tenía grupos y respuestas, el instalador las conserva
+y reacomoda las columnas por encabezado. Quita los campos viejos de esperados y
+acompañantes; cualquier columna personalizada se conserva al final. No añade
+invitaciones de muestra.
 
 > **Si el instalador se quejó de que `url_base` dice `TU_USUARIO`:** es el
 > paso que falta. Andá a la pestaña **`Config`**, en la fila `url_base`, y
 > escribí `https://TU_USUARIO.github.io/boda/`. Después volvé a correr
 > **Boda → Instalar invitaciones** para que los links dejen de decir PENDIENTE.
 > El instalador avisa porque los links se arman con ese valor: si queda mal,
-> los 30 invitados reciben un link que no lleva a ningún lado.
+> los invitados reciben un link que no lleva a ningún lado.
 
-**Sacá el ejemplo.** En `Invitados` borrá las filas de muestra y escribí las
-tuyas. Por cada grupo que invitás:
+En `Invitados` registra cada grupo como aparece en `data/invitados.js`:
 
 | columna | qué va |
 |---|---|
-| `grupo` | el nombre del grupo, ej. `Familia Carrillo` |
-| `miembros` | los nombres separados por coma, **sin** comas dentro de cada nombre |
-| `max_acompanantes` | cuántas personas de fuera puede llevar cada quien (vacío = 2) |
-| `notas` | opcional, para ti |
+| `codigo` | código actual del objeto en `data/invitados.js`; si falta, se genera |
+| `grupo` | nombre que verá el grupo, ej. `Familia Carrillo` |
+| `miembros` | nombres separados por coma, **sin** comas dentro de cada nombre |
+| `notas` | opcional, para ustedes |
+| `link` / `mensaje` | los arma **Boda → Generar lista para la web** |
+| `enviada` | checkbox; márcalo al mandar el link para guardar la fecha |
+| `fecha_envio` | se actualiza al marcar o desmarcar el checkbox |
+| `estado_respuesta` | se actualiza cuando el grupo confirma |
+| `asistiran` / `no_asistiran` / `total_asistentes` | resumen de la respuesta del grupo |
 
 El código de la columna `A` se genera solo y **no cambia nunca**, aunque
-vuelvas a correr el instalador. Los links que ya mandaste siguen sirviendo.
+vuelvas a correr el instalador. Los enlaces son `url_base/#CODIGO`, por lo que
+abren con el sobre cerrado. El Sheet empieza sin ejemplos; copia los códigos,
+grupos, miembros y notas de `data/invitados.js` antes de generar los enlaces.
 
 ---
 
@@ -317,16 +340,22 @@ escritos, así que también hay que regenerarla si cambian.
 
 ---
 
-## 7. Ver quién confirmó
+## 7. Envíos y respuestas
 
-**Boda → Ver resumen** abre un panel con todo: ocho números arriba
-(invitaciones, confirmadas, pendientes, personas, asistirán, no asistirán,
-acompañantes y sin decidir) y debajo las dos listas, la de los que no han
-respondido y la de los que sí. Trae un filtro que también ignora los acentos
+Marca `enviada` en cada grupo cuando le mandes el enlace. En `fecha_envio`
+queda la fecha del cambio; al desmarcarlo, se borra. Las respuestas aparecen
+solas en `Respuestas` y actualizan el estado y las listas individuales de
+asistencia en `Invitados`.
+
+**Boda → Ver resumen** abre el dashboard: enlaces enviados y por enviar,
+grupos que ya respondieron, pendientes de respuesta, personas que asistirán,
+que no asistirán y que aún no deciden. Incluye listas por nombre y grupo y un
+filtro que también ignora los acentos
 —`sanchez` encuentra a `Sánchez`— y un botón para imprimirlo.
 
-**Boda → Resumen en la hoja** hace lo mismo pero escribiendo una pestaña, útil
-si querés un pantallazo para compartir o imprimir desde el Sheet.
+**Boda → Resumen en la hoja** escribe esas métricas y listas en `Resumen`.
+El dashboard se actualiza al marcar un link o recibir una confirmación; también
+se puede refrescar a mano con **Boda → Actualizar dashboard**.
 
 Las respuestas crudas, una por línea, están en `Respuestas`. Si alguien
 confirma otra vez, se actualiza su fila en lugar de duplicarse.
@@ -408,7 +437,7 @@ node tools/probar-estilos.js      CSS: clases, variables, pesos de fuente
 node tools/probar-links.js        los links de invitación, uno por uno
 node tools/probar-movil.js        pack de anchos de teléfono: scroll, táctil y letra chica
 node tools/probar-marco.js        las flores existen y no se fijan; ningún centro de texto sobre una flor
-node tools/probar-panel.js        57 pruebas del panel del resumen y su filtro
+node tools/probar-panel.js        59 pruebas del panel del resumen y su filtro
 node tools/probar-rsvp.js         20 pruebas de comportamiento del formulario
 ```
 
@@ -419,10 +448,9 @@ simple vista, no rompen nada, y llegan al sitio publicado. El script busca
 escritura china o japonesa, cirílica y árabe o devanagari en el CSS, el HTML, el
 JS y este README.
 
-`probar-backend.js` son 85 pruebas que cubren la instalación, la generación de
-links y códigos, el `data/invitados.js` que produce, el envío de respuestas, el
-filtrado de nombres ajenos, el límite de acompañantes, la corrección de
-respuestas y el resumen.
+`probar-backend.js` ejecuta 45 pruebas sobre la migración conservando grupos,
+respuestas y columnas personalizadas; creación de links, envío de RSVP,
+checkbox/fecha de envío y dashboard de asistentes.
 
 El simulador de hojas que usan esas pruebas mira las **columnas** de cada fila
 que se escribe, igual que Google, no sólo cuántas filas hay. Antes miraba
