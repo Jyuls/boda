@@ -20,6 +20,29 @@ var HOJA_GENERADO   = 'Generado';
 var COL_INV = ['codigo', 'grupo', 'miembros', 'notas', 'link', 'mensaje', 'enviada', 'fecha_envio', 'estado_respuesta', 'asistiran', 'no_asistiran', 'total_asistentes'];
 var COL_RES = ['fecha', 'codigo', 'grupo', 'asistiran', 'no_asistiran', 'total', 'mensaje'];
 
+/* Copia inicial de data/invitados.js. Apps Script no puede leer ese archivo
+   local del repositorio, así que esta lista se mantiene junto al proyecto. */
+var INVITADOS_BASE = [
+  ['YZ32', 'Familia Sánchez', 'Victoria Padilla Aviña, Lilian Alejandra del Rosario Sánchez Padilla, David Antonio Sánchez Padilla', ''],
+  ['QS25', 'Familia Medina', 'Angélica Medina, Mauricio Barrios', ''],
+  ['XP76', 'Leslie Helena Raphael Sánchez', 'Leslie Helena Raphael Sánchez, César', ''],
+  ['SS28', 'Maribel Medina', 'Maribel Medina', ''],
+  ['SG50', 'Familia Fazelpour', 'Lizbeth Fazelpour, Saad Fazelpour', ''],
+  ['ZR89', 'Griselda', 'Griselda', ''],
+  ['AH47', 'Familia Paredes', 'Carmen Paredes, Ana Sofía Paredes', ''],
+  ['EI69', 'Yared y Nashelly', 'Yared, Nashelly', ''],
+  ['TV45', 'Familia Nuñez Felipe', 'José Luis Núñez Rodríguez, Maribel Felipe Rendón, José Luis Núñez Felipe, Diana Karol Núñez Felipe', ''],
+  ['GN09', 'Carlos Zamora', 'Carlos Zamora', ''],
+  ['CL43', 'Familia González', 'Josefina González Domínguez, Josué Manuel Vega González, Jahim Vega González', ''],
+  ['LH63', 'Juan Manuel Vega Burgara', 'Juan Manuel Vega Burgara', ''],
+  ['PO86', 'Familia Espinoza Castillo', 'Jonathan Espinoza, Jessica Castillo', ''],
+  ['QX30', 'Familia González Duarte', 'Zahory González, Luis Duarte', ''],
+  ['XF99', 'Roxana Gutiérrez', 'Roxana Gutiérrez, Esposo', ''],
+  ['CG46', 'Familia Dominguez', 'Teresa Dominguez, Esposo', ''],
+  ['VJ99', 'Andrea y Fernando', 'Andrea, Fernando', ''],
+  ['FW10', 'Jonathan y Jessica', 'Jonathan Espinoza, Jessica Castillo', '']
+];
+
 var ZONA = 'America/Tijuana';
 
 var LETRAS = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; /* sin I ni O: se confunden con 1 y 0 */
@@ -134,6 +157,7 @@ function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('Boda')
     .addItem('Instalar invitaciones', 'instalar')
+    .addItem('Importar lista de invitados', 'importarInvitadosBase')
     .addItem('Generar lista para la web', 'generarInvitados')
     .addItem('Ver resumen', 'mostrarResumen')
     .addItem('Resumen en la hoja', 'verResumen')
@@ -146,16 +170,18 @@ function onOpen() {
 function ayuda() {
   SpreadsheetApp.getUi().alert(
     'Cómo se usa\n\n' +
-    '1. En la pestaña Config, pon tu dirección de GitHub en url_base.\n\n' +
-    '2. En la pestaña Invitados escribe, grupo por grupo:\n' +
+    '1. Revisa la dirección del sitio en Config > url_base.\n\n' +
+    '2. Boda > Importar lista de invitados sincroniza los grupos desde la copia\n' +
+    '   de data/invitados.js incluida en este script.\n\n' +
+    '3. En la pestaña Invitados revisa cada grupo y sus integrantes:\n' +
     '   - grupo: el nombre de la invitación (Familia Carrillo)\n' +
     '   - miembros: los nombres separados por coma\n' +
     '   - enviada: marca la casilla al enviar el link al grupo\n\n' +
-    '3. Boda > Generar lista para la web. Rellena los códigos que falten,\n' +
+    '4. Boda > Generar lista para la web. Rellena los códigos que falten,\n' +
     '   arma los links y deja el archivo listo en la pestaña Generado.\n\n' +
-    '4. Copia la pestaña Generado dentro de data/invitados.js del proyecto\n' +
+    '5. Copia la pestaña Generado dentro de data/invitados.js del proyecto\n' +
     '   y súbelo a GitHub.\n\n' +
-    '5. Las confirmaciones llegan solas a la pestaña Respuestas y actualizan\n' +
+    '6. Las confirmaciones llegan solas a la pestaña Respuestas y actualizan\n' +
     '   el dashboard. Usa Boda > Actualizar dashboard para refrescarlo.'
   );
 }
@@ -175,13 +201,31 @@ function instalar() {
   var cfg = asegurarHoja(HOJA_CONFIG, ['clave', 'valor', 'qué es']);
   if (cfg.getLastRow() < 2) {
     cfg.getRange(2, 1, 5, 3).setValues([
-      ['url_base',    'https://TU_USUARIO.github.io/boda',            'Tu dirección en GitHub, sin barra final.'],
+      ['url_base',    'https://jyuls.github.io/boda',                 'Tu dirección en GitHub, sin barra final.'],
       ['enlace_maps', 'https://maps.app.goo.gl/UJr6qCr8tBrk5gqE9',    'El mapa que se abre desde la invitación.'],
       ['fecha_texto', 'Jueves 22 de octubre de 2026',                 'Cómo se escribe la fecha.'],
       ['hora_texto',  '11:00',                                        'Hora de la misa.'],
       ['lugar_texto', 'Parroquia San Ignacio de Loyola, Tijuana',     'Cómo se escribe el lugar.']
     ]);
   }
+
+  var filasConfig = leerFilas(HOJA_CONFIG, 2);
+  var encontroUrlBase = false;
+  for (var c = 0; c < filasConfig.length; c++) {
+    if (texto(filasConfig[c][0]) === 'url_base') {
+      encontroUrlBase = true;
+      if (!texto(filasConfig[c][1]) || texto(filasConfig[c][1]).indexOf('TU_USUARIO') !== -1) {
+        cfg.getRange(c + 2, 2).setValue('https://jyuls.github.io/boda');
+      }
+    }
+  }
+  if (!encontroUrlBase) {
+    cfg.getRange(cfg.getLastRow() + 1, 1, 1, 3).setValues([[
+      'url_base', 'https://jyuls.github.io/boda', 'Tu dirección en GitHub, sin barra final.'
+    ]]);
+  }
+
+  importarInvitadosBase(false);
 
   if (inv.getLastRow() > 1) {
     var filasEnviadas = inv.getRange(2, 7, inv.getLastRow() - 1, 1).getValues();
@@ -196,11 +240,77 @@ function instalar() {
 
   SpreadsheetApp.getUi().alert(
     'Listo.\n\n' +
-    'Se instalaron las pestañas y se conservaron los grupos y respuestas existentes.\n\n' +
-    'Falta lo más importante: en Config cambia TU_USUARIO por tu usuario de\n' +
-    'GitHub. Completa los grupos en Invitados, genera la lista y marca la\n' +
+    'Se importaron/sincronizaron los ' + INVITADOS_BASE.length +
+    ' grupos desde la lista del sitio. Las respuestas existentes se conservaron.\n\n' +
+    'Ahora revisa Invitados y usa Boda > Generar lista para la web. Marca la\n' +
     'casilla enviada cuando compartas cada enlace.'
   );
+}
+
+/* Sincroniza el snapshot de data/invitados.js incluido en este Apps Script.
+   Coincide por código o por grupo y conserva links, notas, envíos y RSVP. */
+function importarInvitadosBase(mostrarAviso) {
+  var inv = hoja(HOJA_INVITADOS);
+  if (!inv) throw new Error('Falta la pestaña ' + HOJA_INVITADOS + '. Corre Boda > Instalar invitaciones.');
+
+  var existentes = leerFilas(HOJA_INVITADOS, COL_INV.length);
+  var porCodigo = {};
+  var porGrupo = {};
+  for (var i = 0; i < existentes.length; i++) {
+    var codigo = texto(existentes[i][0]).toUpperCase();
+    var grupo = texto(existentes[i][1]).toLowerCase();
+    if (codigo && !porCodigo[codigo]) porCodigo[codigo] = i;
+    if (grupo && !porGrupo[grupo]) porGrupo[grupo] = i;
+  }
+
+  var agregados = 0;
+  var actualizados = 0;
+  for (var b = 0; b < INVITADOS_BASE.length; b++) {
+    var base = INVITADOS_BASE[b];
+    var indice = porCodigo[base[0]] !== undefined ? porCodigo[base[0]] : porGrupo[base[1].toLowerCase()];
+    var fila;
+    var numeroFila;
+    if (indice === undefined) {
+      fila = [base[0], base[1], base[2], base[3], '', '', false, '', 'Pendiente', '', '', ''];
+      numeroFila = inv.getLastRow() + 1;
+      inv.getRange(numeroFila, 1, 1, COL_INV.length).setValues([fila]);
+      porCodigo[base[0]] = existentes.length;
+      porGrupo[base[1].toLowerCase()] = existentes.length;
+      existentes.push(fila);
+      agregados++;
+      continue;
+    }
+
+    fila = existentes[indice].slice(0, COL_INV.length);
+    while (fila.length < COL_INV.length) fila.push('');
+    fila[0] = base[0];
+    fila[1] = base[1];
+    fila[2] = base[2];
+    if (!texto(fila[3])) fila[3] = base[3];
+    if (!texto(fila[8])) fila[8] = 'Pendiente';
+    numeroFila = indice + 2;
+    inv.getRange(numeroFila, 1, 1, COL_INV.length).setValues([fila]);
+    porCodigo[base[0]] = indice;
+    porGrupo[base[1].toLowerCase()] = indice;
+    existentes[indice] = fila;
+    actualizados++;
+  }
+
+  if (inv.getLastRow() > 1) {
+    var checks = inv.getRange(2, 7, inv.getLastRow() - 1, 1);
+    var valores = checks.getValues();
+    checks.insertCheckboxes();
+    checks.setValues(valores);
+  }
+
+  if (mostrarAviso !== false) {
+    SpreadsheetApp.getUi().alert(
+      'Lista importada.\n\n' + agregados + ' grupos agregados; ' +
+      actualizados + ' grupos sincronizados desde la lista del sitio.\n' +
+      'Se conservaron los datos de envío y las respuestas. Corre Generar lista para la web para renovar los links.'
+    );
+  }
+  return { agregados: agregados, actualizados: actualizados };
 }
 
 /* -------------------------------------------------------------------------- */

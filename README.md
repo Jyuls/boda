@@ -156,7 +156,7 @@ Las tres se agregaron a `index.html`; los datos que faltan por completar son:
   de la Familia González. El calendario termina a las 5:00 p. m. y el botón
   "Ver ubicación" abre `https://maps.app.goo.gl/Wcf1Rp1yFucQYaVm8`. La foto
   `assets/img/iglesia.jpg` es provisional; no representa la casa. A su lado se
-  muestran dos notas ilustradas: la comida será pozole y no habrá bebidas
+  muestran dos notas ilustradas: la comida será barbacoa y no habrá bebidas
   alcohólicas.
 - **Ceremonia** — la misa en la Iglesia San Ignacio de Loyola es a las 11:00
   a. m. del jueves 22 de octubre de 2026. La sección "Lugar de la ceremonia"
@@ -219,23 +219,26 @@ Si ya existe una implementación web, publicá una versión nueva desde
 se conserva la URL `/exec` que ya está configurada en el sitio.
 
 Eso crea cinco pestañas: `Invitados`, `Respuestas`, `Resumen`, `Config` y
-`Generado`. Si el Sheet ya tenía grupos y respuestas, el instalador las conserva
-y reacomoda las columnas por encabezado. Quita los campos viejos de esperados y
-acompañantes; cualquier columna personalizada se conserva al final. No añade
-invitaciones de muestra.
+`Generado`. También importa los 16 grupos actuales de `data/invitados.js` a
+`Invitados`. Si el Sheet ya tenía grupos y respuestas, conserva los datos
+existentes y reacomoda las columnas por encabezado. Quita los campos viejos de
+esperados y acompañantes; cualquier columna personalizada se conserva al final.
 
-> **Si el instalador se quejó de que `url_base` dice `TU_USUARIO`:** es el
-> paso que falta. Andá a la pestaña **`Config`**, en la fila `url_base`, y
-> escribí `https://TU_USUARIO.github.io/boda/`. Después volvé a correr
-> **Boda → Instalar invitaciones** para que los links dejen de decir PENDIENTE.
-> El instalador avisa porque los links se arman con ese valor: si queda mal,
-> los invitados reciben un link que no lleva a ningún lado.
+`gas/Code.gs` contiene una copia inicial (`INVITADOS_BASE`) de
+`data/invitados.js`, porque Apps Script no puede leer directamente un archivo
+local del repositorio. **Boda → Importar lista de invitados** sincroniza esa
+copia a la hoja sin borrar notas, links enviados ni respuestas. Si cambias los
+grupos en `data/invitados.js`, actualiza también `INVITADOS_BASE` en `Code.gs`,
+vuelve a pegar el script en Apps Script y ejecuta esa opción del menú.
+
+`url_base` se inicializa con `https://jyuls.github.io/boda`. Confirma que esa
+URL sea la del sitio publicado antes de generar los links.
 
 En `Invitados` registra cada grupo como aparece en `data/invitados.js`:
 
 | columna | qué va |
 |---|---|
-| `codigo` | código actual del objeto en `data/invitados.js`; si falta, se genera |
+| `codigo` | se importa junto con el grupo desde la lista del sitio |
 | `grupo` | nombre que verá el grupo, ej. `Familia Carrillo` |
 | `miembros` | nombres separados por coma, **sin** comas dentro de cada nombre |
 | `notas` | opcional, para ustedes |
@@ -245,10 +248,9 @@ En `Invitados` registra cada grupo como aparece en `data/invitados.js`:
 | `estado_respuesta` | se actualiza cuando el grupo confirma |
 | `asistiran` / `no_asistiran` / `total_asistentes` | resumen de la respuesta del grupo |
 
-El código de la columna `A` se genera solo y **no cambia nunca**, aunque
-vuelvas a correr el instalador. Los enlaces son `url_base/#CODIGO`, por lo que
-abren con el sobre cerrado. El Sheet empieza sin ejemplos; copia los códigos,
-grupos, miembros y notas de `data/invitados.js` antes de generar los enlaces.
+Los códigos existentes no cambian al volver a importar. Los enlaces son
+`url_base/#CODIGO`, por lo que abren con el sobre cerrado. Después de importar,
+usa **Boda → Generar lista para la web** para crear los links personales.
 
 ---
 

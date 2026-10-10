@@ -133,6 +133,11 @@ global.Utilities = {
    global: require() lo escondería dentro de un módulo. */
 const GS = path.join(__dirname, '..', 'gas', 'Code.gs');
 vm.runInThisContext(fs.readFileSync(GS, 'utf8'), { filename: GS });
+const datosSitio = { window: {} };
+vm.runInNewContext(
+  fs.readFileSync(path.join(__dirname, '..', 'data', 'invitados.js'), 'utf8'),
+  datosSitio
+);
 
 /* ------------------------------------------------------------- aserciones */
 
@@ -158,31 +163,42 @@ const nFilasRes = () => Math.max(hojas['Respuestas'].getLastRow() - 1, 0);
 hojas['Invitados'] = new Hoja('Invitados');
 hojas['Invitados'].getRange(1, 1, 3, 9).setValues([
   ['codigo', 'grupo', 'miembros', 'esperados', 'max_acompanantes', 'notas', 'link', 'mensaje', 'contacto'],
-  ['YZ32', 'Familia Sánchez', 'Ana Sánchez, Roberto Vega', 2, 2, 'Mesa cercana', 'https://viejo/#YZ32', 'Mensaje anterior', 'Ana'],
+  ['YZ32', 'Familia Sánchez', 'Nombre anterior', 1, 2, 'Mesa cercana', 'https://viejo/#YZ32', 'Mensaje anterior', 'Ana'],
   ['AB01', 'Familia Vega', 'María Vega', 1, 2, '', '', '', '']
 ]);
 hojas['Respuestas'] = new Hoja('Respuestas');
 hojas['Respuestas'].getRange(1, 1, 2, 8).setValues([
   ['fecha', 'codigo', 'grupo', 'asistiran', 'no_asistiran', 'total', 'acompanantes', 'mensaje'],
-  [new Date(2026, 9, 2, 10, 0), 'YZ32', 'Familia Sánchez', 'Ana Sánchez', 'Roberto Vega', 2, 'Invitado extra', 'Respuesta anterior']
+  [new Date(2026, 9, 2, 10, 0), 'YZ32', 'Familia Sánchez', 'Victoria Padilla Aviña', 'Lilian Alejandra del Rosario Sánchez Padilla, David Antonio Sánchez Padilla', 3, 'Invitado extra', 'Respuesta anterior']
 ]);
 
 seccion('1. instalar migra sin perder los datos útiles');
 instalar();
 igual('esquema Invitados limpio', hojas['Invitados'].getRange(1, 1, 1, COL_INV.length).getValues()[0], COL_INV);
 igual('esquema Respuestas limpio', hojas['Respuestas'].getRange(1, 1, 1, COL_RES.length).getValues()[0], COL_RES);
-igual('conserva grupo y miembros', filasInv()[0].slice(0, 3), ['YZ32', 'Familia Sánchez', 'Ana Sánchez, Roberto Vega']);
+igual('sincroniza grupo y miembros con data/invitados.js',
+  filasInv()[0].slice(0, 3),
+  [datosSitio.window.INVITADOS[0].codigo, datosSitio.window.INVITADOS[0].grupo,
+    datosSitio.window.INVITADOS[0].miembros.join(', ')]);
 igual('conserva las notas', filasInv()[0][3], 'Mesa cercana');
 igual('conserva las columnas personalizadas', filasInv()[0][12], 'Ana');
 cierto('retira las columnas de cupos y acompañantes',
   !COL_INV.join('|').match(/esperados|max_acompanantes|acompanantes/) &&
   !COL_RES.join('|').match(/acompanantes/));
-igual('respuesta histórica conserva el sí', hojas['Respuestas'].getRange(2, 4).getValue(), 'Ana Sánchez');
-igual('respuesta histórica conserva el no', hojas['Respuestas'].getRange(2, 5).getValue(), 'Roberto Vega');
+igual('respuesta histórica conserva el sí', hojas['Respuestas'].getRange(2, 4).getValue(), 'Victoria Padilla Aviña');
+igual('respuesta histórica conserva el no', hojas['Respuestas'].getRange(2, 5).getValue(), 'Lilian Alejandra del Rosario Sánchez Padilla, David Antonio Sánchez Padilla');
 igual('total histórico se recalcula sin acompañantes', hojas['Respuestas'].getRange(2, 6).getValue(), 1);
 igual('conserva el mensaje histórico', hojas['Respuestas'].getRange(2, 7).getValue(), 'Respuesta anterior');
-igual('no inserta ejemplos', filasInv().length, 2);
-igual('conserva los códigos ya asignados', codigos(), ['YZ32', 'AB01']);
+igual('importa los 16 grupos del sitio y conserva una fila extra', filasInv().length, 17);
+igual('todos los códigos del sitio aparecen en Invitados',
+  codigos().filter(c => datosSitio.window.INVITADOS.some(inv => inv.codigo === c)),
+  datosSitio.window.INVITADOS.map(inv => inv.codigo));
+igual('conserva la fila preexistente que no estaba en el sitio', codigos().filter(c => c === 'AB01').length, 1);
+igual('el snapshot del Apps Script coincide con data/invitados.js',
+  INVITADOS_BASE.map(f => [f[0], f[1], f[2]]),
+  datosSitio.window.INVITADOS.map(inv => [inv.codigo, inv.grupo, inv.miembros.join(', ')]));
+igual('Config usa la URL publicada de la invitación',
+  hojas['Config'].getRange(2, 2).getValue(), 'https://jyuls.github.io/boda');
 
 seccion('2. generar links y lista de la web');
 hojas['Config'].getRange(2, 2).setValue('https://boda.github.io');
@@ -193,8 +209,8 @@ igual('link personal conserva el código y deja el sobre cerrado',
   tras[0][4], 'https://boda.github.io/#' + codigoSanchez);
 igual('el mensaje incluye el link', tras[0][5].indexOf(tras[0][4]) !== -1, true);
 igual('el estado de respuesta histórica se sincroniza', tras[0][8], 'Respondida');
-igual('integrantes que asisten se sincronizan', tras[0][9], 'Ana Sánchez');
-igual('integrantes que no asisten se sincronizan', tras[0][10], 'Roberto Vega');
+igual('integrantes que asisten se sincronizan', tras[0][9], 'Victoria Padilla Aviña');
+igual('integrantes que no asisten se sincronizan', tras[0][10], 'Lilian Alejandra del Rosario Sánchez Padilla, David Antonio Sánchez Padilla');
 
 const gen = hojas['Generado'];
 const js = gen.getRange(1, 1, gen.getLastRow(), 1).getValues().map(l => l[0]).join('\n');
@@ -205,7 +221,7 @@ const sandbox = { window: {} };
 new Function('window', js)(sandbox.window);
 igual('lista web conserva grupo y miembros',
   [sandbox.window.INVITADOS[0].grupo, sandbox.window.INVITADOS[0].miembros],
-  ['Familia Sánchez', ['Ana Sánchez', 'Roberto Vega']]);
+  ['Familia Sánchez', ['Victoria Padilla Aviña', 'Lilian Alejandra del Rosario Sánchez Padilla', 'David Antonio Sánchez Padilla']]);
 
 seccion('3. marca de envío y fecha');
 hojas['Invitados'].getRange(2, 7).setValue(true);
@@ -221,8 +237,8 @@ cierto('al editar un grupo crea su checkbox de enviada',
 seccion('4. doPost guarda y sincroniza la confirmación');
 let r = doPost({ postData: { contents: JSON.stringify({
   codigo: codigoSanchez,
-  asistiran: ['Ana Sánchez'],
-  no_asistiran: ['Roberto Vega'],
+  asistiran: ['Victoria Padilla Aviña'],
+  no_asistiran: ['Lilian Alejandra del Rosario Sánchez Padilla'],
   mensaje: 'Con mucha alegría'
 }) } });
 igual('acepta respuesta válida', JSON.parse(r.getContent()).ok, true);
@@ -236,9 +252,9 @@ hojas['Invitados'].getRange(2, 7).setValue(true);
 onEdit({ range: hojas['Invitados'].getRange(2, 7) });
 
 r = doPost({ postData: { contents: JSON.stringify({
-  codigo: 'AB01', asistiran: ['María Vega', 'Intruso'], no_asistiran: []
+  codigo: 'QS25', asistiran: ['Angélica Medina', 'Intruso'], no_asistiran: []
 }) } });
-igual('descarta nombres ajenos', hojas['Respuestas'].getRange(3, 4).getValue(), 'María Vega');
+igual('descarta nombres ajenos', hojas['Respuestas'].getRange(3, 4).getValue(), 'Angélica Medina');
 igual('rechaza un código desconocido', JSON.parse(doPost({
   postData: { contents: JSON.stringify({ codigo: 'ZZ99', asistiran: ['Intruso'] }) }
 }).getContent()).ok, false);
@@ -248,9 +264,9 @@ seccion('5. dashboard muestra envíos y listas por persona');
 verResumen();
 const resumen = hojas['Resumen'];
 const celda = (f, c) => resumen.getRange(f, c).getValue();
-igual('2 grupos en dashboard', celda(5, 2), 2);
+igual('17 grupos en dashboard', celda(5, 2), 17);
 igual('1 link enviado', celda(6, 2), 1);
-igual('1 link pendiente', celda(7, 2), 1);
+igual('16 links pendientes', celda(7, 2), 16);
 igual('2 respuestas', celda(8, 2), 2);
 igual('2 personas asistirán', celda(5, 5), 2);
 igual('1 persona no asistirá', celda(6, 5), 1);

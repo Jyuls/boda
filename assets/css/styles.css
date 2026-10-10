@@ -740,11 +740,25 @@ a { color: inherit; }
 
 /* Mapa */
 .mapa-wrap { position: relative; z-index: 10; }
+.mapa-wrap--ceremonia {
+  z-index: 11;
+  margin: 84px auto 52px;
+  padding: 0 24px;
+}
 .mapa {
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 32px 24px 24px;
+}
+.mapa--ceremonia {
+  width: min(100%, 920px);
+  margin: 0 auto;
+  padding: clamp(24px, 4vw, 42px);
+  border: 1px solid rgba(87, 53, 110, .14);
+  border-radius: 28px;
+  background: #fffaff;
+  box-shadow: 0 16px 42px rgba(69, 38, 90, .1);
 }
 .mapa h3 {
   text-transform: uppercase;
@@ -843,7 +857,23 @@ a { color: inherit; }
   object-fit: contain;
   border-radius: 18px;
 }
+.mapa--ceremonia .mapa-foto {
+  max-width: 760px;
+  margin-top: 24px;
+  padding: 7px;
+  border: 1px solid rgba(87, 53, 110, .15);
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(69, 38, 90, .12);
+}
 @media (max-width: 767px) {
+  .mapa-wrap--ceremonia {
+    margin: 58px auto 40px;
+    padding: 0 18px;
+  }
+  .mapa--ceremonia {
+    padding: 24px 18px 26px;
+    border-radius: 22px;
+  }
   .celebracion-visual {
     grid-template-columns: minmax(0, 1fr);
     gap: 12px;
