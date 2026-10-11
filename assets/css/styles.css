@@ -596,7 +596,7 @@ a { color: inherit; }
 }
 @media (min-width: 768px) { .carrusel { max-width: 600px; height: 520px; } }
 .flecha {
-  display: none;
+  display: flex;
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -615,7 +615,21 @@ a { color: inherit; }
 .flecha svg { width: 18px; height: 18px; }
 .flecha.prev { left: 0; }
 .flecha.next { right: 0; }
-@media (min-width: 768px) { .flecha { display: flex; } }
+@media (max-width: 767px) {
+  .galeria { padding-right: 16px; padding-left: 16px; }
+  .carrusel {
+    width: 100%;
+    height: clamp(280px, 82vw, 340px);
+  }
+  .flecha {
+    width: 34px;
+    height: 34px;
+    background: rgba(255, 255, 255, .9);
+    box-shadow: 0 2px 10px rgba(74, 20, 140, .16);
+  }
+  .flecha.prev { left: 2px; }
+  .flecha.next { right: 2px; }
+}
 .escena {
   position: relative;
   width: 100%;

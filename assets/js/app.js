@@ -7,7 +7,7 @@
   'use strict';
 
   /* ---------- Datos del demo ---------- */
-  var FOTOS = [
+  var FOTOS_RESPALDO = [
     'assets/img/fotos/foto1.webp',
     'assets/img/fotos/foto3.webp',
     'assets/img/fotos/foto4.webp',
@@ -18,6 +18,12 @@
     'assets/img/fotos/foto8.webp',
     'assets/img/fotos/foto9.webp'
   ];
+  var galeriaConfig = window.CONFIG && window.CONFIG.boda && window.CONFIG.boda.galeria;
+  var FOTOS = (Array.isArray(galeriaConfig) && galeriaConfig.length
+    ? galeriaConfig
+    : FOTOS_RESPALDO).map(function (foto) {
+    return typeof foto === 'string' ? { src: foto } : foto && foto.src ? foto : null;
+  }).filter(Boolean);
 
   var MENSAJES_SEMILLA = [
     ['Rashid Al Nuaimi', '1/7/2027, 1:00:00 AM', 'Here is to a lifetime of shared jokes nobody else will ever understand.'],
@@ -133,6 +139,7 @@
   var contador = $('#galeria-contador');
   var indiceActual = 0;
   var slides = [];
+  var suprimirClick = false;
 
   function construirGaleria() {
     if (!escena) return;
@@ -141,27 +148,54 @@
       d.className = 'gslide';
       d.setAttribute('data-i', i);
       var img = document.createElement('img');
-      img.src = src;
-      img.alt = 'Wedding photo ' + (i + 1);
+      img.src = src.src;
+      img.alt = 'Foto de la boda ' + (i + 1);
       img.draggable = false;
+      if (src.objectPosition) img.style.objectPosition = src.objectPosition;
       d.appendChild(img);
       escena.appendChild(d);
       slides.push(d);
     });
     pintarGaleria();
     escena.addEventListener('click', function (e) {
+      if (suprimirClick) {
+        e.preventDefault();
+        suprimirClick = false;
+        return;
+      }
       var g = e.target.closest ? e.target.closest('.gslide') : null;
       if (!g) return;
       var i = parseInt(g.getAttribute('data-i'), 10);
       if (i === indiceActual) { abrirVisor(i); }
       else { irA(i); }
     });
+    var inicioToqueX = null;
+    escena.addEventListener('touchstart', function (e) {
+      if (!e.touches.length) return;
+      inicioToqueX = e.touches[0].clientX;
+      detenerAutoplay();
+    }, { passive: true });
+    escena.addEventListener('touchend', function (e) {
+      if (inicioToqueX === null || !e.changedTouches.length) return;
+      var desplazamiento = e.changedTouches[0].clientX - inicioToqueX;
+      inicioToqueX = null;
+      if (Math.abs(desplazamiento) >= 45) {
+        irA(indiceActual + (desplazamiento < 0 ? 1 : -1));
+        suprimirClick = true;
+        setTimeout(function () { suprimirClick = false; }, 600);
+      }
+      setTimeout(iniciarAutoplay, 1200);
+    }, { passive: true });
+    escena.addEventListener('touchcancel', function () {
+      inicioToqueX = null;
+      setTimeout(iniciarAutoplay, 1200);
+    }, { passive: true });
   }
 
   function posicionDe(slide) {
     var i = parseInt(slide.getAttribute('data-i'), 10);
     var d = (i - indiceActual + FOTOS.length) % FOTOS.length;
-    if (d > 4) d -= FOTOS.length;
+    if (d > FOTOS.length / 2) d -= FOTOS.length;
     return d;
   }
 
@@ -169,8 +203,9 @@
     slides.forEach(function (g) {
       var d = posicionDe(g);
       var ad = Math.abs(d);
+      var distanciaVisible = Math.max(1, Math.min(3, Math.floor((FOTOS.length - 1) / 2)));
       var t, o, z, pe;
-      if (ad >= 4) {
+      if (ad > distanciaVisible) {
         t = '';
         o = 0;
         z = 0;
@@ -220,7 +255,7 @@
   }
 
   function pintarVisor() {
-    visorImg.src = FOTOS[indiceActual];
+    visorImg.src = FOTOS[indiceActual].src;
     visorContador.textContent = (indiceActual + 1) + ' / ' + FOTOS.length;
     $$('button', visorThumbs).forEach(function (b) {
       b.classList.toggle('activo', parseInt(b.dataset.i, 10) === indiceActual);
@@ -233,14 +268,15 @@
   }
   function construirThumbs() {
     if (!visorThumbs) return;
-    FOTOS.forEach(function (src, i) {
+    FOTOS.forEach(function (foto, i) {
       var b = document.createElement('button');
       b.dataset.i = i;
       b.setAttribute('aria-label', 'Ver foto ' + (i + 1));
       var img = document.createElement('img');
-      img.src = src;
+      img.src = foto.src;
       img.alt = 'Thumbnail ' + (i + 1);
       img.draggable = false;
+      if (foto.objectPosition) img.style.objectPosition = foto.objectPosition;
       b.appendChild(img);
       b.addEventListener('click', function () { irA(i); pintarVisor(); });
       visorThumbs.appendChild(b);

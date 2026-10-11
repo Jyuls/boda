@@ -52,10 +52,16 @@ window.CONFIG = {
     fotoIglesia: 'assets/img/iglesia.jpg',
     fotoPareja: 'assets/img/nuestros.jpg',
 
-    /* Galería: las fotos del carrusel, en orden. Cada una puede ser un string
-       (la ruta del archivo) o un objeto { src, pie } con su pie de foto.
-       Vacía, el carrusel cae a las dos fotos de arriba (iglesia y pareja). */
-    galeria: []
+    /* Galería: rutas de las fotos del carrusel, en el orden en que aparecen. */
+    galeria: [
+      'assets/img/carrusel/WhatsApp Image 2026-10-10 at 8.40.32 PM.jpeg',
+      'assets/img/carrusel/WhatsApp Image 2026-10-10 at 8.41.37 PM.jpeg',
+      {
+        src: 'assets/img/carrusel/WhatsApp Image 2026-10-10 at 8.44.55 PM.jpeg',
+        objectPosition: 'center 18%'
+      },
+      'assets/img/carrusel/WhatsApp Image 2026-10-10 at 8.48.08 PM.jpeg'
+    ]
   }
 };
 
