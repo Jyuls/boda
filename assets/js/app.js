@@ -7,21 +7,8 @@
   'use strict';
 
   /* ---------- Datos del demo ---------- */
-  var FOTOS_RESPALDO = [
-    'assets/img/fotos/foto1.webp',
-    'assets/img/fotos/foto3.webp',
-    'assets/img/fotos/foto4.webp',
-    'assets/img/fotos/foto5.webp',
-    'assets/img/fotos/foto6.webp',
-    'assets/img/fotos/foto7.webp',
-    'assets/img/fotos/foto2.webp',
-    'assets/img/fotos/foto8.webp',
-    'assets/img/fotos/foto9.webp'
-  ];
   var galeriaConfig = window.CONFIG && window.CONFIG.boda && window.CONFIG.boda.galeria;
-  var FOTOS = (Array.isArray(galeriaConfig) && galeriaConfig.length
-    ? galeriaConfig
-    : FOTOS_RESPALDO).map(function (foto) {
+  var FOTOS = (Array.isArray(galeriaConfig) ? galeriaConfig : []).map(function (foto) {
     return typeof foto === 'string' ? { src: foto } : foto && foto.src ? foto : null;
   }).filter(Boolean);
 
@@ -143,6 +130,12 @@
 
   function construirGaleria() {
     if (!escena) return;
+    if (!FOTOS.length) {
+      var carrusel = escena.closest('.carrusel');
+      if (carrusel) carrusel.hidden = true;
+      if (contador) contador.hidden = true;
+      return;
+    }
     FOTOS.forEach(function (src, i) {
       var d = document.createElement('div');
       d.className = 'gslide';
@@ -200,6 +193,7 @@
   }
 
   function pintarGaleria() {
+    if (!FOTOS.length) return;
     slides.forEach(function (g) {
       var d = posicionDe(g);
       var ad = Math.abs(d);
@@ -230,6 +224,7 @@
   }
 
   function irA(i) {
+    if (!FOTOS.length) return;
     indiceActual = (i + FOTOS.length) % FOTOS.length;
     pintarGaleria();
   }
@@ -389,6 +384,7 @@
   }
   function iniciarAutoplay() {
     detenerAutoplay();
+    if (!FOTOS.length) return;
     autoplayId = setInterval(function(){ irA(indiceActual + 1); pintarGaleria(); pintarVisor(); }, 8000);
   }
   ['escena','flecha-prev','flecha-next','visor'].forEach(function(id){

@@ -59,8 +59,7 @@ window.CONFIG = {
       {
         src: 'assets/img/carrusel/WhatsApp Image 2026-10-10 at 8.44.55 PM.jpeg',
         objectPosition: 'center 18%'
-      },
-      'assets/img/carrusel/WhatsApp Image 2026-10-10 at 8.48.08 PM.jpeg'
+      }
     ]
   }
 };

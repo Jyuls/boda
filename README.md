@@ -18,8 +18,9 @@ assets/
     og.png                  vista previa al compartir el enlace
     sello.svg               emblema de la parroquia y favicon
     nuestros.jpg            foto de Abril y Johann
-    iglesia.jpg             foto provisional de la parroquia y celebración
-    fotos/                  fotos de la galería
+    iglesia.jpg             foto de la parroquia
+    casaFamilia.png         foto del lugar de celebración
+    carrusel/               fotos de la galería
     minimalism/             fondos, flores, papel y adornos usados por la web
 data/invitados.js           grupos y códigos de invitación; se conserva aquí
 gas/Code.gs                 backend de Google Apps Script
