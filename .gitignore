@@ -20,6 +20,7 @@ skills-lock.json
 # captura que se cuele en esa carpeta.
 *.png
 !assets/img/og.png
+!assets/img/casaFamilia.png
 capturas/
 
 # La foto de los novios SÍ se sube: GitHub Pages sólo sirve lo que está
