@@ -220,7 +220,7 @@ Si ya existe una implementación web, publicá una versión nueva desde
 se conserva la URL `/exec` que ya está configurada en el sitio.
 
 Eso crea cinco pestañas: `Invitados`, `Respuestas`, `Resumen`, `Config` y
-`Generado`. También importa los 16 grupos actuales de `data/invitados.js` a
+`Generado`. También importa los 19 grupos actuales de `data/invitados.js` a
 `Invitados`. Si el Sheet ya tenía grupos y respuestas, conserva los datos
 existentes y reacomoda las columnas por encabezado. Quita los campos viejos de
 esperados y acompañantes; cualquier columna personalizada se conserva al final.

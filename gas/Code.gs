@@ -40,7 +40,8 @@ var INVITADOS_BASE = [
   ['XF99', 'Roxana Gutiérrez', 'Roxana Gutiérrez, Esposo', ''],
   ['CG46', 'Familia Dominguez', 'Teresa Dominguez, Esposo', ''],
   ['VJ99', 'Andrea y Fernando', 'Andrea, Fernando', ''],
-  ['FW10', 'Jonathan y Jessica', 'Jonathan Espinoza, Jessica Castillo', '']
+  ['FW10', 'Jonathan y Jessica', 'Jonathan Espinoza, Jessica Castillo', ''],
+  ['GG00', 'Familia González Diaz', 'Jazmin González, Pedro Diaz, Emmanuel Diaz, Mateo Diaz', '']
 ];
 
 var ZONA = 'America/Tijuana';

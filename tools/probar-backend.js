@@ -189,7 +189,15 @@ igual('respuesta histórica conserva el sí', hojas['Respuestas'].getRange(2, 4)
 igual('respuesta histórica conserva el no', hojas['Respuestas'].getRange(2, 5).getValue(), 'Lilian Alejandra del Rosario Sánchez Padilla, David Antonio Sánchez Padilla');
 igual('total histórico se recalcula sin acompañantes', hojas['Respuestas'].getRange(2, 6).getValue(), 1);
 igual('conserva el mensaje histórico', hojas['Respuestas'].getRange(2, 7).getValue(), 'Respuesta anterior');
-igual('importa los 16 grupos del sitio y conserva una fila extra', filasInv().length, 17);
+igual('importa los grupos del sitio y conserva una fila extra',
+  filasInv().length, datosSitio.window.INVITADOS.length + 1);
+igual('códigos nuevos muestran sus grupos y miembros',
+  datosSitio.window.INVITADOS.slice(-3).map(inv => [inv.codigo, inv.grupo, inv.miembros]),
+  [
+    ['VJ99', 'Andrea y Fernando', ['Andrea', 'Fernando']],
+    ['FW10', 'Jonathan y Jessica', ['Jonathan Espinoza', 'Jessica Castillo']],
+    ['GG00', 'Familia González Diaz', ['Jazmin González', 'Pedro Diaz', 'Emmanuel Diaz', 'Mateo Diaz']]
+  ]);
 igual('todos los códigos del sitio aparecen en Invitados',
   codigos().filter(c => datosSitio.window.INVITADOS.some(inv => inv.codigo === c)),
   datosSitio.window.INVITADOS.map(inv => inv.codigo));
@@ -264,9 +272,11 @@ seccion('5. dashboard muestra envíos y listas por persona');
 verResumen();
 const resumen = hojas['Resumen'];
 const celda = (f, c) => resumen.getRange(f, c).getValue();
-igual('17 grupos en dashboard', celda(5, 2), 17);
+igual('19 grupos y una fila previa en dashboard',
+  celda(5, 2), datosSitio.window.INVITADOS.length + 1);
 igual('1 link enviado', celda(6, 2), 1);
-igual('16 links pendientes', celda(7, 2), 16);
+igual('los demás links están pendientes',
+  celda(7, 2), datosSitio.window.INVITADOS.length);
 igual('2 respuestas', celda(8, 2), 2);
 igual('2 personas asistirán', celda(5, 5), 2);
 igual('1 persona no asistirá', celda(6, 5), 1);
