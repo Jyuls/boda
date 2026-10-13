@@ -51,7 +51,9 @@
   }
 
   function codigoDeUrl() {
-    return (window.location.hash || '').replace(/^#/, '').trim().toUpperCase();
+    var url = new URL(window.location.href);
+    var codigo = url.searchParams.get('code') || (window.location.hash || '').replace(/^#/, '');
+    return codigo.trim().toUpperCase();
   }
 
   function grupoPorCodigo(codigo) {

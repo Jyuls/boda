@@ -342,6 +342,25 @@
   <div class="visor-thumbs" id="visor-thumbs"></div>
 </dialog>
 
+<audio
+  id="musica-boda"
+  src="assets/mp3/My%20Will%20%E2%94%82Inuyasha%20Ending%201%E2%94%82Subtitulado%20al%20Espa%C3%B1ol%E2%94%82Inuyasha%20y%20Aome%E3%80%8EAMV%E3%80%8F%20-%20TomoKami.mp3"
+  preload="none"
+  loop
+></audio>
+<button class="music-toggle" id="music-toggle" type="button" aria-label="Reproducir música" aria-pressed="false">
+  <svg class="music-icon music-icon-note" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M9 18V5l12-2v13"></path>
+    <circle cx="6" cy="18" r="3"></circle>
+    <circle cx="18" cy="16" r="3"></circle>
+  </svg>
+  <svg class="music-icon music-icon-pause" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+    <path d="M8 5v14M16 5v14"></path>
+  </svg>
+  <span>Nuestra canción</span>
+</button>
+<span class="music-status-sr" id="music-status" aria-live="polite"></span>
+
 <script src="assets/js/config.js"></script>
 <script src="data/invitados.js"></script>
 <script src="assets/js/app.js"></script>

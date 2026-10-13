@@ -22,6 +22,7 @@ assets/
     casaFamilia.png         foto del lugar de celebración
     carrusel/               fotos de la galería
     minimalism/             fondos, flores, papel y adornos usados por la web
+  mp3/                      canción; inicia al abrir la invitación y se pausa desde el control flotante
 data/invitados.js           grupos y códigos de invitación; se conserva aquí
 gas/Code.gs                 backend de Google Apps Script
 tools/                      pruebas, bancos de navegador y utilidades locales

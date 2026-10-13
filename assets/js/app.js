@@ -39,6 +39,46 @@
   var sobre = $('#sobre');
   var sobreCard = $('#sobre-card');
   var btnOpen = $('#btn-open');
+  var musica = $('#musica-boda');
+  var controlMusica = $('#music-toggle');
+  var estadoMusica = $('#music-status');
+
+  function actualizarControlMusica(sonando) {
+    if (!controlMusica) return;
+    controlMusica.setAttribute('aria-pressed', sonando ? 'true' : 'false');
+    controlMusica.setAttribute('aria-label', sonando ? 'Pausar música' : 'Reproducir música');
+  }
+
+  function iniciarMusica() {
+    if (!musica) return;
+    musica.volume = 0.2;
+    var intento = musica.play();
+    if (intento && typeof intento.catch === 'function') {
+      intento.catch(function () {
+        actualizarControlMusica(false);
+        if (estadoMusica) estadoMusica.textContent = 'La reproducción automática está bloqueada. Pulsa Nuestra canción para escuchar.';
+      });
+    }
+  }
+
+  if (musica && controlMusica) {
+    musica.addEventListener('play', function () {
+      actualizarControlMusica(true);
+      if (estadoMusica) estadoMusica.textContent = 'Nuestra canción está sonando a volumen suave.';
+    });
+    musica.addEventListener('pause', function () {
+      actualizarControlMusica(false);
+      if (estadoMusica) estadoMusica.textContent = 'Música pausada.';
+    });
+    musica.addEventListener('error', function () {
+      actualizarControlMusica(false);
+      if (estadoMusica) estadoMusica.textContent = 'No se pudo cargar la canción. Intenta reproducirla de nuevo.';
+    });
+    controlMusica.addEventListener('click', function () {
+      if (musica.paused) iniciarMusica();
+      else musica.pause();
+    });
+  }
 
   function invitadoDeUrl() {
     var urlParams = new URLSearchParams(window.location.search);
@@ -51,10 +91,14 @@
     }) || null;
   }
 
-  var grupoInvitado = invitadoDeUrl();
-  if (grupoInvitado) {
-    $('.sobre-chip').textContent = grupoInvitado.grupo || '';
+  var grupoInvitado = null;
+  function actualizarGrupoInvitado() {
+    grupoInvitado = invitadoDeUrl();
+    var chip = $('.sobre-chip');
+    if (chip) chip.textContent = grupoInvitado ? grupoInvitado.grupo || '' : '';
   }
+  actualizarGrupoInvitado();
+  window.addEventListener('hashchange', actualizarGrupoInvitado);
 
   function marcarSobreAbierto() {
     var url = new URL(window.location.href);
@@ -110,11 +154,13 @@
     var yaAbierto = /(?:^|[?&])open=1(?=&|$)/.test(window.location.search);
     if (yaAbierto) {
       sobre.style.display = 'none';
+      iniciarMusica();
       return;
     }
     bloquearScroll(true);
     btnOpen.addEventListener('click', function (e) {
       e.preventDefault();
+      iniciarMusica();
       abrirInvitacion();
     });
   }
