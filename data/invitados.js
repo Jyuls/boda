@@ -13,7 +13,7 @@ window.INVITADOS = [
   { codigo: 'LH63', grupo: 'Juan Manuel Vega Burgara', miembros: ['Juan Manuel Vega Burgara'], notas: '' },
   { codigo: 'QX30', grupo: 'Familia González Duarte', miembros: ['Zahory González', 'Luis Duarte'], notas: '' },
   { codigo: 'XF99', grupo: 'Roxana Gutiérrez', miembros: ['Roxana Gutiérrez'], notas: '' },
-  { codigo: 'CG46', grupo: 'Familia Dominguez', miembros: ['Teresa Dominguez', 'Vanessa', 'Kimberly'], notas: '' },
+  { codigo: 'CG46', grupo: 'Familia Dominguez Urrutia', miembros: ['Teresa Dominguez', 'Vanessa Urrutia', 'Kimberly Urrutia'], notas: '' },
   { codigo: 'VJ99', grupo: 'Andrea y Fernando', miembros: ['Andrea', 'Fernando'], notas: '' },
   { codigo: 'FW10', grupo: 'Jonathan y Jessica', miembros: ['Jonathan Espinoza', 'Jessica Castillo'], notas: '' },
   { codigo: 'GG00', grupo: 'Familia González Diaz', miembros: ['Jazmin González', 'Pedro Diaz', 'Emmanuel Diaz', 'Mateo Diaz'], notas: '' },
