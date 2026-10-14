@@ -17,5 +17,5 @@ window.INVITADOS = [
   { codigo: 'VJ99', grupo: 'Andrea y Fernando', miembros: ['Andrea', 'Fernando'], notas: '' },
   { codigo: 'FW10', grupo: 'Jonathan y Jessica', miembros: ['Jonathan Espinoza', 'Jessica Castillo'], notas: '' },
   { codigo: 'GG00', grupo: 'Familia González Diaz', miembros: ['Jazmin González', 'Pedro Diaz', 'Emmanuel Diaz', 'Mateo Diaz'], notas: '' },
-  { codigo: 'CI31', grupo: 'Cielo Alejandra Raphael', miembros: ['Cielo Alejandra Raphael', notas: '' },
+  { codigo: 'CI31', grupo: 'Cielo Alejandra Raphael', miembros: ['Cielo Alejandra Raphael'], notas: '' },
 ];
