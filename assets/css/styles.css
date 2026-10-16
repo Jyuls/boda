@@ -1127,6 +1127,9 @@ a { color: inherit; }
   text-align: center;
   line-height: 1.5;
 }
+.padrinos__item--centrada {
+  grid-column: 1 / -1;
+}
 .padrinos__item h3 {
   margin-bottom: 6px;
   color: var(--morado);
