@@ -32,6 +32,10 @@ open-browser.ps1            apertura de la invitación en Edge
 README.md                   configuración, mantenimiento y pruebas
 ```
 
+El código `YZ32` conserva el nombre de grupo «Familia Sánchez» y omite la
+galería y la música. Su RSVP sigue usando los integrantes registrados para el
+grupo.
+
 ### Herramientas locales
 
 - **Pruebas automatizadas:** `probar-backend.js`, `probar-conexion.js`,

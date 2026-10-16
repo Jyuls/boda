@@ -39,6 +39,7 @@
   var sobre = $('#sobre');
   var sobreCard = $('#sobre-card');
   var btnOpen = $('#btn-open');
+  var CODIGO_INVITACION_SIN_EXTRAS = 'YZ32';
   var musica = $('#musica-boda');
   var controlMusica = $('#music-toggle');
   var estadoMusica = $('#music-status');
@@ -50,7 +51,7 @@
   }
 
   function iniciarMusica() {
-    if (!musica) return;
+    if (!musica || esInvitacionSinExtras()) return;
     musica.volume = 0.2;
     var intento = musica.play();
     if (intento && typeof intento.catch === 'function') {
@@ -92,13 +93,18 @@
   }
 
   var grupoInvitado = null;
+  function esInvitacionSinExtras() {
+    return grupoInvitado &&
+      String(grupoInvitado.codigo).toUpperCase() === CODIGO_INVITACION_SIN_EXTRAS;
+  }
+
   function actualizarGrupoInvitado() {
     grupoInvitado = invitadoDeUrl();
     var chip = $('.sobre-chip');
     if (chip) chip.textContent = grupoInvitado ? grupoInvitado.grupo || '' : '';
+    document.body.classList.toggle('invitacion-sin-extras', !!esInvitacionSinExtras());
   }
   actualizarGrupoInvitado();
-  window.addEventListener('hashchange', actualizarGrupoInvitado);
 
   function marcarSobreAbierto() {
     var url = new URL(window.location.href);
@@ -173,9 +179,11 @@
   var indiceActual = 0;
   var slides = [];
   var suprimirClick = false;
+  var galeriaConstruida = false;
 
   function construirGaleria() {
-    if (!escena) return;
+    if (!escena || esInvitacionSinExtras() || galeriaConstruida) return;
+    galeriaConstruida = true;
     if (!FOTOS.length) {
       var carrusel = escena.closest('.carrusel');
       if (carrusel) carrusel.hidden = true;
@@ -430,9 +438,20 @@
   }
   function iniciarAutoplay() {
     detenerAutoplay();
-    if (!FOTOS.length) return;
+    if (!FOTOS.length || esInvitacionSinExtras()) return;
     autoplayId = setInterval(function(){ irA(indiceActual + 1); pintarGaleria(); pintarVisor(); }, 8000);
   }
+  window.addEventListener('hashchange', function () {
+    actualizarGrupoInvitado();
+    if (esInvitacionSinExtras()) {
+      detenerAutoplay();
+      if (musica) musica.pause();
+      if (visor && visor.open) cerrarDialog(visor);
+    } else {
+      construirGaleria();
+      iniciarAutoplay();
+    }
+  });
   ['escena','flecha-prev','flecha-next','visor'].forEach(function(id){
     var el = document.getElementById(id) || (id==='flecha-prev'?$('.flecha.prev'): (id==='flecha-next'?$('.flecha.next'):null));
   });

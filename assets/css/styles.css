@@ -1538,6 +1538,11 @@ a { color: inherit; }
   white-space: nowrap;
   border: 0;
 }
+body.invitacion-sin-extras .galeria-wrap,
+body.invitacion-sin-extras #visor,
+body.invitacion-sin-extras .music-toggle {
+  display: none;
+}
 @media (max-width: 480px) {
   .music-toggle {
     right: 12px;
