@@ -168,9 +168,9 @@ Las tres se agregaron a `index.html`; los datos que faltan por completar son:
   a. m. del jueves 22 de octubre de 2026. La sección "Lugar de la ceremonia"
   aparece inmediatamente después de la tarjeta y usa el mapa
   `https://maps.app.goo.gl/hc42dzcKFi88nMW68` y la foto `assets/img/iglesia.jpg`.
-- **Padrinos** — los roles (Arras, Anillo, Lazo y Velación) aparecen agrupados
-  en una cuadrícula. Para corregirlos se edita el bloque `Padrinos` de
-  `index.html`.
+- **Padrinos** — los roles (Arras, Anillo, Lazo, Velación y Madrina de Biblia
+  y Rosario) aparecen agrupados en una cuadrícula. Para corregirlos se edita el
+  bloque `Padrinos` de `index.html`.
 - **Sobres de Regalo** — una ilustración de un sobre acompaña el aviso de que
   habrá sobres para cooperar con lo que cada invitado guste para los recién
   casados. No se muestran datos bancarios. Debajo aparece la confirmación de
